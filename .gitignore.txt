@@ -1,0 +1,23 @@
+# Node
+node_modules/
+.npm-cache/
+dist/
+build/
+
+# IntelliJ
+.idea/
+*.iml
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.*
+
+# Maven
+target/
+
+# OS
+.DS_Store
+Thumbs.db

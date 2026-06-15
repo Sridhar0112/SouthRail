@@ -1,0 +1,230 @@
+{
+  "info": {
+    "name": "SouthRail Reservation API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "pnr", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
+            "body": { "mode": "raw", "raw": "{\"fullName\":\"Arun Kumar\",\"email\":\"arun@example.com\",\"phone\":\"9876543210\",\"password\":\"Password@123\"}" }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": { "mode": "raw", "raw": "{\"email\":\"arun@example.com\",\"password\":\"Password@123\"}" }
+          }
+        },
+        {
+          "name": "Refresh token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/refresh",
+            "body": { "mode": "raw", "raw": "{\"refreshToken\":\"{{refreshToken}}\"}" }
+          }
+        },
+        {
+          "name": "Forgot password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/forgot-password",
+            "body": { "mode": "raw", "raw": "{\"email\":\"arun@example.com\"}" }
+          }
+        },
+        {
+          "name": "Reset password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/reset-password",
+            "body": { "mode": "raw", "raw": "{\"token\":\"reset-token\",\"password\":\"Password@1234\"}" }
+          }
+        },
+        {
+          "name": "Verify email",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/verify-email",
+            "body": { "mode": "raw", "raw": "{\"token\":\"verification-token\"}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Train Search",
+      "item": [
+        {
+          "name": "Station suggestions",
+          "request": { "method": "GET", "url": "{{baseUrl}}/trains/stations?q=che&page=0&size=8" }
+        },
+        {
+          "name": "Search trains",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/trains/search",
+            "body": { "mode": "raw", "raw": "{\"source\":\"SBC\",\"destination\":\"MAS\",\"journeyDate\":\"2026-06-08\",\"travelClass\":\"3A\",\"quota\":\"GENERAL\"}" }
+          }
+        },
+        {
+          "name": "Train detail",
+          "request": { "method": "GET", "url": "{{baseUrl}}/trains/8ddad0c4-0000-4000-9000-000000000001" }
+        }
+      ]
+    },
+    {
+      "name": "Booking",
+      "item": [
+        {
+          "name": "Review booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/bookings/review",
+            "body": { "mode": "raw", "raw": "{\"trainId\":\"8ddad0c4-0000-4000-9000-000000000001\",\"sourceStationCode\":\"SBC\",\"destinationStationCode\":\"MAS\",\"journeyDate\":\"2026-06-08\",\"travelClass\":\"3A\",\"quota\":\"GENERAL\",\"passengers\":[{\"fullName\":\"Arun Kumar\",\"age\":31,\"gender\":\"Male\",\"berthPreference\":\"LOWER\"}]}" }
+          }
+        },
+        {
+          "name": "Create booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/bookings",
+            "body": { "mode": "raw", "raw": "{\"trainId\":\"8ddad0c4-0000-4000-9000-000000000001\",\"sourceStationCode\":\"SBC\",\"destinationStationCode\":\"MAS\",\"journeyDate\":\"2026-06-08\",\"travelClass\":\"3A\",\"quota\":\"GENERAL\",\"passengers\":[{\"fullName\":\"Arun Kumar\",\"age\":31,\"gender\":\"Male\",\"berthPreference\":\"LOWER\"}]}" }
+          }
+        },
+        {
+          "name": "Booking history",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/bookings?page=0&size=20"
+          }
+        },
+        {
+          "name": "PNR status",
+          "request": { "method": "GET", "url": "{{baseUrl}}/pnr/{{pnr}}" }
+        },
+        {
+          "name": "Cancel booking",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/pnr/{{pnr}}/cancel"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Current profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/users/me"
+          }
+        },
+        {
+          "name": "Update profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/users/me",
+            "body": { "mode": "raw", "raw": "{\"fullName\":\"Arun Kumar\",\"phone\":\"9876543210\"}" }
+          }
+        },
+        {
+          "name": "Notifications",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/notifications?page=0&size=10"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Summary",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/admin/summary"
+          }
+        },
+        {
+          "name": "Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/admin/users?page=0&size=20"
+          }
+        },
+        {
+          "name": "Trains",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/admin/trains?page=0&size=20"
+          }
+        },
+        {
+          "name": "Routes",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/admin/routes?page=0&size=20"
+          }
+        },
+        {
+          "name": "Stations",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/admin/stations?page=0&size=20"
+          }
+        },
+        {
+          "name": "Bookings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/admin/bookings?page=0&size=20"
+          }
+        }
+      ]
+    }
+  ]
+}

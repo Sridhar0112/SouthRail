@@ -1,0 +1,70 @@
+spring:
+  application:
+    name: southrail-reservation
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/southrail_new}
+    username: ${DB_USERNAME:southrail}
+    password: ${DB_PASSWORD:southrail}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: false
+  cache:
+    type: simple
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: sridharsri7537@gmail.com
+    password: qoyewuhyrrbzchwf
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api
+
+app:
+  frontend-url: ${APP_FRONTEND_URL:http://localhost:5173}
+  jwt:
+    issuer: southrail
+    secret: ${JWT_SECRET:change-me-change-me-change-me-change-me-change-me}
+    access-token-minutes: ${JWT_ACCESS_MINUTES:20}
+    refresh-token-days: ${JWT_REFRESH_DAYS:14}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:8088}
+  mail:
+    from: ${MAIL_FROM:sridharsri7537@gmail.com}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.southrail.reservation: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.springframework.security: DEBUG
