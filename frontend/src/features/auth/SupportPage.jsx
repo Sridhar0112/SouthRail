@@ -1,19 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Box,
-  Button,
-  Chip,
-  Collapse,
-  Container,
-  Divider,
-  Grid,
-  InputAdornment,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
+  Box, Button, Chip, Collapse, Container, Divider, Grid,
+  InputAdornment, Paper, Stack, TextField, Typography,
 } from '@mui/material';
+import api from '../../services/api.js';
 import TrainIcon from '@mui/icons-material/Train';
 import SearchIcon from '@mui/icons-material/Search';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -32,6 +23,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
 // ─── Data ────────────────────────────────────────────────────────────────────
+// All static data stays at module scope (unchanged).
 
 const CATEGORIES = [
   { id: 'all', label: 'All topics' },
@@ -44,116 +36,74 @@ const CATEGORIES = [
 
 const FAQ_ITEMS = [
   {
-    id: 1,
-    category: 'account',
-    icon: LockResetIcon,
+    id: 1, category: 'account', icon: LockResetIcon,
     question: 'My account is locked. How do I unlock it?',
-    answer:
-      'SouthRail locks accounts after several consecutive failed login attempts to protect your data. We automatically send an unlock link to your registered email address. Open that email and click the link — your account will be restored immediately. If you can\'t find the email, check your spam folder. Links expire after 24 hours; contact support if you need a new one.',
+    answer: 'SouthRail locks accounts after several consecutive failed login attempts to protect your data. We automatically send an unlock link to your registered email address. Open that email and click the link — your account will be restored immediately. If you can\'t find the email, check your spam folder. Links expire after 24 hours; contact support if you need a new one.',
   },
   {
-    id: 2,
-    category: 'account',
-    icon: AccountCircleOutlinedIcon,
+    id: 2, category: 'account', icon: AccountCircleOutlinedIcon,
     question: 'How do I verify my email address?',
-    answer:
-      'After registering, we send a verification email to the address you provided. Click the link inside to activate your account. If the link has expired or you didn\'t receive the email, log in and go to Account Settings → Email → Resend verification. Verification links are valid for 24 hours.',
+    answer: 'After registering, we send a verification email to the address you provided. Click the link inside to activate your account. If the link has expired or you didn\'t receive the email, log in and go to Account Settings → Email → Resend verification. Verification links are valid for 24 hours.',
   },
   {
-    id: 3,
-    category: 'account',
-    icon: LockResetIcon,
+    id: 3, category: 'account', icon: LockResetIcon,
     question: 'I forgot my password. How do I reset it?',
-    answer:
-      'On the login page, click "Forgot password?" and enter your email address. We\'ll send you a password reset link valid for 1 hour. If you don\'t receive it within a few minutes, check your spam folder or try again. For security reasons, reset links can only be used once.',
+    answer: 'On the login page, click "Forgot password?" and enter your email address. We\'ll send you a password reset link valid for 1 hour. If you don\'t receive it within a few minutes, check your spam folder or try again. For security reasons, reset links can only be used once.',
   },
   {
-    id: 4,
-    category: 'account',
-    icon: AccountCircleOutlinedIcon,
+    id: 4, category: 'account', icon: AccountCircleOutlinedIcon,
     question: 'How do I update my email address or phone number?',
-    answer:
-      'Go to Account Settings → Personal details. You can update your email or phone number there. Changing your email will require re-verification — we\'ll send a link to your new address. Your old email remains active until the new one is confirmed.',
+    answer: 'Go to Account Settings → Personal details. You can update your email or phone number there. Changing your email will require re-verification — we\'ll send a link to your new address. Your old email remains active until the new one is confirmed.',
   },
   {
-    id: 5,
-    category: 'bookings',
-    icon: ConfirmationNumberOutlinedIcon,
+    id: 5, category: 'bookings', icon: ConfirmationNumberOutlinedIcon,
     question: 'How do I cancel or modify a booking?',
-    answer:
-      'Open My Bookings, find the trip, and select "Modify" or "Cancel." You can cancel eligible Confirmed, RAC, and Waitlisted bookings through SouthRail. Before cancellation, the system calculates the applicable cancellation charge, refund percentage, and refund amount based on the configured cancellation policy.',
+    answer: 'Open My Bookings, find the trip, and select "Modify" or "Cancel." You can cancel eligible Confirmed, RAC, and Waitlisted bookings through SouthRail. Before cancellation, the system calculates the applicable cancellation charge, refund percentage, and refund amount based on the configured cancellation policy.',
   },
   {
-    id: 6,
-    category: 'bookings',
-    icon: ConfirmationNumberOutlinedIcon,
+    id: 6, category: 'bookings', icon: ConfirmationNumberOutlinedIcon,
     question: 'Where do I find my booking confirmation?',
-    answer:
-      'Confirmations are emailed immediately after booking. You can also find all your bookings under My Bookings in the app or website. Each booking has a unique reference number — keep it handy for check-in and customer service queries.',
+    answer: 'Confirmations are emailed immediately after booking. You can also find all your bookings under My Bookings in the app or website. Each booking has a unique reference number — keep it handy for check-in and customer service queries.',
   },
   {
-    id: 7,
-    category: 'bookings',
-    icon: TrainOutlinedIcon,
+    id: 7, category: 'bookings', icon: TrainOutlinedIcon,
     question: 'How are seats allocated?',
-    answer:
-      'SouthRail automatically allocates seats based on train availability, travel class, and passenger berth preference. Seat allocation occurs during booking and manual seat selection is currently not available.',
+    answer: 'SouthRail automatically allocates seats based on train availability, travel class, and passenger berth preference. Seat allocation occurs during booking and manual seat selection is currently not available.',
   },
   {
-    id: 8,
-    category: 'payments',
-    icon: CreditCardOutlinedIcon,
+    id: 8, category: 'payments', icon: CreditCardOutlinedIcon,
     question: 'What payment methods are accepted?',
-    answer:
-      'We accept Visa, Mastercard, American Express, UPI, net banking, and SouthRail Travel Wallet. All payments are processed over encrypted connections. We do not store full card numbers on our servers.',
+    answer: 'We accept Visa, Mastercard, American Express, UPI, net banking, and SouthRail Travel Wallet. All payments are processed over encrypted connections. We do not store full card numbers on our servers.',
   },
   {
-    id: 9,
-    category: 'payments',
-    icon: CreditCardOutlinedIcon,
+    id: 9, category: 'payments', icon: CreditCardOutlinedIcon,
     question: 'Why was my payment declined?',
-    answer:
-      'Payments can be declined for several reasons: insufficient funds, card limits, bank security checks, or incorrect card details. Try a different payment method or contact your bank. If the amount was deducted but the booking failed, the charge will be automatically reversed within 3–5 business days.',
+    answer: 'Payments can be declined for several reasons: insufficient funds, card limits, bank security checks, or incorrect card details. Try a different payment method or contact your bank. If the amount was deducted but the booking failed, the charge will be automatically reversed within 3–5 business days.',
   },
   {
-    id: 10,
-    category: 'payments',
-    icon: CreditCardOutlinedIcon,
+    id: 10, category: 'payments', icon: CreditCardOutlinedIcon,
     question: 'How do I get a refund?',
-    answer:
-      'Eligible refunds are automatically initiated when you cancel a booking. The amount is returned to the original payment method within 5–7 business days. For Travel Wallet refunds, credit appears within 24 hours. If your refund hasn\'t arrived after 7 business days, contact support with your booking reference.',
+    answer: 'Eligible refunds are automatically initiated when you cancel a booking. The amount is returned to the original payment method within 5–7 business days. For Travel Wallet refunds, credit appears within 24 hours. If your refund hasn\'t arrived after 7 business days, contact support with your booking reference.',
   },
   {
-    id: 11,
-    category: 'travel',
-    icon: TrainOutlinedIcon,
+    id: 11, category: 'travel', icon: TrainOutlinedIcon,
     question: 'What happens if my train is delayed or cancelled?',
-    answer:
-      'Passengers can check booking status and train information through SouthRail. Any refund or cancellation eligibility is determined through the cancellation and refund process supported by the system.',
+    answer: 'Passengers can check booking status and train information through SouthRail. Any refund or cancellation eligibility is determined through the cancellation and refund process supported by the system.',
   },
   {
-    id: 12,
-    category: 'travel',
-    icon: TrainOutlinedIcon,
+    id: 12, category: 'travel', icon: TrainOutlinedIcon,
     question: 'What luggage am I allowed to bring?',
-    answer:
-      'Please refer to railway travel guidelines for luggage and baggage restrictions. SouthRail currently does not manage baggage reservations or baggage fee calculations.',
+    answer: 'Please refer to railway travel guidelines for luggage and baggage restrictions. SouthRail currently does not manage baggage reservations or baggage fee calculations.',
   },
   {
-    id: 13,
-    category: 'notifications',
-    icon: NotificationsNoneOutlinedIcon,
+    id: 13, category: 'notifications', icon: NotificationsNoneOutlinedIcon,
     question: 'How do I manage travel alerts and notifications?',
-    answer:
-      'Go to Account Settings → Notifications. You can choose to receive departure reminders, delay alerts, and booking confirmations via email, SMS, or push notification. We recommend enabling at least email alerts so you never miss a schedule change.',
+    answer: 'Go to Account Settings → Notifications. You can choose to receive departure reminders, delay alerts, and booking confirmations via email, SMS, or push notification. We recommend enabling at least email alerts so you never miss a schedule change.',
   },
   {
-    id: 14,
-    category: 'notifications',
-    icon: NotificationsNoneOutlinedIcon,
+    id: 14, category: 'notifications', icon: NotificationsNoneOutlinedIcon,
     question: 'I\'m not receiving emails from SouthRail. What should I do?',
-    answer:
-      'First, check your spam or junk folder and mark SouthRail emails as "Not spam." Add support@southrail.com to your contacts. If the problem persists, verify that your registered email address is correct in Account Settings. Still nothing? Contact support and we\'ll investigate.',
+    answer: 'First, check your spam or junk folder and mark SouthRail emails as "Not spam." Add support@southrail.com to your contacts. If the problem persists, verify that your registered email address is correct in Account Settings. Still nothing? Contact support and we\'ll investigate.',
   },
 ];
 
@@ -195,25 +145,95 @@ const STATUS_ITEMS = [
   { label: 'Mobile app', ok: false, note: 'Intermittent delays (investigating)' },
 ];
 
+// ─── OPTIMIZATION 1: Hoist static policy array out of JSX to module scope ────
+// Previously defined inline in JSX — recreated as a new array reference on
+// every render, forcing React to diff all four Grid children unnecessarily.
+// Impact: Medium.
+const POLICIES = [
+  {
+    title: 'Cancellation & Refund Policy',
+    description:
+      'Eligible bookings can be cancelled through the SouthRail cancellation process. Refund amount, cancellation charges, and refund percentage are automatically calculated according to the configured cancellation policy before cancellation is confirmed.',
+    to: '/policies/refunds',
+  },
+  {
+    title: 'Baggage policy',
+    description: 'Permitted luggage sizes and weights, oversized items, and how to pre-book extra bags.',
+    to: '/policies/baggage',
+  },
+  {
+    title: 'Accessibility & assistance',
+    description: 'Services available for passengers with reduced mobility, visual or hearing impairments, and special dietary needs.',
+    to: '/policies/accessibility',
+  },
+  {
+    title: 'Privacy policy',
+    description: 'How we collect, use, and protect your personal data in line with applicable regulations.',
+    to: '/policies/privacy',
+  },
+];
+
+// ─── OPTIMIZATION 2: Stable sx objects at module scope ───────────────────────
+// Inline `sx` objects are new references every render. Hoisting stable,
+// non-dynamic ones prevents MUI's `sx` prop resolver from rerunning needlessly.
+// Impact: Low (accumulates across many elements).
+const sxPolicyPaper = {
+  border: '1px solid',
+  borderColor: 'divider',
+  borderRadius: 2,
+  p: 2.5,
+  display: 'flex',
+  alignItems: 'flex-start',
+  gap: 1.5,
+  textDecoration: 'none',
+  color: 'inherit',
+  transition: 'border-color 0.15s, background-color 0.15s',
+};
+
+const sxInfoIcon = { fontSize: 20, color: 'primary.main', mt: 0.2, flexShrink: 0 };
+
+const sxFaqPaperOpen = {
+  border: '1px solid',
+  borderColor: 'primary.main',
+  borderRadius: 2,
+  overflow: 'hidden',
+  transition: 'border-color 0.15s',
+};
+
+const sxFaqPaperClosed = {
+  border: '1px solid',
+  borderColor: 'divider',
+  borderRadius: 2,
+  overflow: 'hidden',
+  transition: 'border-color 0.15s',
+};
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function FaqItem({ item }) {
+// OPTIMIZATION 3: Wrap FaqItem in React.memo ──────────────────────────────────
+// Without memo, every keystroke in the search box (which updates parent state)
+// re-renders *all* currently visible FaqItem instances even though their props
+// haven't changed. With 14 items each containing Collapse + icons + Typography,
+// this is a meaningful reconciliation cost.
+// Impact: High.
+const FaqItem = memo(function FaqItem({ item }) {
   const [open, setOpen] = useState(false);
   const Icon = item.icon;
+
+  // OPTIMIZATION 4: useCallback for the toggle handler ─────────────────────
+  // Prevents a new function reference being created on every FaqItem render.
+  // Especially relevant now that FaqItem is memoized — a new handler reference
+  // would bust the memo on every parent render even with no prop change.
+  // Impact: Low-medium (complements memo).
+  const handleToggle = useCallback(() => setOpen((v) => !v), []);
 
   return (
     <Paper
       elevation={0}
-      sx={{
-        border: '1px solid',
-        borderColor: open ? 'primary.main' : 'divider',
-        borderRadius: 2,
-        overflow: 'hidden',
-        transition: 'border-color 0.15s',
-      }}
+      sx={open ? sxFaqPaperOpen : sxFaqPaperClosed}
     >
       <Box
-        onClick={() => setOpen((v) => !v)}
+        onClick={handleToggle}
         sx={{
           px: { xs: 2.5, sm: 3 },
           py: 2,
@@ -222,7 +242,7 @@ function FaqItem({ item }) {
           gap: 2,
           cursor: 'pointer',
           userSelect: 'none',
-         bgcolor: open ? 'action.selected' : 'transparent',
+          bgcolor: open ? 'action.selected' : 'transparent',
           transition: 'background-color 0.15s',
         }}
       >
@@ -243,9 +263,14 @@ function FaqItem({ item }) {
       </Collapse>
     </Paper>
   );
-}
+});
 
-function ContactCard({ channel }) {
+// OPTIMIZATION 5: Wrap ContactCard in React.memo ──────────────────────────────
+// ContactCard receives a stable object reference from the module-scope
+// CONTACT_CHANNELS array. With memo, the three cards skip reconciliation
+// entirely whenever parent state (search, category, ticket) changes.
+// Impact: Medium.
+const ContactCard = memo(function ContactCard({ channel }) {
   const Icon = channel.icon;
   return (
     <Paper
@@ -267,7 +292,7 @@ function ContactCard({ channel }) {
             width: 44,
             height: 44,
             borderRadius: 2,
-           bgcolor: 'action.selected',
+            bgcolor: 'action.selected',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -304,22 +329,102 @@ function ContactCard({ channel }) {
       </Box>
     </Paper>
   );
-}
+});
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SupportPage() {
   const [search, setSearch] = useState('');
+  const [ticket, setTicket] = useState({
+    bookingReference: '',
+    topic: '',
+    description: '',
+  });
   const [activeCategory, setActiveCategory] = useState('all');
 
-  const filtered = FAQ_ITEMS.filter((item) => {
-    const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
-    const matchesSearch =
-      search.trim() === '' ||
-      item.question.toLowerCase().includes(search.toLowerCase()) ||
-      item.answer.toLowerCase().includes(search.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  // OPTIMIZATION 6: useMemo for the filtered FAQ list ───────────────────────
+  // The .filter() previously ran on every render regardless of whether search
+  // or activeCategory had changed. useMemo ensures it only reruns when those
+  // two values actually change — not on ticket field keystrokes, for example.
+  // Impact: Medium.
+  const filtered = useMemo(
+    () =>
+      FAQ_ITEMS.filter((item) => {
+        const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
+        const matchesSearch =
+          search.trim() === '' ||
+          item.question.toLowerCase().includes(search.toLowerCase()) ||
+          item.answer.toLowerCase().includes(search.toLowerCase());
+        return matchesCategory && matchesSearch;
+      }),
+    [search, activeCategory],
+  );
+
+  // OPTIMIZATION 7: useCallback for submitTicket ────────────────────────────
+  // Previously an inline async function recreated on every render. As a
+  // useCallback it gets a stable reference; the Button's onClick prop stays
+  // referentially equal between renders, preventing unnecessary Button
+  // reconciliation. ticket is listed as a dependency so it always closes over
+  // the latest form values — identical behaviour to before.
+  // Impact: Low-medium.
+  const [loading, setLoading] = useState(false);
+  const submitTicket = useCallback(async () => {
+  try {
+    setLoading(true);
+
+    const response = await api.post('/support/tickets', ticket);
+
+    alert(`Ticket Created Successfully.\nTicket ID : ${response.data.ticketId}`);
+
+    setTicket({
+      bookingReference: '',
+      topic: '',
+      description: '',
+    });
+
+  } catch (error) {
+    console.error(error);
+    alert('Failed to create ticket');
+  } finally {
+    setLoading(false);
+  }
+}, [ticket]);
+
+  // OPTIMIZATION 8: useCallback for ticket field onChange handlers ──────────
+  // Each TextField previously received a new arrow function on every render.
+  // Stable callbacks mean MUI's TextField internals don't needlessly
+  // re-subscribe to prop changes while the user types in a different field.
+  // Impact: Low-medium (4 fields × every parent render = noticeable on slower
+  // devices when the ticket form is visible alongside the full FAQ list).
+
+  const handleBookingRefChange = useCallback(
+    (e) => setTicket((prev) => ({ ...prev, bookingReference: e.target.value })),
+    [],
+  );
+  const handleTopicChange = useCallback(
+    (e) => setTicket((prev) => ({ ...prev, topic: e.target.value })),
+    [],
+  );
+  const handleDescriptionChange = useCallback(
+    (e) => setTicket((prev) => ({ ...prev, description: e.target.value })),
+    [],
+  );
+
+  // OPTIMIZATION 9: useCallback for category chip click handler ─────────────
+  // The Chip onClick previously received a new closure per category per render.
+  // A single stable handler using the chip's data attribute avoids 6 new
+  // function allocations on every render cycle.
+  // Impact: Low.
+  const handleCategoryClick = useCallback(
+    (e) => setActiveCategory(e.currentTarget.dataset.categoryId),
+    [],
+  );
+
+  // OPTIMIZATION 10: useCallback for search onChange ────────────────────────
+  // Keeps the TextField's onChange prop referentially stable so MUI doesn't
+  // re-run its internal effect that watches for prop changes.
+  // Impact: Low.
+  const handleSearchChange = useCallback((e) => setSearch(e.target.value), []);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: (theme) => theme.palette.background.default }}>
@@ -335,7 +440,7 @@ export default function SupportPage() {
       >
         <Container maxWidth="md">
           <Stack alignItems="center" spacing={1} sx={{ mb: 5 }}>
-           <TrainIcon color="primary" />
+            <TrainIcon color="primary" />
             <Typography variant="h6" fontWeight={700} letterSpacing={-0.3}>
               SouthRail
             </Typography>
@@ -350,13 +455,12 @@ export default function SupportPage() {
             </Typography>
           </Stack>
 
-          {/* Search */}
           <Box sx={{ maxWidth: 520, mx: 'auto' }}>
             <TextField
               fullWidth
               placeholder="Search — e.g. cancel booking, locked account, refund…"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={handleSearchChange}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -379,17 +483,16 @@ export default function SupportPage() {
 
           {/* ── FAQ ── */}
           <Box>
-            {/* Category filter */}
-            <Stack
-              direction="row"
-              spacing={1}
-              sx={{ mb: 3, flexWrap: 'wrap', gap: 1 }}
-            >
+            <Stack direction="row" spacing={1} sx={{ mb: 3, flexWrap: 'wrap', gap: 1 }}>
               {CATEGORIES.map((cat) => (
                 <Chip
                   key={cat.id}
                   label={cat.label}
-                  onClick={() => setActiveCategory(cat.id)}
+                  // Pass the id via data attribute so the single stable
+                  // handleCategoryClick handler can read it without a closure
+                  // per chip (see Optimization 9).
+                  data-category-id={cat.id}
+                  onClick={handleCategoryClick}
                   color={activeCategory === cat.id ? 'primary' : 'default'}
                   variant={activeCategory === cat.id ? 'filled' : 'outlined'}
                   sx={{ fontWeight: 500, cursor: 'pointer' }}
@@ -531,48 +634,16 @@ export default function SupportPage() {
             </Stack>
 
             <Grid container spacing={2}>
-              {[
-                {
-    title: 'Cancellation & Refund Policy',
-    description:
-      'Eligible bookings can be cancelled through the SouthRail cancellation process. Refund amount, cancellation charges, and refund percentage are automatically calculated according to the configured cancellation policy before cancellation is confirmed.',
-    to: '/policies/refunds',
-  },
-                {
-                  title: 'Baggage policy',
-                  description: 'Permitted luggage sizes and weights, oversized items, and how to pre-book extra bags.',
-                  to: '/policies/baggage',
-                },
-                {
-                  title: 'Accessibility & assistance',
-                  description: 'Services available for passengers with reduced mobility, visual or hearing impairments, and special dietary needs.',
-                  to: '/policies/accessibility',
-                },
-                {
-                  title: 'Privacy policy',
-                  description: 'How we collect, use, and protect your personal data in line with applicable regulations.',
-                  to: '/policies/privacy',
-                },
-              ].map((policy) => (
+              {/* OPTIMIZATION 1 applied here — iterating module-scope POLICIES array */}
+              {POLICIES.map((policy) => (
                 <Grid item xs={12} sm={6} key={policy.title}>
                   <Paper
                     elevation={0}
                     component={Link}
                     to={policy.to}
-                    sx={{
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      borderRadius: 2,
-                      p: 2.5,
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: 1.5,
-                      textDecoration: 'none',
-                      color: 'inherit',
-                      transition: 'border-color 0.15s, background-color 0.15s',
-                    }}
+                    sx={sxPolicyPaper}
                   >
-                    <InfoOutlinedIcon sx={{ fontSize: 20, color: 'primary.main', mt: 0.2, flexShrink: 0 }} />
+                    <InfoOutlinedIcon sx={sxInfoIcon} />
                     <Box>
                       <Typography variant="body2" fontWeight={700} gutterBottom>
                         {policy.title}
@@ -614,53 +685,53 @@ export default function SupportPage() {
 
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Full name" size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Email address" size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Booking reference (optional)" size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Topic"
-                    size="small"
-                    select
-                    SelectProps={{ native: true }}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
-                  >
-                    <option value="">Select a topic…</option>
-                    <option value="account">Account & login</option>
-                    <option value="bookings">Bookings & travel</option>
-                    <option value="payments">Payments & refunds</option>
-                    <option value="notifications">Notifications</option>
-                    <option value="other">Something else</option>
-                  </TextField>
-                </Grid>
+  <TextField
+    fullWidth
+    label="Booking reference (optional)"
+    size="small"
+    value={ticket.bookingReference}
+    onChange={handleBookingRefChange}
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <TextField
+    fullWidth
+    label="Topic"
+    size="small"
+    select
+    value={ticket.topic}
+    onChange={handleTopicChange}
+    SelectProps={{ native: true }}
+  >
+    <option value="">Select a topic…</option>
+    <option value="account">Account & login</option>
+    <option value="bookings">Bookings & travel</option>
+    <option value="payments">Payments & refunds</option>
+    <option value="notifications">Notifications</option>
+    <option value="other">Something else</option>
+  </TextField>
+</Grid>
                 <Grid item xs={12}>
                   <TextField
                     fullWidth
                     label="Describe your issue"
                     multiline
                     minRows={4}
-                    size="small"
-                    placeholder="Include as much detail as you can — the more context we have, the faster we can help."
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                    value={ticket.description}
+                    onChange={handleDescriptionChange}
                   />
                 </Grid>
               </Grid>
 
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
-                <Button
-                  variant="contained"
-                  disableElevation
-                  size="large"
-                  sx={{ borderRadius: 2, fontWeight: 600, px: 4 }}
-                >
-                  Submit ticket
-                </Button>
+               <Button
+  variant="contained"
+  onClick={submitTicket}
+  disabled={loading}
+>
+  {loading ? 'Submitting...' : 'Submit ticket'}
+</Button>
                 <Stack direction="row" spacing={0.75} alignItems="center">
                   <CheckCircleOutlineIcon sx={{ fontSize: 15, color: 'success.main' }} />
                   <Typography variant="caption" color="text.secondary">
