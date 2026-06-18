@@ -109,6 +109,9 @@ const [rowsPerPage, setRowsPerPage] = useState(5);
   const [cancellationOpen, setCancellationOpen] = useState(false);
 
   useEffect(() => { loadDashboard(); }, [user]);
+  useEffect(() => {
+  window.scrollTo(0, 0);
+}, []);
 
   const loadDashboard = () => {
     setLoading({ history: true, notifications: true });

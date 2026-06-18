@@ -25,8 +25,12 @@ const PnrPage = lazy(() => import('./features/booking/PnrPage.jsx'));
 const UnlockAccountPage = lazy(
   () => import('./features/auth/UnlockAccountPage.jsx')
 );
-const support= lazy(()=>import('./features/auth/SupportPage.jsx'));
-const profile=lazy(()=>import('./components/ProfilePage.jsx'))
+const MyTicketsPage = lazy(
+  () => import('./features/auth/MyTicketsPage.jsx')
+);
+const TicketDetailsPage = lazy(
+  () => import('./features/auth/TicketDetailsPage.jsx')
+);
 const router = createBrowserRouter([
   {
     path: '/',
@@ -45,7 +49,12 @@ const router = createBrowserRouter([
       { path: 'admin', element: <ProtectedRoute role="ROLE_ADMIN"><AdminPage /></ProtectedRoute> },
       { path: 'unlock-account', element: <UnlockAccountPage /> },
       {path:'support',element:<SupportPage/>},
-      {path:'profile',element:<ProfilePage/>}
+      {path:'profile',element:<ProfilePage/>},
+      {path:'my-tickets',element:<MyTicketsPage/>},
+      {
+  path: 'support/tickets/:ticketId',
+  element: <TicketDetailsPage />
+}
     ]
   }
 ]);

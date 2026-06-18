@@ -15,6 +15,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import TrainIcon from '@mui/icons-material/Train';
 import { ColorModeContext } from '../theme/AppThemeProvider.jsx';
 import { logout } from '../features/auth/authSlice.js';
+import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 
 function getInitials(name = '') {
   return name.trim().split(/\s+/).map((w) => w[0]).join('').toUpperCase().slice(0, 2);
@@ -80,6 +81,7 @@ export function Shell() {
             {/* Nav links */}
             <Button component={Link} to="/pnr" sx={navButtonSx}>PNR</Button>
             {auth.user && <Button component={Link} to="/dashboard" sx={navButtonSx}>Dashboard</Button>}
+             {auth.user && <Button component={Link} to="/support" sx={navButtonSx}>Support</Button>}
             {auth.user?.roles?.includes('ROLE_ADMIN') && (
               <Button component={Link} to="/admin" sx={navButtonSx}>Admin</Button>
             )}
@@ -162,7 +164,17 @@ export function Shell() {
                     <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon>
                     Profile
                   </MenuItem>
-
+                  <MenuItem
+  component={Link}
+  to="/my-tickets"
+  onClick={handleMenuClose}
+  sx={{ py: 1.25 }}
+>
+  <ListItemIcon>
+    <ConfirmationNumberIcon fontSize="small" />
+  </ListItemIcon>
+  My Tickets
+</MenuItem>
                   <Divider />
 
                   <MenuItem onClick={signOut} sx={{ py: 1.25, color: 'error.main' }}>
@@ -171,6 +183,7 @@ export function Shell() {
                     </ListItemIcon>
                     Sign out
                   </MenuItem>
+
                 </Menu>
               </>
             ) : (

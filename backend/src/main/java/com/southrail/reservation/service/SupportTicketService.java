@@ -6,11 +6,14 @@ import com.southrail.reservation.entity.User;
 import com.southrail.reservation.repository.SupportTicketRepository;
 import com.southrail.reservation.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +37,7 @@ public class SupportTicketService {
         User user = userRepository
                 .findByEmailIgnoreCase(email)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                        new IllegalStateException("User not found"));
         ticket.setFullName(user.getFullName());
         ticket.setEmail(user.getEmail());
 
@@ -46,5 +49,26 @@ public class SupportTicketService {
         ticket.setCreatedAt(LocalDateTime.now());
 
         return repository.save(ticket);
+    }
+    public List<SupportTicket> getMyTickets() {
+
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        return repository.findByEmailOrderByCreatedAtDesc(email);
+    }
+
+    public SupportTicket getMyTicket(UUID ticketId) {
+
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        return repository.findByIdAndEmail(ticketId, email)
+                .orElseThrow(() ->
+                        new IllegalStateException("Ticket not found"));
     }
 }

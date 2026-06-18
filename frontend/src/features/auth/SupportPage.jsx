@@ -1,8 +1,20 @@
-import { useState, useMemo, useCallback, memo } from 'react';
+import { useState, useMemo, useCallback, memo,useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Box, Button, Chip, Collapse, Container, Divider, Grid,
-  InputAdornment, Paper, Stack, TextField, Typography,
+  Alert,
+  Snackbar,
+  Box,
+  Button,
+  Chip,
+  Collapse,
+  Container,
+  Divider,
+  Grid,
+  InputAdornment,
+  Paper,
+  Stack,
+  TextField,
+  Typography,
 } from '@mui/material';
 import api from '../../services/api.js';
 import TrainIcon from '@mui/icons-material/Train';
@@ -334,7 +346,15 @@ const ContactCard = memo(function ContactCard({ channel }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SupportPage() {
+  
   const [search, setSearch] = useState('');
+  
+   const [snackbar, setSnackbar] = useState({
+  open: false,
+  severity: 'success',
+  message: '',
+});
+
   const [ticket, setTicket] = useState({
     bookingReference: '',
     topic: '',
@@ -368,13 +388,59 @@ export default function SupportPage() {
   // the latest form values — identical behaviour to before.
   // Impact: Low-medium.
   const [loading, setLoading] = useState(false);
-  const submitTicket = useCallback(async () => {
+  const [submitted, setSubmitted] = useState(false);
+  const validateTicket = useCallback(() => {
+  const topic = ticket.topic.trim();
+  const description = ticket.description.trim();
+
+  if (!topic) {
+    return 'Please select a topic.';
+  }
+
+  if (!description) {
+    return 'Please enter issue description.';
+  }
+
+  if (description.length < 10) {
+    return 'Description must contain at least 10 characters.';
+  }
+
+  if (description.length > 1000) {
+    return 'Description cannot exceed 1000 characters.';
+  }
+
+  return '';
+}, [ticket]);
+
+const submitTicket = useCallback(async () => {
+  setSubmitted(true);
+
+  const validationMessage = validateTicket();
+
+  if (validationMessage) {
+    setSnackbar({
+      open: true,
+      severity: 'error',
+      message: validationMessage,
+    });
+    return;
+  }
+
   try {
     setLoading(true);
 
-    const response = await api.post('/support/tickets', ticket);
+    const response = await api.post('/support/tickets', {
+      bookingReference: ticket.bookingReference.trim(),
+      topic: ticket.topic.trim(),
+      description: ticket.description.trim(),
+    });
 
-    alert(`Ticket Created Successfully.\nTicket ID : ${response.data.ticketId}`);
+    const val=response?.data?.id.slice(0, 8).toUpperCase();
+    setSnackbar({
+      open: true,
+      severity: 'success',
+      message: `Support ticket created successfully. Ticket ID: ${val}`,
+    });
 
     setTicket({
       bookingReference: '',
@@ -382,13 +448,18 @@ export default function SupportPage() {
       description: '',
     });
 
+    setSubmitted(false);
   } catch (error) {
     console.error(error);
-    alert('Failed to create ticket');
+    setSnackbar({
+      open: true,
+      severity: 'error',
+      message: 'Failed to create support ticket. Please try again.',
+    });
   } finally {
     setLoading(false);
   }
-}, [ticket]);
+}, [ticket, validateTicket]);
 
   // OPTIMIZATION 8: useCallback for ticket field onChange handlers ──────────
   // Each TextField previously received a new arrow function on every render.
@@ -425,7 +496,10 @@ export default function SupportPage() {
   // re-run its internal effect that watches for prop changes.
   // Impact: Low.
   const handleSearchChange = useCallback((e) => setSearch(e.target.value), []);
-
+  
+useEffect(() => {
+  window.scrollTo(0, 0);
+}, []);
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: (theme) => theme.palette.background.default }}>
 
@@ -696,14 +770,16 @@ export default function SupportPage() {
 
 <Grid item xs={12} sm={6}>
   <TextField
-    fullWidth
-    label="Topic"
-    size="small"
-    select
-    value={ticket.topic}
-    onChange={handleTopicChange}
-    SelectProps={{ native: true }}
-  >
+  fullWidth
+  label="Topic"
+  size="small"
+  select
+  value={ticket.topic}
+  onChange={handleTopicChange}
+  error={submitted && !ticket.topic.trim()}
+  helperText={submitted && !ticket.topic.trim() ? 'Topic is required' : ''}
+  SelectProps={{ native: true }}
+>
     <option value="">Select a topic…</option>
     <option value="account">Account & login</option>
     <option value="bookings">Bookings & travel</option>
@@ -714,13 +790,30 @@ export default function SupportPage() {
 </Grid>
                 <Grid item xs={12}>
                   <TextField
-                    fullWidth
-                    label="Describe your issue"
-                    multiline
-                    minRows={4}
-                    value={ticket.description}
-                    onChange={handleDescriptionChange}
-                  />
+  fullWidth
+  label="Describe your issue"
+  multiline
+  minRows={4}
+  value={ticket.description}
+  onChange={handleDescriptionChange}
+  error={
+    submitted &&
+    (
+      !ticket.description.trim() ||
+      ticket.description.trim().length < 10 ||
+      ticket.description.trim().length > 1000
+    )
+  }
+  helperText={
+    submitted && !ticket.description.trim()
+      ? 'Description is required'
+      : submitted && ticket.description.trim().length < 10
+      ? 'Description must contain at least 10 characters'
+      : submitted && ticket.description.trim().length > 1000
+      ? 'Description cannot exceed 1000 characters'
+      : `${ticket.description.length}/1000`
+  }
+/>
                 </Grid>
               </Grid>
 
@@ -743,8 +836,35 @@ export default function SupportPage() {
           </Paper>
 
         </Stack>
+<Snackbar
+  open={snackbar.open}
+  autoHideDuration={3000}
+  onClose={() =>
+    setSnackbar((prev) => ({
+      ...prev,
+      open: false,
+    }))
+  }
+  anchorOrigin={{
+    vertical: 'bottom',
+    horizontal: 'right',
+  }}
+>
+  <Alert
+    severity={snackbar.severity}
+    variant="filled"
+    sx={{
+      minWidth: 320,
+      borderRadius: 2,
+      boxShadow: 6,
+    }}
+  >
+    {snackbar.message}
+  </Alert>
+</Snackbar>
       </Container>
 
     </Box>
+    
   );
 }
