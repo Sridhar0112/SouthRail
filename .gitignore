@@ -1,0 +1,17 @@
+# Environment files
+.env
+.env.*
+
+# Maven build output
+target/
+
+# Node.js dependencies
+node_modules/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Logs
+*.log
+logs/
