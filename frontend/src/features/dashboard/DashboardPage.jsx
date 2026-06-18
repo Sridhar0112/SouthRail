@@ -5,8 +5,6 @@ import TablePagination from '@mui/material/TablePagination';
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Chip,
   Container,
   Grid,
@@ -194,14 +192,15 @@ useEffect(() => {
                 onRetry={loadDashboard}
                 onCancelBooking={openCancellation}
               />
+              
             </Grid>
             <Grid item xs={12} lg={4}>
-              <TravelInsightsCard loading={loading.history} error={errors.history} metrics={metrics} />
+             <RecentActivitySection
+  bookings={sortedBookings}
+  loading={loading.history}
+/>
             </Grid>
           </Grid>
-
-          {/* Recent activity */}
-          <RecentActivitySection bookings={sortedBookings} loading={loading.history} />
 
           {/* Booking history */}
           <BookingHistoryCard
@@ -214,16 +213,6 @@ useEffect(() => {
             statusOptions={metrics.statusOptions}
             historyLoaded={historyLoaded}
             onRetry={loadDashboard}
-            action={
-  <Button
-    component={Link}
-    to="/bookings"
-    variant="outlined"
-    size="small"
-  >
-    View All
-  </Button>
-}
             onCancelBooking={openCancellation}
           />
           <TablePagination
@@ -240,13 +229,6 @@ useEffect(() => {
 />
 
           {/* Notifications */}
-          <NotificationsCard
-            loading={loading.notifications}
-            error={errors.notifications}
-            notifications={notifications || []}
-            notificationsLoaded={notificationsLoaded}
-            onRetry={loadDashboard}
-          />
         </Stack>
       </Container>
 
@@ -270,8 +252,8 @@ function HeroSection({ displayName, displayEmail, roles, loading, metrics, onRef
     <Box
       sx={{
         background: `linear-gradient(135deg, ${greens.dark} 0%, ${greens.main} 60%, ${greens.mid} 100%)`,
-        pt: { xs: 4, md: 5 },
-        pb: { xs: 6, md: 7 },
+        pt: { xs: 3, md: 4 },
+        pb: { xs: 3, md: 4 },
         px: { xs: 2, md: 0 },
         position: 'relative',
         overflow: 'hidden',
@@ -300,7 +282,7 @@ function HeroSection({ displayName, displayEmail, roles, loading, metrics, onRef
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5} alignItems={{ xs: 'flex-start', sm: 'center' }}>
             <Avatar
               sx={{
-                width: 72, height: 72,
+                width: 56, height: 56,
                 bgcolor: alpha('#ffffff', 0.92), color: greens.dark,
                 fontSize: 28, fontWeight: 900, border: `3px solid ${alpha('#fff', 0.3)}`,
                 flexShrink: 0,
@@ -516,28 +498,72 @@ function KpiSkeleton() {
 function NextJourneySection({ loading, error, bookings, onRetry, onCancelBooking }) {
   const theme = useTheme();
   const t = getDashboardTokens(theme);
-  const next = bookings?.[0];
+  const visibleBookings = bookings?.slice(0, 3) || [];
 
   return (
-    <SectionCard title="Next Journey" subtitle="Your upcoming reservation" icon={<TrainIcon sx={{ color: t.primary }} />}>
+    <SectionCard
+      title="Upcoming Journeys"
+      subtitle={`Showing next ${Math.min(bookings?.length || 0, 3)} upcoming trips`}
+      icon={<TrainIcon sx={{ color: t.primary }} />}
+      action={
+        bookings?.length > 3 ? (
+          <Button
+            component={Link}
+            to="/bookings"
+            size="small"
+            variant="outlined"
+          >
+            View All
+          </Button>
+        ) : null
+      }
+    >
       {loading && <JourneySkeleton />}
-      {!loading && error && <ErrorState title="Bookings unavailable" message={error} actionLabel="Retry" onAction={onRetry} />}
-      {!loading && !error && !next && (
+
+      {!loading && error && (
+        <ErrorState
+          title="Bookings unavailable"
+          message={error}
+          actionLabel="Retry"
+          onAction={onRetry}
+        />
+      )}
+
+      {!loading && !error && visibleBookings.length === 0 && (
         <Box sx={{ py: 5, textAlign: 'center' }}>
           <TrainIcon sx={{ fontSize: 56, color: alpha(t.primary, 0.18), mb: 1.5 }} />
-          <Typography fontWeight={700} color={t.textMain} gutterBottom>No upcoming trips</Typography>
-          <Typography color={t.textSub} variant="body2" sx={{ mb: 2 }}>Search trains and book your next adventure.</Typography>
-          <Button component={Link} to="/" variant="contained" startIcon={<SearchIcon />}
-            sx={{ bgcolor: t.primary, color: theme.palette.primary.contrastText, '&:hover': { bgcolor: t.primaryDark }, borderRadius: 2 }}>
+          <Typography fontWeight={700} color={t.textMain} gutterBottom>
+            No upcoming trips
+          </Typography>
+          <Typography color={t.textSub} variant="body2" sx={{ mb: 2 }}>
+            Search trains and book your next adventure.
+          </Typography>
+          <Button
+            component={Link}
+            to="/"
+            variant="contained"
+            startIcon={<SearchIcon />}
+            sx={{
+              bgcolor: t.primary,
+              color: theme.palette.primary.contrastText,
+              '&:hover': { bgcolor: t.primaryDark },
+              borderRadius: 2,
+            }}
+          >
             Search Trains
           </Button>
         </Box>
       )}
-      {!loading && !error && next && (
+
+      {!loading && !error && visibleBookings.length > 0 && (
         <Stack spacing={2}>
-          <TicketCard booking={next} onCancelBooking={onCancelBooking} featured />
-          {bookings.slice(1, 3).map((b) => (
-            <TicketCard key={b.id || b.pnr} booking={b} onCancelBooking={onCancelBooking} />
+          {visibleBookings.map((booking, index) => (
+            <TicketCard
+              key={booking.id || booking.pnr}
+              booking={booking}
+              onCancelBooking={onCancelBooking}
+              featured={index === 0}
+            />
           ))}
         </Stack>
       )}
@@ -753,9 +779,48 @@ function RecentActivitySection({ bookings, loading }) {
             </Box>
             <Box sx={{ pb: 2.5, flex: 1 }}>
               <Typography fontWeight={800} fontSize={14} color={t.textMain}>{item.title}</Typography>
-              <Typography fontSize={13} color={t.textSub}>{item.detail}</Typography>
-              <Typography fontSize={11} color={t.textSub} sx={{ mt: 0.25 }}>{item.time}</Typography>
-            </Box>
+            <Typography
+  fontSize={13}
+  color={t.textSub}
+  sx={{ mb: 0.5 }}
+>
+  {item.detail}
+</Typography>
+
+<Stack
+  direction="row"
+  spacing={1}
+  alignItems="center"
+  sx={{ mt: 0.5 }}
+>
+ <Chip
+  component={Link}
+  clickable
+  to={`/pnr?pnr=${item.pnr}`}
+  label={`PNR: ${item.pnr}`}
+  size="small"
+  color="primary"
+  variant="outlined"
+  sx={{
+    fontWeight: 700,
+    cursor: 'pointer'
+  }}
+/>
+  <Typography
+    variant="caption"
+    color={t.textSub}
+  >
+    •
+  </Typography>
+
+  <Typography
+    variant="caption"
+    color={t.textSub}
+  >
+    {item.time}
+  </Typography>
+</Stack>  
+                       </Box>
           </Box>
         ))}
       </Stack>
@@ -770,7 +835,7 @@ function buildActivity(bookings, t) {
     const isConfirmed = status === 'CONFIRMED';
     return {
       title: isCancelled ? 'Booking cancelled' : isConfirmed ? 'Booking confirmed' : 'Booking created',
-      detail: `${b.trainName || 'Train'} · ${formatRoute(b)}`,
+      detail: `${b.trainName || 'Train'} · ${formatRoute(b)}`,pnr: b.pnr,
       time: b.createdAt ? formatDateTime(b.createdAt) : formatDate(b.journeyDate),
       icon: isCancelled ? <CancelOutlinedIcon fontSize="small" /> : isConfirmed ? <CheckCircleIcon fontSize="small" /> : <AddCircleOutlineIcon fontSize="small" />,
       color: isCancelled ? t.error : isConfirmed ? t.primary : t.secondary,
