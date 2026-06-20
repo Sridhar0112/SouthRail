@@ -298,7 +298,7 @@ const ContactCard = memo(function ContactCard({ channel }) {
         gap: 1.5,
       }}
     >
-      <Stack direction="row" alignItems="center" justifyContent="space-between">
+      <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between" spacing={1.5}>
         <Box
           sx={{
             width: 44,
@@ -509,7 +509,7 @@ useEffect(() => {
           bgcolor: 'background.paper',
           borderBottom: '1px solid',
           borderColor: 'divider',
-          py: { xs: 6, sm: 8 },
+          py: { xs: 4, sm: 8 },
         }}
       >
         <Container maxWidth="md">
@@ -521,7 +521,7 @@ useEffect(() => {
           </Stack>
 
           <Stack alignItems="center" spacing={1.5} sx={{ mb: 4, textAlign: 'center' }}>
-            <Typography variant="h3" fontWeight={800} letterSpacing={-0.5}>
+            <Typography variant="h3" fontWeight={800} letterSpacing={-0.5} sx={{ fontSize: { xs: '2rem', sm: '3rem' }, overflowWrap: 'anywhere' }}>
               How can we help?
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 480 }}>
@@ -529,7 +529,7 @@ useEffect(() => {
             </Typography>
           </Stack>
 
-          <Box sx={{ maxWidth: 520, mx: 'auto' }}>
+          <Box sx={{ width: '100%', maxWidth: 520, mx: 'auto' }}>
             <TextField
               fullWidth
               placeholder="Search — e.g. cancel booking, locked account, refund…"
@@ -618,7 +618,7 @@ useEffect(() => {
 
             <Grid container spacing={2}>
               {CONTACT_CHANNELS.map((ch) => (
-                <Grid item xs={12} sm={4} key={ch.title}>
+                <Grid item xs={12} md={4} key={ch.title}>
                   <ContactCard channel={ch} />
                 </Grid>
               ))}
@@ -741,7 +741,10 @@ useEffect(() => {
               border: '1px solid',
               borderColor: 'divider',
               borderRadius: 3,
-              p: { xs: 3, sm: 4 },
+              p: { xs: 2, sm: 4 },
+              width: '100%',
+              maxWidth: '100%',
+              minWidth: 0,
             }}
           >
             <Stack spacing={3}>
@@ -822,6 +825,7 @@ useEffect(() => {
   variant="contained"
   onClick={submitTicket}
   disabled={loading}
+  sx={{ width: { xs: '100%', sm: 'auto' } }}
 >
   {loading ? 'Submitting...' : 'Submit ticket'}
 </Button>
@@ -854,7 +858,8 @@ useEffect(() => {
     severity={snackbar.severity}
     variant="filled"
     sx={{
-      minWidth: 320,
+      width: { xs: 'calc(100vw - 32px)', sm: 'auto' },
+      minWidth: { xs: 0, sm: 320 },
       borderRadius: 2,
       boxShadow: 6,
     }}

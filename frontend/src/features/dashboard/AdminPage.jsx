@@ -517,6 +517,7 @@ function AdminDataTable({
             </Box>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
               <TextField
+                fullWidth
                 size="small"
                 label={`Search ${title.toLowerCase()}`}
                 value={searchValue}
@@ -536,7 +537,7 @@ function AdminDataTable({
                   label="Filter"
                   value={filterValue}
                   onChange={(event) => onFilter(event.target.value)}
-                  sx={{ minWidth: 180 }}
+                  sx={{ minWidth: { xs: '100%', sm: 180 } }}
                 >
                   {filterOptions.map((option) => (
                     <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
@@ -552,7 +553,7 @@ function AdminDataTable({
           {!error && rows.length === 0 && <EmptyState title={emptyTitle} message={emptyMessage} />}
           {!error && rows.length > 0 && (
             <TableContainer component={Paper} variant="outlined" sx={{ width: '100%', overflowX: 'auto' }}>
-              <Table size="small" aria-label={`${title} table`}>
+              <Table size="small" aria-label={`${title} table`} sx={{ minWidth: { xs: 680, md: 720 } }}>
                 <TableHead>
                   <TableRow>
                     {columns.map((column) => (

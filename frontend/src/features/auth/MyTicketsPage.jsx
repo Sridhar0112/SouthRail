@@ -144,9 +144,9 @@ function PageHero({ ticketCount, loading }) {
         sx={{
           position: 'absolute',
           top: -60,
-          right: -60,
-          width: 220,
-          height: 220,
+          right: { xs: -120, sm: -60 },
+          width: { xs: 180, sm: 220 },
+          height: { xs: 180, sm: 220 },
           borderRadius: '50%',
           background: 'radial-gradient(circle, rgba(255,255,255,0.16), transparent 70%)',
           pointerEvents: 'none',
@@ -156,9 +156,9 @@ function PageHero({ ticketCount, loading }) {
         sx={{
           position: 'absolute',
           bottom: -80,
-          left: -40,
-          width: 240,
-          height: 240,
+          left: { xs: -120, sm: -40 },
+          width: { xs: 180, sm: 240 },
+          height: { xs: 180, sm: 240 },
           borderRadius: '50%',
           background: 'radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%)',
           pointerEvents: 'none',
@@ -172,7 +172,7 @@ function PageHero({ ticketCount, loading }) {
         spacing={2}
         sx={{ position: 'relative', zIndex: 1 }}
       >
-        <Stack direction="row" alignItems="center" spacing={2}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2} sx={{ minWidth: 0 }}>
           <Avatar
             sx={{
               width: 52,
@@ -184,7 +184,7 @@ function PageHero({ ticketCount, loading }) {
           >
             <SupportAgentIcon />
           </Avatar>
-          <Box>
+          <Box sx={{ minWidth: 0 }}>
             <Typography
               variant="overline"
               sx={{ opacity: 0.78, fontWeight: 700, letterSpacing: 1.1 }}
@@ -194,11 +194,11 @@ function PageHero({ ticketCount, loading }) {
             <Typography
               variant="h4"
               fontWeight={800}
-              sx={{ fontSize: { xs: '1.5rem', sm: '1.85rem' }, lineHeight: 1.15 }}
+              sx={{ fontSize: { xs: '1.5rem', sm: '1.85rem' }, lineHeight: 1.15, overflowWrap: 'anywhere' }}
             >
               My Support Tickets
             </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5, maxWidth: 440 }}>
+            <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5, maxWidth: 440, overflowWrap: 'anywhere' }}>
               Track every conversation with our support team, follow up on open cases, and
               review resolutions — all in one place.
             </Typography>
@@ -326,7 +326,7 @@ function StatsDashboard({ tickets, loading }) {
     return (
       <Grid container spacing={2} mb={3.5}>
         {[1, 2, 3, 4].map((n) => (
-          <Grid item xs={6} sm={3} key={n}>
+          <Grid item xs={12} sm={6} md={3} key={n}>
             <Card variant="outlined" sx={{ borderRadius: 3 }}>
               <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
                 <Stack direction="row" alignItems="center" spacing={1.5}>
@@ -347,7 +347,7 @@ function StatsDashboard({ tickets, loading }) {
   return (
     <Grid container spacing={2} mb={3.5}>
       {cards.map((c, i) => (
-        <Grid item xs={6} sm={3} key={c.key}>
+        <Grid item xs={12} sm={6} md={3} key={c.key}>
           <StatCard
             icon={c.icon}
             label={c.label}
@@ -367,7 +367,7 @@ function TicketCard({ ticket, onViewDetails, isLast }) {
   const accent = STATUS_ACCENT[ticket.status] ?? STATUS_ACCENT.CLOSED;
   const shortId = ticket.id?.slice(0, 8).toUpperCase();
   return (
-    <Box sx={{ position: 'relative', display: 'flex' }}>
+    <Box sx={{ position: 'relative', display: 'flex', minWidth: 0, width: '100%' }}>
       {/* Timeline rail */}
       <Box
         sx={{
@@ -414,6 +414,7 @@ function TicketCard({ ticket, onViewDetails, isLast }) {
           overflow: 'hidden',
           borderColor: theme.palette.custom.cardBorder,
           flex: 1,
+          minWidth: 0,
           mb: 2,
           transition: 'box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease',
           '&:hover': {
@@ -463,6 +464,7 @@ function TicketCard({ ticket, onViewDetails, isLast }) {
                   letterSpacing: 0.5,
                   fontWeight: 700,
                   fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                  overflowWrap: 'anywhere',
                 }}
               >
                 {shortId}
@@ -504,6 +506,7 @@ function TicketCard({ ticket, onViewDetails, isLast }) {
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
+              overflowWrap: 'anywhere',
             }}
           >
             {ticket.description}
@@ -556,7 +559,7 @@ function LabelValue({ label, value, mono = false, icon }) {
       <Typography
         variant="body2"
         fontWeight={600}
-        sx={mono ? { fontFamily: 'monospace' } : undefined}
+        sx={{ ...(mono ? { fontFamily: 'monospace' } : {}), overflowWrap: 'anywhere' }}
       >
         {value}
       </Typography>

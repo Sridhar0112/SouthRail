@@ -60,9 +60,9 @@ const checkPasswordStrength = (password) => {
 
   if (successMessage) {
     return (
-      <Container maxWidth="sm" sx={{ py: 8 }}>
-        <Paper sx={{ p: { xs: 3, sm: 5 }, textAlign: 'center' }}>
-          <Typography variant="h4" fontWeight={800} gutterBottom>
+      <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 8 } }}>
+        <Paper sx={{ p: { xs: 2, sm: 5 }, textAlign: 'center', width: '100%', maxWidth: '100%' }}>
+          <Typography variant="h4" fontWeight={800} gutterBottom sx={{ fontSize: { xs: '1.65rem', sm: '2.125rem' } }}>
             Verify your email
           </Typography>
 
@@ -89,9 +89,9 @@ const checkPasswordStrength = (password) => {
   }
 
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
-      <Paper sx={{ p: { xs: 3, sm: 5 } }}>
-        <Typography variant="h4" fontWeight={800} gutterBottom>
+    <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 8 } }}>
+      <Paper sx={{ p: { xs: 2, sm: 5 }, width: '100%', maxWidth: '100%' }}>
+        <Typography variant="h4" fontWeight={800} gutterBottom sx={{ fontSize: { xs: '1.65rem', sm: '2.125rem' } }}>
           Create account
         </Typography>
 
@@ -102,7 +102,7 @@ const checkPasswordStrength = (password) => {
         {apiError && <Alert severity="error" sx={{ mb: 2 }}>{apiError}</Alert>}
 
         <Box component="form" onSubmit={form.handleSubmit(onSubmit)}>
-          <Stack spacing={2}>
+          <Stack spacing={2} sx={{ '& .MuiTextField-root': { width: '100%' } }}>
             <TextField
               label="Full name"
               error={!!form.formState.errors.fullName}
@@ -181,11 +181,11 @@ const checkPasswordStrength = (password) => {
   </Typography>
 )}
 
-            <Button type="submit" variant="contained" startIcon={<PersonAddIcon />} disabled={loading}>
+            <Button type="submit" variant="contained" startIcon={<PersonAddIcon />} disabled={loading} fullWidth>
               {loading ? 'Creating account...' : 'Register'}
             </Button>
 
-            <Button component={Link} to="/login">
+            <Button component={Link} to="/login" fullWidth>
               Already have an account? Login
             </Button>
           </Stack>

@@ -454,8 +454,8 @@ function TicketDrawer({
       aria-labelledby="ticket-drawer-title"
       PaperProps={{
         sx: {
-          width: { xs: '100vw', sm: '92vw', md: 640 },
-          maxWidth: 680,
+          width: { xs: 'calc(100vw - 24px)', sm: 520, md: 640 },
+          maxWidth: '100vw',
           bgcolor: 'background.paper',
           backgroundImage: 'none',
           display: 'flex',
@@ -1031,7 +1031,7 @@ export default function AdminSupportTicketsPage() {
               <Box>
                 <Stack direction="row" alignItems="center" spacing={1.5} mb={0.5}>
                   <SupportAgentIcon sx={{ fontSize: 28, opacity: 0.9 }} />
-                  <Typography variant="h4" fontWeight={900} sx={{ lineHeight: 1 }}>
+                  <Typography variant="h4" fontWeight={900} sx={{ lineHeight: 1.1, fontSize: { xs: '1.75rem', sm: '2.125rem' }, overflowWrap: 'anywhere' }}>
                     Support Tickets
                   </Typography>
                 </Stack>
@@ -1040,7 +1040,7 @@ export default function AdminSupportTicketsPage() {
                 </Typography>
               </Box>
 
-              <Stack direction="row" spacing={1.5} flexShrink={0}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} flexShrink={0} flexWrap="wrap" useFlexGap sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
                 <Button
                   variant="contained"
                   color="secondary"
@@ -1105,7 +1105,7 @@ export default function AdminSupportTicketsPage() {
                   onChange={(e) => setSearch(e.target.value)}
                   size="small"
                   aria-label="Search tickets"
-                  sx={{ flex: 1, maxWidth: { lg: 480 } }}
+                  sx={{ flex: 1, width: '100%', maxWidth: { lg: 480 } }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -1115,7 +1115,7 @@ export default function AdminSupportTicketsPage() {
                   }}
                 />
 
-                <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center" role="group" aria-label="Filter by status">
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center" role="group" aria-label="Filter by status">
                   <FilterListIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
                   {STATUS_OPTIONS.map((status) => {
                     const active = statusFilter === status;
@@ -1179,8 +1179,8 @@ export default function AdminSupportTicketsPage() {
             {/* Table */}
             {!error && (
               <>
-                <TableContainer>
-                  <Table size="small">
+                <TableContainer sx={{ overflowX: 'auto' }}>
+                  <Table size="small" sx={{ minWidth: { xs: 900, md: 980 } }}>
                     <TableHead>
                       <TableRow
                         sx={{

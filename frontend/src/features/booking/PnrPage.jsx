@@ -199,7 +199,7 @@ function PnrResult({ result, onClear, onCancelBooking }) {
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
             <Box>
               <Typography color="text.secondary">PNR</Typography>
-              <Typography variant="h3" fontWeight={900}>{result.pnr || '-'}</Typography>
+              <Typography variant="h3" fontWeight={900} sx={{ fontSize: { xs: '2rem', sm: '3rem' }, overflowWrap: 'anywhere' }}>{result.pnr || '-'}</Typography>
               <Typography variant="h6" fontWeight={800} sx={{ mt: 1 }}>
                 {result.trainName || 'Train'} {result.trainNumber ? `- ${result.trainNumber}` : ''}
               </Typography>
@@ -299,7 +299,7 @@ function PassengerSection({ passengers }) {
         {passengers.length === 0 ? (
           <EmptyState title="Passenger details not available" message="Passenger status was not returned for this booking." />
         ) : (
-          <TableContainer component={Paper} variant="outlined">
+          <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto' }}>
             <Table size="small" aria-label="Passenger status table">
               <TableHead>
                 <TableRow>
@@ -371,7 +371,7 @@ function Detail({ label, value }) {
 
 function SummaryLine({ label, value, strong }) {
   return (
-    <Stack direction="row" justifyContent="space-between" spacing={2}>
+    <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1}>
       <Typography color="text.secondary">{label}</Typography>
       {typeof value === 'string'
         ? <Typography fontWeight={strong ? 900 : 800}>{value}</Typography>

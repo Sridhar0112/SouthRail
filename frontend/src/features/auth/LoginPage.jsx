@@ -143,9 +143,9 @@ export default function LoginPage() {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
-      <Paper sx={{ p: { xs: 3, sm: 5 } }}>
-        <Typography variant="h4" fontWeight={800} gutterBottom>Welcome back</Typography>
+    <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 8 } }}>
+      <Paper sx={{ p: { xs: 2, sm: 5 }, width: '100%', maxWidth: '100%' }}>
+        <Typography variant="h4" fontWeight={800} gutterBottom sx={{ fontSize: { xs: '1.65rem', sm: '2.125rem' } }}>Welcome back</Typography>
         <Typography color="text.secondary" sx={{ mb: 3 }}>
           Book faster across Chennai, Bengaluru, Kochi, Hyderabad, Madurai, Mangaluru, and more.
         </Typography>
@@ -164,7 +164,7 @@ export default function LoginPage() {
         {verificationMessage && <Alert severity="success" sx={{ mb: 2 }}>{verificationMessage}</Alert>}
 
         <Box component="form" onSubmit={handleSubmit(onSubmit)}>
-          <Stack spacing={2}>
+          <Stack spacing={2} sx={{ '& .MuiTextField-root': { width: '100%' } }}>
             <TextField label="Email" autoComplete="email" error={!!errors.email}
               helperText={errors.email?.message}
               {...register('email', { required: 'Email is required' })} />
@@ -201,11 +201,11 @@ export default function LoginPage() {
                 </Button>
               </Typography>
             )}
-            <Button type="submit" variant="contained" startIcon={<LoginIcon />} disabled={loading}>
+            <Button type="submit" variant="contained" startIcon={<LoginIcon />} disabled={loading} fullWidth>
               {loading ? 'Logging in...' : 'Login'}
             </Button>
-            <Button component={Link} to="/forgot-password">Forgot password</Button>
-            <Button component={Link} to="/register">Create a new account</Button>
+            <Button component={Link} to="/forgot-password" fullWidth>Forgot password</Button>
+            <Button component={Link} to="/register" fullWidth>Create a new account</Button>
           </Stack>
         </Box>
       </Paper>

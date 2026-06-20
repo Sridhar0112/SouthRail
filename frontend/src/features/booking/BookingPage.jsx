@@ -104,7 +104,7 @@ export default function BookingPage() {
 
   if (response) {
     return (
-      <Container maxWidth="lg" sx={{ py: 5 }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>
         <Stepper activeStep={2} sx={{ mb: 3 }}>
           {steps.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
         </Stepper>
@@ -114,9 +114,9 @@ export default function BookingPage() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 5 }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>
       <Typography variant="h4" fontWeight={800} gutterBottom>Book ticket</Typography>
-      <Stepper activeStep={activeStep} sx={{ mb: 3 }}>
+      <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 3, overflowX: 'auto', pb: 1 }}>
         {steps.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
       </Stepper>
 
@@ -137,7 +137,7 @@ export default function BookingPage() {
           </Paper>
         )}
 
-        <Paper sx={{ p: { xs: 2, md: 4 } }}>
+        <Paper sx={{ p: { xs: 2, md: 4 }, width: '100%', maxWidth: '100%', minWidth: 0 }}>
           <Box component="form" onSubmit={form.handleSubmit(submit)}>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={4}>
@@ -162,12 +162,12 @@ export default function BookingPage() {
                     validate: (value) => value >= today || 'Please select today or a future journey date.'
                   })} />
               </Grid>
-              <Grid item xs={6} sm={3}>
+              <Grid item xs={12} sm={3}>
                 <TextField select fullWidth label="Class" disabled={submitting} {...form.register('travelClass', { required: 'Travel class is required' })}>
                   {travelClasses.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
                 </TextField>
               </Grid>
-              <Grid item xs={6} sm={3}>
+              <Grid item xs={12} sm={3}>
                 <TextField select fullWidth label="Quota" disabled={submitting} {...form.register('quota', { required: 'Quota is required' })}>
                   {quotas.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
                 </TextField>
@@ -178,7 +178,7 @@ export default function BookingPage() {
               </Grid>
               {fields.map((field, index) => (
                 <Grid item xs={12} key={field.id}>
-                  <Paper variant="outlined" sx={{ p: 2 }}>
+                  <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, width: '100%', maxWidth: '100%', minWidth: 0 }}>
                     <Grid container spacing={2}>
                       <Grid item xs={12} md={4}>
                         <TextField fullWidth label="Passenger name" disabled={submitting}
@@ -186,7 +186,7 @@ export default function BookingPage() {
                           helperText={form.formState.errors.passengers?.[index]?.fullName?.message}
                           {...form.register(`passengers.${index}.fullName`, { required: 'Passenger name is required' })} />
                       </Grid>
-                      <Grid item xs={6} md={2}>
+                      <Grid item xs={12} sm={6} md={2}>
                         <TextField fullWidth label="Age" type="number" disabled={submitting}
                           error={!!form.formState.errors.passengers?.[index]?.age}
                           helperText={form.formState.errors.passengers?.[index]?.age?.message}
@@ -197,7 +197,7 @@ export default function BookingPage() {
                             max: { value: 125, message: 'Age must be 125 or below' }
                           })} />
                       </Grid>
-                      <Grid item xs={6} md={3}>
+                      <Grid item xs={12} sm={6} md={3}>
                         <TextField select fullWidth label="Gender" disabled={submitting} {...form.register(`passengers.${index}.gender`, { required: 'Gender is required' })}>
                           {['Male', 'Female', 'Other'].map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
                         </TextField>
@@ -217,7 +217,7 @@ export default function BookingPage() {
               </Grid>
 
               <Grid item xs={12}>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
                   <Button type="button" startIcon={<AddIcon />} disabled={submitting}
                     onClick={() => append({ fullName: '', age: 30, gender: 'Male', berthPreference: 'NO_PREFERENCE' })}>
                     Add passenger
@@ -244,14 +244,14 @@ function TrainSummary({ train, values }) {
     <Paper sx={{ p: 2 }}>
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={12} md={5}>
-          <Typography variant="h6" fontWeight={800}>{train.name} - {train.number}</Typography>
+          <Typography variant="h6" fontWeight={800} sx={{ overflowWrap: 'anywhere' }}>{train.name} - {train.number}</Typography>
           <Typography color="text.secondary">{train.category}</Typography>
         </Grid>
-        <Grid item xs={6} md={2}>
+        <Grid item xs={12} sm={6} md={2}>
           <Typography color="text.secondary">From</Typography>
           <Typography fontWeight={800}>{values.sourceStationCode || '-'}</Typography>
         </Grid>
-        <Grid item xs={6} md={2}>
+        <Grid item xs={12} sm={6} md={2}>
           <Typography color="text.secondary">To</Typography>
           <Typography fontWeight={800}>{values.destinationStationCode || '-'}</Typography>
         </Grid>
@@ -283,12 +283,12 @@ function ReviewPanel({ review, isCurrent, passengerCount }) {
         <Grid item xs={12} md={5}>
           <Typography variant="h6" fontWeight={800}>Fare breakdown</Typography>
           {review.fareBreakdown?.map((line) => (
-            <Stack key={line.label} direction="row" justifyContent="space-between">
+            <Stack key={line.label} direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between">
               <Typography color="text.secondary">{line.label}</Typography>
               <Typography>Rs {line.amount}</Typography>
             </Stack>
           ))}
-          <Stack direction="row" justifyContent="space-between" sx={{ mt: 1 }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" sx={{ mt: 1 }}>
             <Typography fontWeight={800}>Total</Typography>
             <Typography fontWeight={800}>Rs {review.totalFare}</Typography>
           </Stack>
@@ -321,7 +321,7 @@ function BookingSuccess({ response, fallbackValues }) {
   const hasPnr = Boolean(response?.pnr);
   return (
     <SuccessState title="Booking confirmed" message={hasPnr ? `Your ticket has been booked. PNR ${response.pnr}` : 'Booking completed, but PNR was not returned by the booking API.'}>
-      <Paper variant="outlined" sx={{ p: 2 }}>
+      <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, width: '100%', maxWidth: '100%', minWidth: 0 }}>
         <Grid container spacing={2}>
           <Detail label="PNR" value={response?.pnr || 'Not returned'} />
           <Detail label="Train" value={`${response?.trainName || 'Train'} ${response?.trainNumber ? `- ${response.trainNumber}` : ''}`} />
@@ -334,7 +334,7 @@ function BookingSuccess({ response, fallbackValues }) {
           <Detail label="Payment status" value={response?.paymentStatus || 'Not returned by API'} />
         </Grid>
       </Paper>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
         <Button component={Link} to={hasPnr ? `/pnr?pnr=${response.pnr}` : '/pnr'} variant="contained">View PNR</Button>
         <Button component={Link} to="/dashboard">View My Bookings</Button>
         <Button startIcon={<PrintIcon />} onClick={() => window.print()}>Print Ticket</Button>
@@ -347,7 +347,7 @@ function BookingSuccess({ response, fallbackValues }) {
 function BookingFailure({ message, retry }) {
   return (
     <ErrorState title="Booking could not be completed" message={message}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
         <Button variant="contained" onClick={retry}>Retry Booking</Button>
         <Button component={Link} to="/">Back to Search</Button>
       </Stack>

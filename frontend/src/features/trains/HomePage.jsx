@@ -189,21 +189,21 @@ export default function HomePage() {
         className="hero-rail"
         sx={{
           color: 'white',
-          minHeight: compactSearch ? 'auto' : { xs: 560, md: 520 },
-          py: compactSearch ? { xs: 3, md: 4 } : { xs: 5, md: 8 },
+          minHeight: compactSearch ? 'auto' : { xs: 'auto', md: 520 },
+          py: compactSearch ? { xs: 3, md: 4 } : { xs: 4, sm: 5, md: 8 },
           display: 'flex',
           alignItems: 'center'
         }}
       >
         <Container maxWidth="xl">
-          <Grid container spacing={compactSearch ? 2 : 4} alignItems="center">
+          <Grid container spacing={compactSearch ? 2 : 4} alignItems="center" sx={{ minWidth: 0 }}>
             {!compactSearch && (
               <Grid item xs={12} md={6}>
                 <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-                  <Typography variant="h2" sx={{ fontSize: { xs: 38, md: 64 }, lineHeight: 1.02, mb: 2 }}>
+                  <Typography variant="h2" sx={{ fontSize: { xs: '2.15rem', sm: '2.75rem', md: 64 }, lineHeight: 1.05, mb: 2, overflowWrap: 'anywhere' }}>
                     South Indian railway booking, refined.
                   </Typography>
-                  <Typography variant="h6" sx={{ maxWidth: 660, color: 'rgba(255,255,255,.84)' }}>
+                  <Typography variant="h6" sx={{ maxWidth: 660, color: 'rgba(255,255,255,.84)', fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                     Search trains, check availability, review fare, and book tickets across supported South Indian routes.
                   </Typography>
                 </motion.div>
@@ -216,7 +216,10 @@ export default function HomePage() {
                 sx={{
                   p: { xs: 2, sm: compactSearch ? 2 : 3 },
                   borderRadius: 1,
-                  color: 'text.primary'
+                  color: 'text.primary',
+                  width: '100%',
+                  maxWidth: '100%',
+                  minWidth: 0
                 }}
               >
                 {compactSearch && (
@@ -310,13 +313,13 @@ export default function HomePage() {
                         })}
                       />
                     </Grid>
-                    <Grid item xs={6} sm={compactSearch ? 1.5 : 4}>
+                    <Grid item xs={12} sm={compactSearch ? 1.5 : 4}>
                       <TextField select fullWidth label="Class" error={!!errors.travelClass} helperText={errors.travelClass?.message}
                         {...register('travelClass', { required: 'Travel class is required' })}>
                         {classes.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
                       </TextField>
                     </Grid>
-                    <Grid item xs={6} sm={compactSearch ? 1.5 : 4}>
+                    <Grid item xs={12} sm={compactSearch ? 1.5 : 4}>
                       <TextField select fullWidth label="Quota" error={!!errors.quota} helperText={errors.quota?.message}
                         {...register('quota', { required: 'Quota is required' })}>
                         {quotas.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
@@ -465,7 +468,7 @@ const TrainResultCard = memo(function TrainResultCard({ train, search }) {
             </Grid>
 
             <Grid item xs={12} md={4}>
-              <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'stretch', sm: 'center' }} justifyContent="space-between">
                 <StationTime code={train.sourceCode} time={train.departureTime} label="Departure" />
                 <Box sx={{ flex: 1, textAlign: 'center', px: 1 }}>
                   <Divider sx={{ borderColor: canBook ? 'primary.main' : 'divider', opacity: canBook ? 0.42 : 1 }} />
@@ -513,7 +516,7 @@ const TrainResultCard = memo(function TrainResultCard({ train, search }) {
 
 function StationTime({ code, time, label, align = 'left' }) {
   return (
-    <Box sx={{ minWidth: 78, textAlign: align, p: 1, borderRadius: 1, bgcolor: 'action.hover' }}>
+    <Box sx={{ minWidth: { xs: 0, sm: 78 }, textAlign: { xs: 'center', sm: align }, p: 1, borderRadius: 1, bgcolor: 'action.hover' }}>
       <Typography fontWeight={900}>{code || '-'}</Typography>
       <Typography fontWeight={800}>{formatTime(time)}</Typography>
       <Typography variant="caption" color="text.secondary">{label}</Typography>
@@ -561,7 +564,7 @@ function RouteComparison({ results }) {
               }}
             >
               <Typography color="text.secondary" variant="body2">{item.label}</Typography>
-              <Typography fontWeight={800}>{item.value}</Typography>
+              <Typography fontWeight={800} sx={{ overflowWrap: 'anywhere' }}>{item.value}</Typography>
             </Box>
           </Grid>
         ))}
