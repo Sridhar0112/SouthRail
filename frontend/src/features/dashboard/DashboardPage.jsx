@@ -267,7 +267,7 @@ function HeroSection({ displayName, displayEmail, roles, loading, metrics, onRef
       }} />
       {/* Subtle circle glow */}
       <Box sx={{
-        position: 'absolute', top: -80, right: -80, width: 380, height: 380,
+        position: 'absolute', top: -80, right: -80, width: { xs: 180, md: 380 }, height: { xs: 180, md: 380 },
         borderRadius: '50%', bgcolor: alpha(greens.light, 0.12), pointerEvents: 'none',
       }} />
 
@@ -290,16 +290,16 @@ function HeroSection({ displayName, displayEmail, roles, loading, metrics, onRef
             >
               {initial}
             </Avatar>
-            <Box>
+            <Box sx={{ minWidth: 0 }}>
               <Typography
                 sx={{ color: alpha('#fff', 0.65), fontSize: 13, fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase', mb: 0.25 }}
               >
                 Welcome back
               </Typography>
-              <Typography variant="h4" sx={{ color: '#fff', fontWeight: 900, lineHeight: 1.15 }}>
+              <Typography variant="h4" sx={{ color: '#fff', fontWeight: 900, lineHeight: 1.15, fontSize: { xs: '1.8rem', sm: '2.125rem' }, overflowWrap: 'anywhere' }}>
                 {displayName}
               </Typography>
-              <Typography sx={{ color: alpha('#fff', 0.6), fontSize: 14, mt: 0.25 }}>{displayEmail}</Typography>
+              <Typography sx={{ color: alpha('#fff', 0.6), fontSize: 14, mt: 0.25, overflowWrap: 'anywhere' }}>{displayEmail}</Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}
   justifyContent={{ xs: 'flex-start', md: 'flex-end' }}>
                 {roles.map((role) => (
@@ -316,10 +316,10 @@ function HeroSection({ displayName, displayEmail, roles, loading, metrics, onRef
           </Stack>
 
           {/* Right: Hero stats + CTAs */}
-          <Stack spacing={2} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
+          <Stack spacing={2} alignItems={{ xs: 'stretch', md: 'flex-end' }} sx={{ width: { xs: '100%', md: 'auto' } }}>
             <Stack
-  direction="row"
-  spacing={3}
+  direction={{ xs: 'column', sm: 'row' }}
+  spacing={{ xs: 1.5, sm: 3 }}
   flexWrap="wrap"
   justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
 >
@@ -351,7 +351,7 @@ function HeroSection({ displayName, displayEmail, roles, loading, metrics, onRef
     />
   )}
 </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
               <Button
                 component={Link} to="/"
                 variant="contained"
@@ -399,7 +399,7 @@ function HeroSection({ displayName, displayEmail, roles, loading, metrics, onRef
 
 function HeroStat({ label, value, highlightColor }) {
   return (
-    <Box sx={{ textAlign: 'right' }}>
+    <Box sx={{ textAlign: { xs: 'left', sm: 'right' }, minWidth: 0 }}>
       <Typography sx={{ color: highlightColor || '#fff', fontWeight: 900, fontSize: { xs: 22, md: 28 }, lineHeight: 1 }}>
         {value}
       </Typography>
@@ -439,7 +439,7 @@ function KpiStrip({ metrics }) {
   return (
     <Grid container spacing={2}>
       {buildKpiCards(metrics, t, greens).map((card) => (
-        <Grid item xs={6} sm={4} md={2} key={card.label}>
+        <Grid item xs={12} sm={4} md={2} key={card.label}>
           <Paper
             elevation={0}
             sx={{
@@ -598,14 +598,14 @@ function TicketCard({ booking, onCancelBooking, featured }) {
       )}
       <Box sx={{ p: { xs: 2, md: 2.5 } }}>
         {/* Train name + status */}
-        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 1.5 }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'flex-start' }} spacing={1} sx={{ mb: 1.5 }}>
           <Box>
             {featured && (
               <Typography sx={{ fontSize: 11, fontWeight: 700, color: t.primary, letterSpacing: 1, textTransform: 'uppercase', mb: 0.25 }}>
                 Next departure
               </Typography>
             )}
-            <Typography variant="h6" fontWeight={900} color={t.textMain} sx={{ lineHeight: 1.2 }}>
+            <Typography variant="h6" fontWeight={900} color={t.textMain} sx={{ lineHeight: 1.2, overflowWrap: 'anywhere' }}>
               {booking.trainName || 'Train'}
             </Typography>
             <Typography variant="body2" color={t.textSub}>{booking.trainNumber || ''}</Typography>
@@ -614,7 +614,7 @@ function TicketCard({ booking, onCancelBooking, featured }) {
         </Stack>
 
         {/* Route visual */}
-        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1.5 }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'stretch', sm: 'center' }} spacing={1.5} sx={{ mb: 1.5 }}>
           <Box sx={{ textAlign: 'center' }}>
             <Typography fontWeight={900} fontSize={18} color={t.textMain}>{src}</Typography>
             <Typography fontSize={10} color={t.textSub} textTransform="uppercase" letterSpacing={0.5}>Origin</Typography>
@@ -636,7 +636,7 @@ function TicketCard({ booking, onCancelBooking, featured }) {
 
         {/* Meta row */}
         <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
-          <Stack direction="row" spacing={2}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>
             <MetaItem label="Date"   value={formatDate(booking.journeyDate)} />
             <MetaItem label="PNR"    value={booking.pnr || '—'} />
             <MetaItem label="Fare"   value={formatFare(booking.totalFare)} bold />
@@ -685,12 +685,12 @@ function JourneySkeleton() {
       <Box sx={{ p: 2.5 }}>
         <Skeleton width="40%" height={14} sx={{ mb: 0.5 }} />
         <Skeleton width="60%" height={28} sx={{ mb: 1.5 }} />
-        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1.5 }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'stretch', sm: 'center' }} spacing={1.5} sx={{ mb: 1.5 }}>
           <Skeleton width={48} height={36} />
           <Box sx={{ flex: 1 }}><Skeleton height={8} /></Box>
           <Skeleton width={48} height={36} />
         </Stack>
-        <Stack direction="row" spacing={2}><Skeleton width={60} height={36} /><Skeleton width={60} height={36} /><Skeleton width={60} height={36} /></Stack>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}><Skeleton width={60} height={36} /><Skeleton width={60} height={36} /><Skeleton width={60} height={36} /></Stack>
       </Box>
     </Box>
   );
@@ -865,7 +865,7 @@ function BookingHistoryCard({
       subtitle="Search reservations by PNR, train, route, or status"
       icon={<HistoryIcon sx={{ color: t.primary }} />}
      action={
-  <Stack direction="row" spacing={1}>
+  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
     {action}
 
     <Button
@@ -893,7 +893,7 @@ function BookingHistoryCard({
       {historyLoaded && (
         <Stack spacing={2.5}>
           {/* Filters */}
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
             <TextField
               fullWidth size="small" label="Search by PNR, train, or route"
               value={filters.search}
@@ -938,7 +938,7 @@ function BookingHistoryTable({ rows, onCancelBooking }) {
   const t = getDashboardTokens(theme);
   return (
     <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2.5, border: `1.5px solid ${t.cardBorder}`, overflowX: 'auto' }}>
-      <Table size="small" aria-label="Booking history table" sx={{ minWidth: 760 }}>
+      <Table size="small" aria-label="Booking history table" sx={{ minWidth: { xs: 720, md: 760 } }}>
         <TableHead>
           <TableRow sx={{ bgcolor: alpha(t.primary, 0.04) }}>
             {['PNR', 'Train', 'Route', 'Journey date', 'Status', 'Fare', 'Actions'].map((h) => (
@@ -1072,8 +1072,8 @@ function SectionCard({ title, subtitle, icon, action, children }) {
         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ sm: 'center' }} spacing={1} sx={{ mb: 2 }}>
           <Stack direction="row" spacing={1.25} alignItems="center">
             {icon}
-            <Box>
-              <Typography variant="h6" fontWeight={900} color={t.textMain} sx={{ lineHeight: 1.2 }}>{title}</Typography>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="h6" fontWeight={900} color={t.textMain} sx={{ lineHeight: 1.2, overflowWrap: 'anywhere' }}>{title}</Typography>
               {subtitle && <Typography variant="body2" color={t.textSub}>{subtitle}</Typography>}
             </Box>
           </Stack>

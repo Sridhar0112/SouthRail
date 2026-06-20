@@ -64,20 +64,20 @@ function TabPanel({ value, index, children }) {
 function FieldRow({ icon, label, children }) {
   return (
     <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ sm: 'center' }} spacing={2}>
-      <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 160 }}>
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: { xs: 0, sm: 160 }, width: { xs: '100%', sm: 'auto' } }}>
         <Box sx={{ color: 'text.disabled', display: 'flex' }}>{icon}</Box>
         <Typography variant="body2" color="text.secondary" fontWeight={600}>{label}</Typography>
       </Stack>
-      <Box sx={{ flexGrow: 1 }}>{children}</Box>
+      <Box sx={{ flexGrow: 1, minWidth: 0, width: '100%' }}>{children}</Box>
     </Stack>
   );
 }
 
 function SectionCard({ title, subtitle, icon, action, children }) {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 3 }}>
+    <Card variant="outlined" sx={{ borderRadius: 3, width: '100%', maxWidth: '100%', minWidth: 0 }}>
       <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" mb={2.5}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'stretch', sm: 'flex-start' }} justifyContent="space-between" spacing={1.5} mb={2.5}>
           <Stack direction="row" spacing={1.5} alignItems="center">
             <Box
               sx={{
@@ -88,8 +88,8 @@ function SectionCard({ title, subtitle, icon, action, children }) {
             >
               {icon}
             </Box>
-            <Box>
-              <Typography variant="subtitle1" fontWeight={700}>{title}</Typography>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="subtitle1" fontWeight={700} sx={{ overflowWrap: 'anywhere' }}>{title}</Typography>
               {subtitle && <Typography variant="caption" color="text.secondary">{subtitle}</Typography>}
             </Box>
           </Stack>
@@ -148,8 +148,8 @@ function ProfileHero({ profile, loading }) {
               </>
             ) : (
               <>
-                <Typography variant="h5" fontWeight={800} lineHeight={1.2}>{displayName}</Typography>
-                <Typography variant="body2" color="text.secondary">{profile?.email}</Typography>
+                <Typography variant="h5" fontWeight={800} lineHeight={1.2} sx={{ overflowWrap: 'anywhere' }}>{displayName}</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>{profile?.email}</Typography>
                 <Stack direction="row" spacing={1} mt={1} flexWrap="wrap" useFlexGap>
                   {profile?.emailVerified && (
                     <Chip

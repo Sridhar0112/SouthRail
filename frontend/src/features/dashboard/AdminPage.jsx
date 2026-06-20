@@ -517,6 +517,7 @@ function AdminDataTable({
             </Box>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
               <TextField
+                fullWidth
                 size="small"
                 label={`Search ${title.toLowerCase()}`}
                 value={searchValue}
@@ -552,7 +553,7 @@ function AdminDataTable({
           {!error && rows.length === 0 && <EmptyState title={emptyTitle} message={emptyMessage} />}
           {!error && rows.length > 0 && (
             <TableContainer component={Paper} variant="outlined" sx={{ width: '100%', overflowX: 'auto' }}>
-              <Table size="small" aria-label={`${title} table`} sx={{ minWidth: 720 }}>
+              <Table size="small" aria-label={`${title} table`} sx={{ minWidth: { xs: 680, md: 720 } }}>
                 <TableHead>
                   <TableRow>
                     {columns.map((column) => (

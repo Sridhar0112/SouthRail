@@ -3,14 +3,17 @@ import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   AppBar, Avatar, Box, Button, Container, Divider,
+  Drawer,
   IconButton, ListItemIcon, Menu, MenuItem,
-  Stack, Toolbar, Tooltip, Typography
+  Stack, Toolbar, Tooltip, Typography,
+  List, ListItemButton, ListItemText
 } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import LogoutIcon from '@mui/icons-material/Logout';
+import MenuIcon from '@mui/icons-material/Menu';
 import PersonIcon from '@mui/icons-material/Person';
 import TrainIcon from '@mui/icons-material/Train';
 import { ColorModeContext } from '../theme/AppThemeProvider.jsx';
@@ -27,6 +30,7 @@ export function Shell() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     const clearAuth = () => dispatch(logout());
@@ -42,6 +46,7 @@ export function Shell() {
 
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
+  const closeMobileNav = () => setMobileNavOpen(false);
 
   const navButtonSx = {
     color: 'text.secondary',
@@ -53,12 +58,18 @@ export function Shell() {
 
   const displayName = auth.user?.fullName || auth.user?.name || '';
   const initials = getInitials(displayName);
+  const navItems = [
+    { label: 'PNR', to: '/pnr', show: true },
+    { label: 'Dashboard', to: '/dashboard', show: Boolean(auth.user) },
+    { label: 'Support', to: '/support', show: Boolean(auth.user) },
+    { label: 'Admin', to: '/admin', show: auth.user?.roles?.includes('ROLE_ADMIN') }
+  ].filter((item) => item.show);
 
   return (
     <Box sx={{ minHeight: '100vh' }}>
       <AppBar position="sticky" elevation={0} color="inherit">
         <Container maxWidth="xl">
-          <Toolbar disableGutters sx={{ gap: { xs: 0.75, sm: 2 }, minHeight: { xs: 64, sm: 68 }, flexWrap: { xs: 'wrap', md: 'nowrap' }, py: { xs: 1, md: 0 } }}>
+          <Toolbar disableGutters sx={{ gap: { xs: 1, md: 2 }, minHeight: { xs: 64, sm: 68 }, py: { xs: 0.75, md: 0 } }}>
             {/* Logo */}
             <Stack
               component={Link}
@@ -82,12 +93,13 @@ export function Shell() {
             </Stack>
 
             {/* Nav links */}
-            <Button component={Link} to="/pnr" sx={navButtonSx}>PNR</Button>
-            {auth.user && <Button component={Link} to="/dashboard" sx={navButtonSx}>Dashboard</Button>}
-             {auth.user && <Button component={Link} to="/support" sx={navButtonSx}>Support</Button>}
-            {auth.user?.roles?.includes('ROLE_ADMIN') && (
-              <Button component={Link} to="/admin" sx={navButtonSx}>Admin</Button>
-            )}
+            <Stack direction="row" spacing={0.5} sx={{ display: { xs: 'none', md: 'flex' } }}>
+              {navItems.map((item) => (
+                <Button key={item.to} component={Link} to={item.to} sx={navButtonSx}>
+                  {item.label}
+                </Button>
+              ))}
+            </Stack>
 
             {/* Dark/light toggle */}
             <Tooltip title={mode === 'light' ? 'Dark mode' : 'Light mode'}>
@@ -203,11 +215,77 @@ export function Shell() {
                 </Menu>
               </>
             ) : (
-              <Button variant="contained" component={Link} to="/login">Login</Button>
+              <Button variant="contained" component={Link} to="/login" sx={{ display: { xs: 'none', sm: 'inline-flex' } }}>Login</Button>
             )}
+            <Tooltip title="Open navigation">
+              <IconButton
+                color="primary"
+                onClick={() => setMobileNavOpen(true)}
+                sx={{ display: { xs: 'inline-flex', md: 'none' }, bgcolor: 'action.hover' }}
+                aria-label="Open navigation menu"
+              >
+                <MenuIcon />
+              </IconButton>
+            </Tooltip>
           </Toolbar>
         </Container>
       </AppBar>
+      <Drawer
+        anchor="right"
+        open={mobileNavOpen}
+        onClose={closeMobileNav}
+        PaperProps={{
+          sx: {
+            width: { xs: 'calc(100vw - 32px)', sm: 360 },
+            maxWidth: '100vw',
+            p: 2
+          }
+        }}
+      >
+        <Stack spacing={2} sx={{ height: '100%' }}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
+              <TrainIcon color="primary" />
+              <Typography variant="h6" fontWeight={800}>SouthRail</Typography>
+            </Stack>
+            <IconButton onClick={closeMobileNav} aria-label="Close navigation menu">
+              <MenuIcon />
+            </IconButton>
+          </Stack>
+          <Divider />
+          <List disablePadding>
+            {navItems.map((item) => (
+              <ListItemButton
+                key={item.to}
+                component={Link}
+                to={item.to}
+                onClick={closeMobileNav}
+                sx={{ borderRadius: 2, py: 1.25 }}
+              >
+                <ListItemText
+                  primary={item.label}
+                  primaryTypographyProps={{ fontWeight: 800 }}
+                />
+              </ListItemButton>
+            ))}
+            {!auth.user && (
+              <ListItemButton
+                component={Link}
+                to="/login"
+                onClick={closeMobileNav}
+                sx={{ borderRadius: 2, py: 1.25 }}
+              >
+                <ListItemText primary="Login" primaryTypographyProps={{ fontWeight: 800 }} />
+              </ListItemButton>
+            )}
+          </List>
+          <Box sx={{ mt: 'auto' }}>
+            <Typography variant="body2" color="text.secondary">
+              Theme and account controls remain available in the header.
+            </Typography>
+          </Box>
+        </Stack>
+      </Drawer>
       <Outlet />
     </Box>
   );
