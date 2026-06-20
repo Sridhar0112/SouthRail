@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   AppBar, Avatar, Box, Button, Container, Divider,
@@ -38,15 +38,22 @@ export function Shell() {
     return () => window.removeEventListener('southrail-auth-cleared', clearAuth);
   }, [dispatch]);
 
+  const location = useLocation();
+
+  const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
+  const closeMobileNav = () => setMobileNavOpen(false);
+
+  useEffect(() => {
+    handleMenuClose();
+    closeMobileNav();
+  }, [location.pathname]);
+
   const signOut = () => {
     handleMenuClose();
     dispatch(logout());
     navigate('/');
   };
-
-  const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
-  const handleMenuClose = () => setAnchorEl(null);
-  const closeMobileNav = () => setMobileNavOpen(false);
 
   const navButtonSx = {
     color: 'text.secondary',
