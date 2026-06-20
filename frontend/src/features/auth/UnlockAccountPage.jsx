@@ -95,9 +95,9 @@ export default function UnlockAccountPage() {
         bgcolor: 'background.default',
       }}
     >
-      <Container maxWidth="sm" sx={{ py: 6 }}>
+      <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 6 } }}>
         {/* Brand header */}
-        <Stack alignItems="center" spacing={0.5} sx={{ mb: 4 }}>
+        <Stack alignItems="center" spacing={0.5} sx={{ mb: { xs: 2.5, sm: 4 } }}>
           <TrainIcon color="primary" />
           <Typography variant="h6" fontWeight={700} letterSpacing={-0.3}>
             SouthRail
@@ -111,6 +111,8 @@ export default function UnlockAccountPage() {
             borderColor: 'divider',
             borderRadius: 3,
             overflow: 'hidden',
+            width: '100%',
+            minWidth: 0,
           }}
         >
           {status === 'loading' && <LinearProgress sx={{ height: 3 }} />}
@@ -119,7 +121,7 @@ export default function UnlockAccountPage() {
             {/* Status banner */}
             <Box
               sx={{
-                px: { xs: 3, sm: 5 },
+                px: { xs: 2, sm: 5 },
                 pt: { xs: 4, sm: 5 },
                 pb: 3,
                 bgcolor: cfg.bg,
@@ -127,18 +129,18 @@ export default function UnlockAccountPage() {
                 borderColor: 'divider',
               }}
             >
-              <Stack direction="row" spacing={2} alignItems="flex-start">
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'center', sm: 'flex-start' }} textAlign={{ xs: 'center', sm: 'left' }}>
                 {Icon && (
                   <Icon sx={{ fontSize: 28, color: cfg.color, mt: 0.3, flexShrink: 0 }} />
                 )}
                 {!Icon && status === 'loading' && (
                   <LockOpenOutlinedIcon sx={{ fontSize: 28, color: cfg.color, mt: 0.3, flexShrink: 0 }} />
                 )}
-                <Box>
+                <Box sx={{ minWidth: 0 }}>
                   <Typography variant="h5" fontWeight={700} color={cfg.color} gutterBottom>
                     {cfg.title}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6, overflowWrap: 'anywhere' }}>
                     {status === 'failed'
                       ? (error || 'Unlock link is invalid, expired, or already used.')
                       : cfg.body}
@@ -148,7 +150,7 @@ export default function UnlockAccountPage() {
             </Box>
 
             {/* Detail body */}
-            <Box sx={{ px: { xs: 3, sm: 5 }, py: { xs: 3, sm: 4 } }}>
+            <Box sx={{ px: { xs: 2, sm: 5 }, py: { xs: 3, sm: 4 } }}>
 
               {status === 'loading' && (
                 <Typography variant="body2" color="text.secondary">
@@ -158,7 +160,7 @@ export default function UnlockAccountPage() {
 
               {status === 'success' && (
                 <Stack spacing={2.5}>
-                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, overflowWrap: 'anywhere' }}>
                     Your account has been restored and is fully accessible. To keep your account safe going forward, consider reviewing your recent login activity and updating your password after signing in.
                   </Typography>
                   <Divider />
@@ -171,7 +173,7 @@ export default function UnlockAccountPage() {
                       'Review recent login activity in security settings',
                       'Update your password if you suspect unauthorized access',
                     ].map((step) => (
-                      <Stack key={step} direction="row" spacing={1} alignItems="center">
+                      <Stack key={step} direction="row" sx={{ minWidth: 0 }} spacing={1} alignItems="center">
                         <Box sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: 'success.main', flexShrink: 0 }} />
                         <Typography variant="body2" color="text.secondary">{step}</Typography>
                       </Stack>
@@ -182,7 +184,7 @@ export default function UnlockAccountPage() {
 
               {(status === 'failed' || status === 'missing') && (
                 <Stack spacing={2.5}>
-                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, overflowWrap: 'anywhere' }}>
                     {status === 'missing'
                       ? 'Unlock links are single-use and expire after 24 hours. Please check your inbox for the most recent unlock email and use the link from that message.'
                       : 'Unlock links are single-use and expire after 24 hours. If your account is still locked, contact our support team and we\'ll help you regain access.'}
@@ -197,7 +199,7 @@ export default function UnlockAccountPage() {
                       'Check your spam or junk folder',
                       'Make sure you opened the full, unmodified link from the email',
                     ].map((tip) => (
-                      <Stack key={tip} direction="row" spacing={1} alignItems="center">
+                      <Stack key={tip} direction="row" sx={{ minWidth: 0 }} spacing={1} alignItems="center">
                         <Box sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: 'warning.main', flexShrink: 0 }} />
                         <Typography variant="body2" color="text.secondary">{tip}</Typography>
                       </Stack>

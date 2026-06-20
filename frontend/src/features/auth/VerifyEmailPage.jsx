@@ -91,9 +91,9 @@ export default function VerifyEmailPage() {
        bgcolor: 'background.default'
       }}
     >
-      <Container maxWidth="sm" sx={{ py: 6 }}>
+      <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 6 } }}>
         {/* Brand header */}
-        <Stack alignItems="center" spacing={0.5} sx={{ mb: 4 }}>
+        <Stack alignItems="center" spacing={0.5} sx={{ mb: { xs: 2.5, sm: 4 } }}>
           <MarkEmailReadOutlinedIcon sx={{ fontSize: 36, color: 'primary.main' }} />
           <Typography variant="h6" fontWeight={700} letterSpacing={-0.3}>
             SouthRail
@@ -107,6 +107,8 @@ export default function VerifyEmailPage() {
             borderColor: 'divider',
             borderRadius: 3,
             overflow: 'hidden',
+            width: '100%',
+            minWidth: 0,
           }}
         >
           {/* Progress bar shown only while loading */}
@@ -118,7 +120,7 @@ export default function VerifyEmailPage() {
             {/* Status banner */}
             <Box
               sx={{
-                px: { xs: 3, sm: 5 },
+                px: { xs: 2, sm: 5 },
                 pt: { xs: 4, sm: 5 },
                 pb: 3,
                 bgcolor: cfg.bg,
@@ -126,15 +128,15 @@ export default function VerifyEmailPage() {
                 borderColor: 'divider',
               }}
             >
-              <Stack direction="row" spacing={2} alignItems="flex-start">
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'center', sm: 'flex-start' }} textAlign={{ xs: 'center', sm: 'left' }}>
                 {Icon && (
                   <Icon sx={{ fontSize: 28, color: cfg.color, mt: 0.3, flexShrink: 0 }} />
                 )}
-                <Box>
+                <Box sx={{ minWidth: 0 }}>
                   <Typography variant="h5" fontWeight={700} color={cfg.color} gutterBottom>
                     {cfg.title}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6, overflowWrap: 'anywhere' }}>
                     {status === 'failed'
                       ? (error || 'Verification link is invalid, expired, or already used.')
                       : cfg.body}
@@ -144,7 +146,7 @@ export default function VerifyEmailPage() {
             </Box>
 
             {/* Detail body */}
-            <Box sx={{ px: { xs: 3, sm: 5 }, py: { xs: 3, sm: 4 } }}>
+            <Box sx={{ px: { xs: 2, sm: 5 }, py: { xs: 3, sm: 4 } }}>
               {status === 'loading' && (
                 <Typography variant="body2" color="text.secondary">
                   We're confirming your email address with our servers. This usually completes within a second.
@@ -153,7 +155,7 @@ export default function VerifyEmailPage() {
 
               {status === 'verified' && (
                 <Stack spacing={2.5}>
-                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, overflowWrap: 'anywhere' }}>
                     Welcome aboard! Your account is fully set up. Once you log in you can manage bookings, view upcoming trips, and update your travel preferences from your dashboard.
                   </Typography>
                   <Divider />
@@ -166,7 +168,7 @@ export default function VerifyEmailPage() {
                       'Browse and book your first trip',
                       'Set up travel alerts and preferences',
                     ].map((step) => (
-                      <Stack key={step} direction="row" spacing={1} alignItems="center">
+                      <Stack key={step} direction="row" sx={{ minWidth: 0 }} spacing={1} alignItems="center">
                         <Box
                           sx={{
                             width: 5,
@@ -187,7 +189,7 @@ export default function VerifyEmailPage() {
 
               {(status === 'failed' || status === 'missing') && (
                 <Stack spacing={2.5}>
-                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, overflowWrap: 'anywhere' }}>
                     {status === 'missing'
                       ? 'Verification links are single-use and expire after 24 hours. If you requested a new one, please use the most recent email in your inbox.'
                       : 'Verification links are single-use and expire after 24 hours. If you have already verified your email, you can log in directly. Otherwise, request a fresh link from the login page.'}
@@ -202,7 +204,7 @@ export default function VerifyEmailPage() {
                       'Check your spam or junk folder',
                       'Make sure you opened the full link from the email',
                     ].map((tip) => (
-                      <Stack key={tip} direction="row" spacing={1} alignItems="center">
+                      <Stack key={tip} direction="row" sx={{ minWidth: 0 }} spacing={1} alignItems="center">
                         <Box
                           sx={{
                             width: 5,

@@ -25,50 +25,49 @@ export default function ForgotPasswordPage() {
       setLoading(false);
     }
   };
-if (message) {
+  if (message) {
+    return (
+      <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 8 } }}>
+        <Paper sx={{ p: { xs: 2, sm: 5 }, textAlign: 'center', width: '100%', minWidth: 0 }}>
+          <Typography variant="h4" fontWeight={800} gutterBottom>
+            📧 Check Your Email
+          </Typography>
+
+          <Typography color="text.secondary" sx={{ mb: 3, overflowWrap: 'anywhere' }}>
+            If an account exists for this email address,
+            a password reset email has been sent.
+            Please check your inbox and spam folder.
+          </Typography>
+
+          <Alert severity="success" sx={{ mb: 3 }}>
+            Password reset email sent successfully.
+          </Alert>
+
+          <Button
+            component={Link}
+            to="/login"
+            variant="contained"
+            fullWidth
+          >
+            Back to Login
+          </Button>
+        </Paper>
+      </Container>
+    );
+  }
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
-      <Paper sx={{ p: { xs: 3, sm: 5 }, textAlign: 'center' }}>
-        <Typography variant="h4" fontWeight={800} gutterBottom>
-          📧 Check Your Email
-        </Typography>
-
-        <Typography color="text.secondary" sx={{ mb: 3 }}>
-          If an account exists for this email address,
-  a password reset email has been sent.
-  Please check your inbox and spam folder.
-        </Typography>
-
-        <Alert severity="success" sx={{ mb: 3 }}>
-          Password reset email sent successfully.
-        </Alert>
-
-        <Button
-          component={Link}
-          to="/login"
-          variant="contained"
-          fullWidth
-        >
-          Back to Login
-        </Button>
-      </Paper>
-    </Container>
-  );
-}
-  return (
-    
-    <Container maxWidth="sm" sx={{ py: 8 }}>
-      <Paper sx={{ p: { xs: 3, sm: 5 } }}>
+    <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 8 } }}>
+      <Paper sx={{ p: { xs: 2, sm: 5 }, width: '100%', minWidth: 0 }}>
         <Typography variant="h4" fontWeight={800} gutterBottom>Reset password</Typography>
-        <Typography color="text.secondary" sx={{ mb: 3 }}>Enter your registered email address.</Typography>
+        <Typography color="text.secondary" sx={{ mb: 3, overflowWrap: 'anywhere' }}>Enter your registered email address.</Typography>
         {message && <Alert severity="success" sx={{ mb: 2 }}>{message}</Alert>}
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <Box component="form" onSubmit={form.handleSubmit(submit)}>
           <Stack spacing={2}>
             <TextField label="Email" autoComplete="email" error={!!form.formState.errors.email} helperText={form.formState.errors.email?.message}
               {...form.register('email', { required: 'Email is required' })} />
-            <Button type="submit" variant="contained" disabled={loading}>{loading ? 'Sending reset link...' : 'Send reset link'}</Button>
-            <Button component={Link} to="/login">Back to login</Button>
+            <Button type="submit" variant="contained" disabled={loading} fullWidth>{loading ? 'Sending reset link...' : 'Send reset link'}</Button>
+            <Button component={Link} to="/login" fullWidth>Back to login</Button>
           </Stack>
         </Box>
       </Paper>
