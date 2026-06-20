@@ -157,7 +157,7 @@ export default function LoginPage() {
 
   return (
     <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 8 } }}>
-      <Paper sx={{ p: { xs: 2, sm: 5 }, width: "100%", maxWidth: "100%" }}>
+      <Paper sx={{ p: { xs: 2, sm: 5 }, width: "100%", maxWidth: "100%", minWidth: 0 }}>
         <Typography
           variant="h4"
           fontWeight={800}
@@ -166,7 +166,7 @@ export default function LoginPage() {
         >
           Welcome back
         </Typography>
-        <Typography color="text.secondary" sx={{ mb: 3 }}>
+        <Typography color="text.secondary" sx={{ mb: 3, overflowWrap: 'anywhere' }}>
           Book faster across Chennai, Bengaluru, Kochi, Hyderabad, Madurai,
           Mangaluru, and more.
         </Typography>

@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   AppBar, Avatar, Box, Button, Container, Divider,
@@ -29,6 +29,7 @@ export function Shell() {
   const auth = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -37,8 +38,6 @@ export function Shell() {
     window.addEventListener('southrail-auth-cleared', clearAuth);
     return () => window.removeEventListener('southrail-auth-cleared', clearAuth);
   }, [dispatch]);
-
-  const location = useLocation();
 
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
@@ -51,6 +50,7 @@ export function Shell() {
 
   const signOut = () => {
     handleMenuClose();
+    closeMobileNav();
     dispatch(logout());
     navigate('/');
   };
@@ -85,8 +85,9 @@ export function Shell() {
               alignItems="center"
               spacing={1}
               sx={{
-                mr: { xs: 'auto', md: 'auto' },
+                mr: 'auto',
                 minWidth: 0,
+                maxWidth: { xs: 'min(44vw, 180px)', sm: 'none' },
                 py: 0.75,
                 pr: 1.25,
                 borderRadius: 2,
@@ -95,8 +96,8 @@ export function Shell() {
                 '&:hover': { bgcolor: 'action.hover' }
               }}
             >
-              <TrainIcon color="primary" />
-              <Typography variant="h6" fontWeight={800} sx={{ fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>SouthRail</Typography>
+              <TrainIcon color="primary" sx={{ flexShrink: 0 }} />
+              <Typography variant="h6" fontWeight={800} noWrap sx={{ fontSize: { xs: '1.05rem', sm: '1.25rem' }, minWidth: 0 }}>SouthRail</Typography>
             </Stack>
 
             {/* Nav links */}
@@ -113,7 +114,7 @@ export function Shell() {
               <IconButton
                 onClick={toggleColorMode}
                 color="primary"
-                sx={{ bgcolor: 'action.hover', '&:hover': { bgcolor: 'action.selected' } }}
+                sx={{ bgcolor: 'action.hover', flexShrink: 0, '&:hover': { bgcolor: 'action.selected' } }}
               >
                 {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
               </IconButton>
@@ -123,7 +124,7 @@ export function Shell() {
             {auth.user ? (
               <>
                 <Tooltip title="Account">
-                  <IconButton onClick={handleMenuOpen} sx={{ p: 0 }}>
+                  <IconButton onClick={handleMenuOpen} sx={{ p: 0, flexShrink: 0 }}>
                     <Avatar
                       sx={{
                         width: 36,
@@ -151,16 +152,16 @@ export function Shell() {
                   slotProps={{
                     paper: {
                       elevation: 3,
-                      sx: { mt: 1, minWidth: 200, borderRadius: 2 }
+                      sx: { mt: 1, width: { xs: 'calc(100vw - 32px)', sm: 280 }, maxWidth: 320, borderRadius: 2 }
                     }
                   }}
                 >
                   {/* Identity block */}
-                  <Box sx={{ px: 2, py: 1.5 }}>
-                    <Typography variant="subtitle2" fontWeight={700} noWrap>
+                  <Box sx={{ px: 2, py: 1.5, minWidth: 0 }}>
+                    <Typography variant="subtitle2" fontWeight={700} noWrap sx={{ maxWidth: '100%' }}>
                       {displayName || 'Passenger'}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary" noWrap display="block">
+                    <Typography variant="caption" color="text.secondary" noWrap display="block" sx={{ maxWidth: '100%' }}>
                       {auth.user?.email || ''}
                     </Typography>
                   </Box>
@@ -187,29 +188,30 @@ export function Shell() {
                     Profile
                   </MenuItem>
                   <MenuItem
-  component={Link}
-  to="/my-tickets"
-  onClick={handleMenuClose}
-  sx={{ py: 1.25 }}
->
-  <ListItemIcon>
-    <ConfirmationNumberIcon fontSize="small" />
-  </ListItemIcon>
-  My Tickets
-</MenuItem>
-{auth.user?.roles?.includes('ROLE_ADMIN') && (
-  <MenuItem
-    component={Link}
-    to="/admin/support-tickets"
-    onClick={handleMenuClose}
-    sx={{ py: 1.25 }}
-  >
-    <ListItemIcon>
-      <SupportAgentIcon fontSize="small" />
-    </ListItemIcon>
-    Support Tickets
-  </MenuItem>
-)}
+                    component={Link}
+                    to="/my-tickets"
+                    onClick={handleMenuClose}
+                    sx={{ py: 1.25 }}
+                  >
+                    <ListItemIcon>
+                      <ConfirmationNumberIcon fontSize="small" />
+                    </ListItemIcon>
+                    My Tickets
+                  </MenuItem>
+
+                  {auth.user?.roles?.includes('ROLE_ADMIN') && (
+                    <MenuItem
+                      component={Link}
+                      to="/admin/support-tickets"
+                      onClick={handleMenuClose}
+                      sx={{ py: 1.25 }}
+                    >
+                      <ListItemIcon>
+                        <SupportAgentIcon fontSize="small" />
+                      </ListItemIcon>
+                      Support Tickets
+                    </MenuItem>
+                  )}
                   <Divider />
 
                   <MenuItem onClick={signOut} sx={{ py: 1.25, color: 'error.main' }}>
@@ -228,7 +230,7 @@ export function Shell() {
               <IconButton
                 color="primary"
                 onClick={() => setMobileNavOpen(true)}
-                sx={{ display: { xs: 'inline-flex', md: 'none' }, bgcolor: 'action.hover' }}
+                sx={{ display: { xs: 'inline-flex', md: 'none' }, bgcolor: 'action.hover', flexShrink: 0 }}
                 aria-label="Open navigation menu"
               >
                 <MenuIcon />
@@ -253,7 +255,7 @@ export function Shell() {
           <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
             <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
               <TrainIcon color="primary" />
-              <Typography variant="h6" fontWeight={800}>SouthRail</Typography>
+              <Typography variant="h6" fontWeight={800} noWrap sx={{ minWidth: 0 }}>SouthRail</Typography>
             </Stack>
             <IconButton onClick={closeMobileNav} aria-label="Close navigation menu">
               <MenuIcon />
@@ -267,7 +269,7 @@ export function Shell() {
                 component={Link}
                 to={item.to}
                 onClick={closeMobileNav}
-                sx={{ borderRadius: 2, py: 1.25 }}
+                sx={{ borderRadius: 2, py: 1.5, minHeight: 48 }}
               >
                 <ListItemText
                   primary={item.label}
@@ -280,7 +282,7 @@ export function Shell() {
                 component={Link}
                 to="/login"
                 onClick={closeMobileNav}
-                sx={{ borderRadius: 2, py: 1.25 }}
+                sx={{ borderRadius: 2, py: 1.5, minHeight: 48 }}
               >
                 <ListItemText primary="Login" primaryTypographyProps={{ fontWeight: 800 }} />
               </ListItemButton>

@@ -61,7 +61,7 @@ const checkPasswordStrength = (password) => {
   if (successMessage) {
     return (
       <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 8 } }}>
-        <Paper sx={{ p: { xs: 2, sm: 5 }, textAlign: 'center', width: '100%', maxWidth: '100%' }}>
+        <Paper sx={{ p: { xs: 2, sm: 5 }, textAlign: 'center', width: '100%', maxWidth: '100%', minWidth: 0 }}>
           <Typography variant="h4" fontWeight={800} gutterBottom sx={{ fontSize: { xs: '1.65rem', sm: '2.125rem' } }}>
             Verify your email
           </Typography>
@@ -71,12 +71,12 @@ const checkPasswordStrength = (password) => {
           </Alert>
 
           {registeredEmail && (
-            <Typography color="text.secondary" sx={{ mb: 3 }}>
+            <Typography color="text.secondary" sx={{ mb: 3, overflowWrap: 'anywhere' }}>
               Verification email sent to: <strong>{registeredEmail}</strong>
             </Typography>
           )}
 
-          <Typography color="text.secondary" sx={{ mb: 3 }}>
+          <Typography color="text.secondary" sx={{ mb: 3, overflowWrap: 'anywhere' }}>
             Please open the verification link from your email. After verification, you can login and access your dashboard.
           </Typography>
 
@@ -90,12 +90,12 @@ const checkPasswordStrength = (password) => {
 
   return (
     <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 8 } }}>
-      <Paper sx={{ p: { xs: 2, sm: 5 }, width: '100%', maxWidth: '100%' }}>
+      <Paper sx={{ p: { xs: 2, sm: 5 }, width: '100%', maxWidth: '100%', minWidth: 0 }}>
         <Typography variant="h4" fontWeight={800} gutterBottom sx={{ fontSize: { xs: '1.65rem', sm: '2.125rem' } }}>
           Create account
         </Typography>
 
-        <Typography color="text.secondary" sx={{ mb: 3 }}>
+        <Typography color="text.secondary" sx={{ mb: 3, overflowWrap: 'anywhere' }}>
           Create your SouthRail account. You will need to verify your email before logging in.
         </Typography>
 

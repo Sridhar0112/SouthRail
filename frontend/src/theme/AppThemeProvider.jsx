@@ -141,7 +141,9 @@ export function AppThemeProvider({ children }) {
           styleOverrides: {
             root: {
               backgroundImage: 'none',
-              borderColor: palette.custom.cardBorder
+              borderColor: palette.custom.cardBorder,
+              maxWidth: '100%',
+              minWidth: 0
             },
             elevation1: {
               boxShadow: palette.custom.cardShadow
@@ -157,7 +159,24 @@ export function AppThemeProvider({ children }) {
               backgroundColor: palette.surface.raised,
               backgroundImage: 'none',
               border: `1px solid ${palette.custom.cardBorder}`,
-              boxShadow: palette.custom.cardShadow
+              boxShadow: palette.custom.cardShadow,
+              maxWidth: '100%',
+              minWidth: 0
+            }
+          }
+        },
+        MuiContainer: {
+          styleOverrides: {
+            root: {
+              minWidth: 0,
+              '@media (max-width: 599.95px)': {
+                paddingLeft: 16,
+                paddingRight: 16
+              },
+              '@media (max-width: 359.95px)': {
+                paddingLeft: 12,
+                paddingRight: 12
+              }
             }
           }
         },
@@ -173,8 +192,9 @@ export function AppThemeProvider({ children }) {
         MuiButton: {
           styleOverrides: {
             root: {
-              minHeight: 42,
-              borderRadius: 8
+              minHeight: 44,
+              borderRadius: 8,
+              whiteSpace: 'normal'
             },
             containedPrimary: {
               boxShadow: isLight ? '0 10px 22px rgba(6,78,59,0.20)' : '0 10px 24px rgba(22,160,111,0.24)',
@@ -319,6 +339,10 @@ export function AppThemeProvider({ children }) {
               border: `1px solid ${palette.custom.cardBorder}`,
               backgroundImage: 'none'
             },
+            message: {
+              minWidth: 0,
+              overflowWrap: 'anywhere'
+            },
             standardSuccess: {
               backgroundColor: alpha(palette.success.main, isLight ? 0.11 : 0.16),
               color: palette.text.primary
@@ -372,9 +396,74 @@ export function AppThemeProvider({ children }) {
           styleOverrides: {
             label: {
               color: palette.text.secondary,
+              overflowWrap: 'anywhere',
               '&.Mui-active, &.Mui-completed': {
                 color: palette.text.primary,
                 fontWeight: 800
+              }
+            }
+          }
+        },
+        MuiDialog: {
+          styleOverrides: {
+            paper: {
+              maxWidth: 'calc(100vw - 24px)',
+              maxHeight: 'calc(100dvh - 24px)',
+              margin: 12
+            }
+          }
+        },
+        MuiDialogContent: {
+          styleOverrides: {
+            root: {
+              minWidth: 0,
+              overflowWrap: 'anywhere'
+            }
+          }
+        },
+        MuiTableContainer: {
+          styleOverrides: {
+            root: {
+              maxWidth: '100%',
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch'
+            }
+          }
+        },
+        MuiTableCell: {
+          styleOverrides: {
+            root: {
+              overflowWrap: 'anywhere'
+            }
+          }
+        },
+        MuiTypography: {
+          styleOverrides: {
+            root: {
+              minWidth: 0
+            },
+            h2: {
+              '@media (max-width: 599.95px)': {
+                fontSize: 'clamp(2rem, 12vw, 2.6rem)',
+                lineHeight: 1.08
+              }
+            },
+            h3: {
+              '@media (max-width: 599.95px)': {
+                fontSize: 'clamp(1.8rem, 10vw, 2.4rem)',
+                lineHeight: 1.1
+              }
+            },
+            h4: {
+              '@media (max-width: 599.95px)': {
+                fontSize: 'clamp(1.45rem, 7vw, 2rem)',
+                lineHeight: 1.15
+              }
+            },
+            h5: {
+              '@media (max-width: 599.95px)': {
+                fontSize: 'clamp(1.2rem, 6vw, 1.5rem)',
+                lineHeight: 1.2
               }
             }
           }
