@@ -465,7 +465,7 @@ const TrainResultCard = memo(function TrainResultCard({ train, search }) {
             </Grid>
 
             <Grid item xs={12} md={4}>
-              <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'stretch', sm: 'center' }} justifyContent="space-between">
                 <StationTime code={train.sourceCode} time={train.departureTime} label="Departure" />
                 <Box sx={{ flex: 1, textAlign: 'center', px: 1 }}>
                   <Divider sx={{ borderColor: canBook ? 'primary.main' : 'divider', opacity: canBook ? 0.42 : 1 }} />
@@ -513,7 +513,7 @@ const TrainResultCard = memo(function TrainResultCard({ train, search }) {
 
 function StationTime({ code, time, label, align = 'left' }) {
   return (
-    <Box sx={{ minWidth: 78, textAlign: align, p: 1, borderRadius: 1, bgcolor: 'action.hover' }}>
+    <Box sx={{ minWidth: { xs: 0, sm: 78 }, textAlign: { xs: 'center', sm: align }, p: 1, borderRadius: 1, bgcolor: 'action.hover' }}>
       <Typography fontWeight={900}>{code || '-'}</Typography>
       <Typography fontWeight={800}>{formatTime(time)}</Typography>
       <Typography variant="caption" color="text.secondary">{label}</Typography>

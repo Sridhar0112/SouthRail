@@ -298,7 +298,7 @@ const ContactCard = memo(function ContactCard({ channel }) {
         gap: 1.5,
       }}
     >
-      <Stack direction="row" alignItems="center" justifyContent="space-between">
+      <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between" spacing={1.5}>
         <Box
           sx={{
             width: 44,
@@ -854,7 +854,7 @@ useEffect(() => {
     severity={snackbar.severity}
     variant="filled"
     sx={{
-      minWidth: 320,
+      minWidth: { xs: 0, sm: 320 },
       borderRadius: 2,
       boxShadow: 6,
     }}

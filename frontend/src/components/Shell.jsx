@@ -45,7 +45,9 @@ export function Shell() {
 
   const navButtonSx = {
     color: 'text.secondary',
-    px: 1.5,
+    px: { xs: 0.75, sm: 1.5 },
+    minWidth: 'auto',
+    fontSize: { xs: '0.78rem', sm: '0.875rem' },
     '&:hover': { bgcolor: 'action.hover', color: 'text.primary' }
   };
 
@@ -56,7 +58,7 @@ export function Shell() {
     <Box sx={{ minHeight: '100vh' }}>
       <AppBar position="sticky" elevation={0} color="inherit">
         <Container maxWidth="xl">
-          <Toolbar disableGutters sx={{ gap: { xs: 1, sm: 2 }, minHeight: { xs: 64, sm: 68 } }}>
+          <Toolbar disableGutters sx={{ gap: { xs: 0.75, sm: 2 }, minHeight: { xs: 64, sm: 68 }, flexWrap: { xs: 'wrap', md: 'nowrap' }, py: { xs: 1, md: 0 } }}>
             {/* Logo */}
             <Stack
               component={Link}
@@ -65,7 +67,8 @@ export function Shell() {
               alignItems="center"
               spacing={1}
               sx={{
-                mr: 'auto',
+                mr: { xs: 'auto', md: 'auto' },
+                minWidth: 0,
                 py: 0.75,
                 pr: 1.25,
                 borderRadius: 2,
@@ -75,7 +78,7 @@ export function Shell() {
               }}
             >
               <TrainIcon color="primary" />
-              <Typography variant="h6" fontWeight={800}>SouthRail</Typography>
+              <Typography variant="h6" fontWeight={800} sx={{ fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>SouthRail</Typography>
             </Stack>
 
             {/* Nav links */}

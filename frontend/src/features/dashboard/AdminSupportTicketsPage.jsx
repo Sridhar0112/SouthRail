@@ -455,7 +455,7 @@ function TicketDrawer({
       PaperProps={{
         sx: {
           width: { xs: '100vw', sm: '92vw', md: 640 },
-          maxWidth: 680,
+          maxWidth: '100vw',
           bgcolor: 'background.paper',
           backgroundImage: 'none',
           display: 'flex',
@@ -1040,7 +1040,7 @@ export default function AdminSupportTicketsPage() {
                 </Typography>
               </Box>
 
-              <Stack direction="row" spacing={1.5} flexShrink={0}>
+              <Stack direction="row" spacing={1.5} flexShrink={0} flexWrap="wrap" useFlexGap>
                 <Button
                   variant="contained"
                   color="secondary"
@@ -1179,8 +1179,8 @@ export default function AdminSupportTicketsPage() {
             {/* Table */}
             {!error && (
               <>
-                <TableContainer>
-                  <Table size="small">
+                <TableContainer sx={{ overflowX: 'auto' }}>
+                  <Table size="small" sx={{ minWidth: 980 }}>
                     <TableHead>
                       <TableRow
                         sx={{
