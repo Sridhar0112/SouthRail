@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import TablePagination from '@mui/material/TablePagination';
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import TablePagination from "@mui/material/TablePagination";
 import {
   Alert,
   Box,
@@ -24,34 +24,43 @@ import {
   Avatar,
   Skeleton,
   Divider,
-  alpha
-} from '@mui/material';
-import { useTheme, lighten } from '@mui/material/styles';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import CancelIcon from '@mui/icons-material/Cancel';
-import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
-import DirectionsRailwayIcon from '@mui/icons-material/DirectionsRailway';
-import HistoryIcon from '@mui/icons-material/History';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import PaymentsIcon from '@mui/icons-material/Payments';
-import RouteIcon from '@mui/icons-material/Route';
-import SearchIcon from '@mui/icons-material/Search';
-import TravelExploreIcon from '@mui/icons-material/TravelExplore';
-import TrainIcon from '@mui/icons-material/Train';
-import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import StarIcon from '@mui/icons-material/Star';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import { downloadTicketPdf } from '../../services/downloadTicket.js';
-import api from '../../services/api.js';
-import BookingCancellationDialog, { canShowCancelButton } from '../../components/BookingCancellationDialog.jsx';
-import { EmptyState, ErrorState, LoadingState } from '../../components/StateFeedback.jsx';
-import { RailwayStatusChip, formatStatus } from '../../components/RailwayStatusChip.jsx';
-import { getApiErrorMessage, isAuthError } from '../../utils/apiErrors.js';
+  alpha,
+} from "@mui/material";
+import { useTheme, lighten } from "@mui/material/styles";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import CancelIcon from "@mui/icons-material/Cancel";
+import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
+import DirectionsRailwayIcon from "@mui/icons-material/DirectionsRailway";
+import HistoryIcon from "@mui/icons-material/History";
+import NotificationsIcon from "@mui/icons-material/Notifications";
+import PaymentsIcon from "@mui/icons-material/Payments";
+import RouteIcon from "@mui/icons-material/Route";
+import SearchIcon from "@mui/icons-material/Search";
+import TravelExploreIcon from "@mui/icons-material/TravelExplore";
+import TrainIcon from "@mui/icons-material/Train";
+import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import StarIcon from "@mui/icons-material/Star";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import { downloadTicketPdf } from "../../services/downloadTicket.js";
+import api from "../../services/api.js";
+import BookingCancellationDialog, {
+  canShowCancelButton,
+} from "../../components/BookingCancellationDialog.jsx";
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+} from "../../components/StateFeedback.jsx";
+import {
+  RailwayStatusChip,
+  formatStatus,
+} from "../../components/RailwayStatusChip.jsx";
+import { getApiErrorMessage, isAuthError } from "../../utils/apiErrors.js";
 
 // ─── Theme helpers ───────────────────────────────────────────────────────────
 // SouthRail branding is expressed through the theme's primary/secondary palette
@@ -66,7 +75,7 @@ function getGreenShades(theme) {
     dark,
     main,
     mid: light,
-    light: lighten(light, theme.palette.mode === 'light' ? 0.25 : 0.18)
+    light: lighten(light, theme.palette.mode === "light" ? 0.25 : 0.18),
   };
 }
 
@@ -89,81 +98,115 @@ function getDashboardTokens(theme) {
     secondary: palette.secondary.main,
     secondaryLight: palette.secondary.light,
     success: palette.success.main,
-    error: palette.error.main
+    error: palette.error.main,
   };
 }
 
-const initialFilters = { search: '', status: 'ALL' };
+const initialFilters = { search: "", status: "ALL" };
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const theme = useTheme();
   const user = useSelector((state) => state.auth.user);
   const [page, setPage] = useState(0);
-const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [history, setHistory] = useState(null);
   const [notifications, setNotifications] = useState(null);
-  const [loading, setLoading] = useState({ history: true, notifications: true });
-  const [errors, setErrors] = useState({ history: '', notifications: '' });
+  const [loading, setLoading] = useState({
+    history: true,
+    notifications: true,
+  });
+  const [errors, setErrors] = useState({ history: "", notifications: "" });
   const [filters, setFilters] = useState(initialFilters);
-  const [cancellationPnr, setCancellationPnr] = useState('');
+  const [cancellationPnr, setCancellationPnr] = useState("");
   const [cancellationOpen, setCancellationOpen] = useState(false);
 
-  useEffect(() => { loadDashboard(); }, [user]);
   useEffect(() => {
-  window.scrollTo(0, 0);
-}, []);
+    loadDashboard();
+  }, [user]);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const loadDashboard = () => {
     setLoading({ history: true, notifications: true });
-    setErrors({ history: '', notifications: '' });
+    setErrors({ history: "", notifications: "" });
     setHistory(null);
     setNotifications(null);
 
-    api.get('/bookings?page=0&size=20')
+    api
+      .get("/bookings?page=0&size=20")
       .then(({ data }) => setHistory(normalizePage(data)))
       .catch((apiError) => {
-        console.error('Booking history load failed', apiError);
+        console.error("Booking history load failed", apiError);
         setHistory({ content: [] });
-        setErrors((c) => ({ ...c, history: getDashboardErrorMessage(apiError, 'Unable to load booking history right now.') }));
+        setErrors((c) => ({
+          ...c,
+          history: getDashboardErrorMessage(
+            apiError,
+            "Unable to load booking history right now.",
+          ),
+        }));
       })
       .finally(() => setLoading((c) => ({ ...c, history: false })));
 
-    api.get('/notifications?page=0&size=10')
+    api
+      .get("/notifications?page=0&size=10")
       .then(({ data }) => setNotifications(normalizeRows(data)))
       .catch((apiError) => {
-        console.error('Notifications load failed', apiError);
+        console.error("Notifications load failed", apiError);
         setNotifications([]);
-        setErrors((c) => ({ ...c, notifications: getDashboardErrorMessage(apiError, 'Unable to load notifications right now.') }));
+        setErrors((c) => ({
+          ...c,
+          notifications: getDashboardErrorMessage(
+            apiError,
+            "Unable to load notifications right now.",
+          ),
+        }));
       })
       .finally(() => setLoading((c) => ({ ...c, notifications: false })));
   };
 
-  const openCancellation  = (pnr) => { setCancellationPnr(pnr || ''); setCancellationOpen(true); };
-  const closeCancellation = ()    => setCancellationOpen(false);
-  const handleCancelled   = ()    => loadDashboard();
+  const openCancellation = (pnr) => {
+    setCancellationPnr(pnr || "");
+    setCancellationOpen(true);
+  };
+  const closeCancellation = () => setCancellationOpen(false);
+  const handleCancelled = () => loadDashboard();
 
-  const bookings        = history?.content || [];
-  const sortedBookings  = useMemo(() => sortBookings(bookings), [bookings]);
-  const metrics         = useMemo(() => buildDashboardMetrics(sortedBookings), [sortedBookings]);
-  const filteredBookings = useMemo(() => filterBookings(sortedBookings, filters), [sortedBookings, filters]);
+  const bookings = history?.content || [];
+  const sortedBookings = useMemo(() => sortBookings(bookings), [bookings]);
+  const metrics = useMemo(
+    () => buildDashboardMetrics(sortedBookings),
+    [sortedBookings],
+  );
+  const filteredBookings = useMemo(
+    () => filterBookings(sortedBookings, filters),
+    [sortedBookings, filters],
+  );
   const paginatedBookings = filteredBookings.slice(
-  page * rowsPerPage,
-  page * rowsPerPage + rowsPerPage
-);
-useEffect(() => {
-  setPage(0);
-}, [filters]);
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage,
+  );
+  useEffect(() => {
+    setPage(0);
+  }, [filters]);
   const upcomingBookings = metrics.upcomingBookings;
 
-  const displayName = user?.fullName || 'Passenger';
-  const displayEmail = user?.email || '';
+  const displayName = user?.fullName || "Passenger";
+  const displayEmail = user?.email || "";
   const roles = Array.from(user?.roles || []);
   const historyLoaded = !loading.history && !errors.history;
   const notificationsLoaded = !loading.notifications && !errors.notifications;
 
   return (
-    <Box sx={{ bgcolor: theme.palette.background.default, minHeight: '100vh', pb: 6 }}>
+    <Box
+      sx={{
+        bgcolor: theme.palette.background.default,
+        minHeight: "100vh",
+        pb: 6,
+      }}
+    >
       {/* Hero */}
       <HeroSection
         displayName={displayName}
@@ -174,13 +217,21 @@ useEffect(() => {
         onRefresh={loadDashboard}
       />
 
-      <Container maxWidth="xl" sx={{ mt: { xs: -3, md: -4 }, position: 'relative', zIndex: 1 }}>
+      <Container
+        maxWidth="xl"
+        sx={{ mt: { xs: -3, md: -4 }, position: "relative", zIndex: 1 }}
+      >
         <Stack spacing={4}>
           {/* KPI strip */}
           {loading.history ? (
             <KpiSkeleton />
           ) : errors.history ? (
-            <ErrorState title="Travel data unavailable" message={errors.history} actionLabel="Retry" onAction={loadDashboard} />
+            <ErrorState
+              title="Travel data unavailable"
+              message={errors.history}
+              actionLabel="Retry"
+              onAction={loadDashboard}
+            />
           ) : (
             <KpiStrip metrics={metrics} />
           )}
@@ -195,13 +246,12 @@ useEffect(() => {
                 onRetry={loadDashboard}
                 onCancelBooking={openCancellation}
               />
-              
             </Grid>
             <Grid item xs={12} lg={4}>
-             <RecentActivitySection
-  bookings={sortedBookings}
-  loading={loading.history}
-/>
+              <RecentActivitySection
+                bookings={sortedBookings}
+                loading={loading.history}
+              />
             </Grid>
           </Grid>
 
@@ -209,7 +259,7 @@ useEffect(() => {
           <BookingHistoryCard
             loading={loading.history}
             error={errors.history}
-           rows={paginatedBookings}
+            rows={paginatedBookings}
             allRows={sortedBookings}
             filters={filters}
             setFilters={setFilters}
@@ -218,18 +268,40 @@ useEffect(() => {
             onRetry={loadDashboard}
             onCancelBooking={openCancellation}
           />
-          <TablePagination
-  component="div"
-  count={filteredBookings.length}
-  page={page}
-  onPageChange={(event, newPage) => setPage(newPage)}
-  rowsPerPage={rowsPerPage}
-  onRowsPerPageChange={(event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  }}
-  rowsPerPageOptions={[5, 10, 20, 50]}
-/>
+          <Paper
+            variant="outlined"
+            sx={{
+              borderRadius: 2.5,
+              overflowX: "auto",
+              "& .MuiTablePagination-toolbar": {
+                flexWrap: "wrap",
+                justifyContent: { xs: "center", sm: "flex-end" },
+                gap: { xs: 0.5, sm: 1 },
+                px: { xs: 1, sm: 2 },
+              },
+              "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows":
+                {
+                  my: { xs: 0.5, sm: 0 },
+                  fontSize: { xs: 12, sm: 14 },
+                },
+              "& .MuiTablePagination-actions": {
+                ml: { xs: 0, sm: 2 },
+              },
+            }}
+          >
+            <TablePagination
+              component="div"
+              count={filteredBookings.length}
+              page={page}
+              onPageChange={(event, newPage) => setPage(newPage)}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={(event) => {
+                setRowsPerPage(parseInt(event.target.value, 10));
+                setPage(0);
+              }}
+              rowsPerPageOptions={[5, 10, 20, 50]}
+            />
+          </Paper>
 
           {/* Notifications */}
         </Stack>
@@ -246,10 +318,17 @@ useEffect(() => {
 }
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
-function HeroSection({ displayName, displayEmail, roles, loading, metrics, onRefresh }) {
+function HeroSection({
+  displayName,
+  displayEmail,
+  roles,
+  loading,
+  metrics,
+  onRefresh,
+}) {
   const theme = useTheme();
   const greens = getGreenShades(theme);
-  const initial = displayName?.[0]?.toUpperCase() || 'P';
+  const initial = displayName?.[0]?.toUpperCase() || "P";
 
   return (
     <Box
@@ -258,36 +337,58 @@ function HeroSection({ displayName, displayEmail, roles, loading, metrics, onRef
         pt: { xs: 3, md: 4 },
         pb: { xs: 3, md: 4 },
         px: { xs: 2, md: 0 },
-        position: 'relative',
-        overflow: 'hidden',
+        position: "relative",
+        overflow: "hidden",
       }}
     >
       {/* Track lines decoration */}
-      <Box sx={{
-        position: 'absolute', bottom: 0, left: 0, right: 0, height: 28,
-        backgroundImage: `repeating-linear-gradient(90deg, ${alpha('#fff', 0.07)} 0px, ${alpha('#fff', 0.07)} 40px, transparent 40px, transparent 80px)`,
-        borderTop: `3px solid ${alpha('#fff', 0.12)}`,
-      }} />
+      <Box
+        sx={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 28,
+          backgroundImage: `repeating-linear-gradient(90deg, ${alpha("#fff", 0.07)} 0px, ${alpha("#fff", 0.07)} 40px, transparent 40px, transparent 80px)`,
+          borderTop: `3px solid ${alpha("#fff", 0.12)}`,
+        }}
+      />
       {/* Subtle circle glow */}
-      <Box sx={{
-        position: 'absolute', top: -80, right: -80, width: { xs: 180, md: 380 }, height: { xs: 180, md: 380 },
-        borderRadius: '50%', bgcolor: alpha(greens.light, 0.12), pointerEvents: 'none',
-      }} />
+      <Box
+        sx={{
+          position: "absolute",
+          top: -80,
+          right: -80,
+          width: { xs: 180, md: 380 },
+          height: { xs: 180, md: 380 },
+          borderRadius: "50%",
+          bgcolor: alpha(greens.light, 0.12),
+          pointerEvents: "none",
+        }}
+      />
 
       <Container maxWidth="xl">
         <Stack
-          direction={{ xs: 'column', md: 'row' }}
+          direction={{ xs: "column", md: "row" }}
           spacing={3}
           justifyContent="space-between"
-          alignItems={{ xs: 'flex-start', md: 'center' }}
+          alignItems={{ xs: "flex-start", md: "center" }}
         >
           {/* Left: Identity */}
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={2.5}
+            alignItems={{ xs: "flex-start", sm: "center" }}
+          >
             <Avatar
               sx={{
-                width: 56, height: 56,
-                bgcolor: alpha('#ffffff', 0.92), color: greens.dark,
-                fontSize: 28, fontWeight: 900, border: `3px solid ${alpha('#fff', 0.3)}`,
+                width: 56,
+                height: 56,
+                bgcolor: alpha("#ffffff", 0.92),
+                color: greens.dark,
+                fontSize: 28,
+                fontWeight: 900,
+                border: `3px solid ${alpha("#fff", 0.3)}`,
                 flexShrink: 0,
               }}
             >
@@ -295,22 +396,59 @@ function HeroSection({ displayName, displayEmail, roles, loading, metrics, onRef
             </Avatar>
             <Box sx={{ minWidth: 0 }}>
               <Typography
-                sx={{ color: alpha('#fff', 0.65), fontSize: 13, fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase', mb: 0.25 }}
+                sx={{
+                  color: alpha("#fff", 0.65),
+                  fontSize: 13,
+                  fontWeight: 600,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                  mb: 0.25,
+                }}
               >
                 Welcome back
               </Typography>
-              <Typography variant="h4" sx={{ color: '#fff', fontWeight: 900, lineHeight: 1.15, fontSize: { xs: '1.8rem', sm: '2.125rem' }, overflowWrap: 'anywhere' }}>
+              <Typography
+                variant="h4"
+                sx={{
+                  color: "#fff",
+                  fontWeight: 900,
+                  lineHeight: 1.15,
+                  fontSize: { xs: "1.8rem", sm: "2.125rem" },
+                  overflowWrap: "anywhere",
+                }}
+              >
                 {displayName}
               </Typography>
-              <Typography sx={{ color: alpha('#fff', 0.6), fontSize: 14, mt: 0.25, overflowWrap: 'anywhere' }}>{displayEmail}</Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}
-  justifyContent={{ xs: 'flex-start', md: 'flex-end' }}>
+              <Typography
+                sx={{
+                  color: alpha("#fff", 0.6),
+                  fontSize: 14,
+                  mt: 0.25,
+                  overflowWrap: "anywhere",
+                }}
+              >
+                {displayEmail}
+              </Typography>
+              <Stack
+                direction="row"
+                spacing={1}
+                flexWrap="wrap"
+                useFlexGap
+                sx={{ mt: 1 }}
+                justifyContent={{ xs: "flex-start", md: "flex-end" }}
+              >
                 {roles.map((role) => (
                   <Chip
                     key={role}
                     size="small"
-                    label={String(role).replace('ROLE_', '')}
-                    sx={{ bgcolor: alpha('#fff', 0.15), color: '#fff', borderColor: alpha('#fff', 0.3), fontWeight: 700, fontSize: 11 }}
+                    label={String(role).replace("ROLE_", "")}
+                    sx={{
+                      bgcolor: alpha("#fff", 0.15),
+                      color: "#fff",
+                      borderColor: alpha("#fff", 0.3),
+                      fontWeight: 700,
+                      fontSize: 11,
+                    }}
                     variant="outlined"
                   />
                 ))}
@@ -319,61 +457,81 @@ function HeroSection({ displayName, displayEmail, roles, loading, metrics, onRef
           </Stack>
 
           {/* Right: Hero stats + CTAs */}
-          <Stack spacing={2} alignItems={{ xs: 'stretch', md: 'flex-end' }} sx={{ width: { xs: '100%', md: 'auto' } }}>
+          <Stack
+            spacing={2}
+            alignItems={{ xs: "stretch", md: "flex-end" }}
+            sx={{ width: { xs: "100%", md: "auto" } }}
+          >
             <Stack
-  direction={{ xs: 'column', sm: 'row' }}
-  spacing={{ xs: 1.5, sm: 3 }}
-  flexWrap="wrap"
-  justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
->
-  <HeroStat
-    label="Total Trips"
-    value={loading ? '—' : metrics.totalBookings}
-  />
+              direction={{ xs: "column", sm: "row" }}
+              spacing={{ xs: 1.5, sm: 3 }}
+              flexWrap="wrap"
+              justifyContent={{ xs: "flex-start", md: "flex-end" }}
+            >
+              <HeroStat
+                label="Total Trips"
+                value={loading ? "—" : metrics.totalBookings}
+              />
 
-  <HeroStat
-    label="Upcoming"
-    value={loading ? '—' : metrics.upcomingCount}
-    highlightColor={greens.light}
-  />
+              <HeroStat
+                label="Upcoming"
+                value={loading ? "—" : metrics.upcomingCount}
+                highlightColor={greens.light}
+              />
 
-  <HeroStat
-    label="Confirmed"
-    value={loading ? '—' : metrics.confirmedCount}
-  />
+              <HeroStat
+                label="Confirmed"
+                value={loading ? "—" : metrics.confirmedCount}
+              />
 
-  <HeroStat
-    label="Cancelled"
-    value={loading ? '—' : metrics.cancelledCount}
-  />
+              <HeroStat
+                label="Cancelled"
+                value={loading ? "—" : metrics.cancelledCount}
+              />
 
-  {metrics.hasFareData && !loading && (
-    <HeroStat
-      label="Total Spend"
-      value={formatFare(metrics.totalSpend)}
-    />
-  )}
-</Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
+              {metrics.hasFareData && !loading && (
+                <HeroStat
+                  label="Total Spend"
+                  value={formatFare(metrics.totalSpend)}
+                />
+              )}
+            </Stack>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={1.5}
+              sx={{
+                "& .MuiButton-root": { width: { xs: "100%", sm: "auto" } },
+              }}
+            >
               <Button
-                component={Link} to="/"
+                component={Link}
+                to="/"
                 variant="contained"
                 startIcon={<SearchIcon />}
                 sx={{
-                  bgcolor: '#ffffff', color: greens.dark, fontWeight: 800,
-                  '&:hover': { bgcolor: alpha('#ffffff', 0.9) },
-                  px: 3, borderRadius: 2,
+                  bgcolor: "#ffffff",
+                  color: greens.dark,
+                  fontWeight: 800,
+                  "&:hover": { bgcolor: alpha("#ffffff", 0.9) },
+                  px: 3,
+                  borderRadius: 2,
                 }}
               >
                 Search Trains
               </Button>
               <Button
-                component={Link} to="/pnr"
+                component={Link}
+                to="/pnr"
                 startIcon={<ConfirmationNumberIcon />}
                 sx={{
-                  borderColor: alpha('#fff', 0.45), color: '#fff',
-                  '&:hover': { borderColor: '#fff', bgcolor: alpha('#fff', 0.08) },
-                  px: 3, borderRadius: 2,
+                  borderColor: alpha("#fff", 0.45),
+                  color: "#fff",
+                  "&:hover": {
+                    borderColor: "#fff",
+                    bgcolor: alpha("#fff", 0.08),
+                  },
+                  px: 3,
+                  borderRadius: 2,
                 }}
                 variant="outlined"
               >
@@ -383,8 +541,12 @@ function HeroSection({ displayName, displayEmail, roles, loading, metrics, onRef
                 onClick={onRefresh}
                 startIcon={<RefreshIcon />}
                 sx={{
-                  color: alpha('#fff', 0.7), borderColor: alpha('#fff', 0.25),
-                  '&:hover': { borderColor: alpha('#fff', 0.5), bgcolor: alpha('#fff', 0.06) },
+                  color: alpha("#fff", 0.7),
+                  borderColor: alpha("#fff", 0.25),
+                  "&:hover": {
+                    borderColor: alpha("#fff", 0.5),
+                    bgcolor: alpha("#fff", 0.06),
+                  },
                   borderRadius: 2,
                 }}
                 variant="outlined"
@@ -402,11 +564,27 @@ function HeroSection({ displayName, displayEmail, roles, loading, metrics, onRef
 
 function HeroStat({ label, value, highlightColor }) {
   return (
-    <Box sx={{ textAlign: { xs: 'left', sm: 'right' }, minWidth: 0 }}>
-      <Typography sx={{ color: highlightColor || '#fff', fontWeight: 900, fontSize: { xs: 22, md: 28 }, lineHeight: 1 }}>
+    <Box sx={{ textAlign: { xs: "left", sm: "right" }, minWidth: 0 }}>
+      <Typography
+        sx={{
+          color: highlightColor || "#fff",
+          fontWeight: 900,
+          fontSize: { xs: 22, md: 28 },
+          lineHeight: 1,
+        }}
+      >
         {value}
       </Typography>
-      <Typography sx={{ color: alpha('#fff', 0.55), fontSize: 11, fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase', mt: 0.3 }}>
+      <Typography
+        sx={{
+          color: alpha("#fff", 0.55),
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: 0.5,
+          textTransform: "uppercase",
+          mt: 0.3,
+        }}
+      >
         {label}
       </Typography>
     </Box>
@@ -416,12 +594,42 @@ function HeroStat({ label, value, highlightColor }) {
 // ─── KPI Strip ────────────────────────────────────────────────────────────────
 function buildKpiCards(metrics, t, greens) {
   return [
-    { label: 'Total Bookings', value: metrics.totalBookings,  icon: <ConfirmationNumberIcon />, color: t.primary },
-    { label: 'Upcoming Trips', value: metrics.upcomingCount,  icon: <TravelExploreIcon />,      color: greens.mid },
-    { label: 'Confirmed',      value: metrics.confirmedCount, icon: <CheckCircleIcon />,        color: greens.light },
-    { label: 'Cancelled',      value: metrics.cancelledCount, icon: <CancelIcon />,             color: t.error },
-    { label: 'Completed',      value: metrics.completedCount, icon: <DirectionsRailwayIcon />,  color: greens.dark },
-    { label: 'Total Spend',    value: metrics.hasFareData ? formatFare(metrics.totalSpend) : 'Rs 0', icon: <CurrencyRupeeIcon />, color: t.secondary }
+    {
+      label: "Total Bookings",
+      value: metrics.totalBookings,
+      icon: <ConfirmationNumberIcon />,
+      color: t.primary,
+    },
+    {
+      label: "Upcoming Trips",
+      value: metrics.upcomingCount,
+      icon: <TravelExploreIcon />,
+      color: greens.mid,
+    },
+    {
+      label: "Confirmed",
+      value: metrics.confirmedCount,
+      icon: <CheckCircleIcon />,
+      color: greens.light,
+    },
+    {
+      label: "Cancelled",
+      value: metrics.cancelledCount,
+      icon: <CancelIcon />,
+      color: t.error,
+    },
+    {
+      label: "Completed",
+      value: metrics.completedCount,
+      icon: <DirectionsRailwayIcon />,
+      color: greens.dark,
+    },
+    {
+      label: "Total Spend",
+      value: metrics.hasFareData ? formatFare(metrics.totalSpend) : "Rs 0",
+      icon: <CurrencyRupeeIcon />,
+      color: t.secondary,
+    },
   ];
 }
 
@@ -432,10 +640,22 @@ function KpiStrip({ metrics }) {
 
   if (metrics.totalBookings === 0) {
     return (
-      <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: `1.5px dashed ${t.cardBorder}`, textAlign: 'center' }}>
+      <Paper
+        elevation={0}
+        sx={{
+          p: 3,
+          borderRadius: 3,
+          border: `1.5px dashed ${t.cardBorder}`,
+          textAlign: "center",
+        }}
+      >
         <TrainIcon sx={{ fontSize: 40, color: alpha(t.primary, 0.3), mb: 1 }} />
-        <Typography fontWeight={700} color={t.textMain}>No travel statistics yet</Typography>
-        <Typography color={t.textSub} variant="body2">Book your first journey to see summaries here.</Typography>
+        <Typography fontWeight={700} color={t.textMain}>
+          No travel statistics yet
+        </Typography>
+        <Typography color={t.textSub} variant="body2">
+          Book your first journey to see summaries here.
+        </Typography>
       </Paper>
     );
   }
@@ -446,28 +666,55 @@ function KpiStrip({ metrics }) {
           <Paper
             elevation={0}
             sx={{
-              p: { xs: 2, md: 1.5 }, borderRadius: 3, bgcolor: t.raisedBg,
+              p: { xs: 2, md: 1.5 },
+              borderRadius: 3,
+              bgcolor: t.raisedBg,
               border: `1.5px solid ${t.cardBorder}`,
-              transition: 'box-shadow 0.2s, transform 0.2s',
-              height: '100%',
-              '&:hover': { boxShadow: t.cardShadow, transform: 'translateY(-2px)' },
+              transition: "box-shadow 0.2s, transform 0.2s",
+              height: "100%",
+              "&:hover": {
+                boxShadow: t.cardShadow,
+                transform: "translateY(-2px)",
+              },
             }}
           >
             <Stack spacing={1.5}>
               <Box
                 sx={{
-                  width: 36, height: 36, borderRadius: 2,
-                  bgcolor: alpha(card.color, 0.1), color: card.color,
-                  display: 'grid', placeItems: 'center',
+                  width: 36,
+                  height: 36,
+                  borderRadius: 2,
+                  bgcolor: alpha(card.color, 0.1),
+                  color: card.color,
+                  display: "grid",
+                  placeItems: "center",
                 }}
               >
                 {card.icon}
               </Box>
               <Box>
-                <Typography sx={{ color: t.textSub, fontSize: { xs: 11, md: 10 }, fontWeight: 600, letterSpacing: 0.3, textTransform: 'uppercase', lineHeight: 1.2 }}>
+                <Typography
+                  sx={{
+                    color: t.textSub,
+                    fontSize: { xs: 11, md: 10 },
+                    fontWeight: 600,
+                    letterSpacing: 0.3,
+                    textTransform: "uppercase",
+                    lineHeight: 1.2,
+                  }}
+                >
                   {card.label}
                 </Typography>
-                <Typography sx={{ fontWeight: 900, fontSize: { xs: 20, md: 22 }, color: t.textMain, lineHeight: 1.1, mt: 0.5, wordBreak: 'break-word' }}>
+                <Typography
+                  sx={{
+                    fontWeight: 900,
+                    fontSize: { xs: 20, md: 22 },
+                    color: t.textMain,
+                    lineHeight: 1.1,
+                    mt: 0.5,
+                    wordBreak: "break-word",
+                  }}
+                >
                   {card.value}
                 </Typography>
               </Box>
@@ -486,8 +733,21 @@ function KpiSkeleton() {
     <Grid container spacing={2}>
       {[1, 2, 3, 4, 5, 6].map((i) => (
         <Grid item xs={6} sm={4} md={2} key={i}>
-          <Paper elevation={0} sx={{ p: { xs: 2, md: 1.5 }, borderRadius: 3, border: `1.5px solid ${t.cardBorder}`, height: '100%' }}>
-            <Skeleton variant="rounded" width={36} height={36} sx={{ mb: 1.5, borderRadius: 2 }} />
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 2, md: 1.5 },
+              borderRadius: 3,
+              border: `1.5px solid ${t.cardBorder}`,
+              height: "100%",
+            }}
+          >
+            <Skeleton
+              variant="rounded"
+              width={36}
+              height={36}
+              sx={{ mb: 1.5, borderRadius: 2 }}
+            />
             <Skeleton width="70%" height={12} sx={{ mb: 0.5 }} />
             <Skeleton width="50%" height={26} />
           </Paper>
@@ -498,7 +758,13 @@ function KpiSkeleton() {
 }
 
 // ─── Next Journey (ticket-style) ─────────────────────────────────────────────
-function NextJourneySection({ loading, error, bookings, onRetry, onCancelBooking }) {
+function NextJourneySection({
+  loading,
+  error,
+  bookings,
+  onRetry,
+  onCancelBooking,
+}) {
   const theme = useTheme();
   const t = getDashboardTokens(theme);
   const visibleBookings = bookings?.slice(0, 3) || [];
@@ -533,8 +799,10 @@ function NextJourneySection({ loading, error, bookings, onRetry, onCancelBooking
       )}
 
       {!loading && !error && visibleBookings.length === 0 && (
-        <Box sx={{ py: 5, textAlign: 'center' }}>
-          <TrainIcon sx={{ fontSize: 56, color: alpha(t.primary, 0.18), mb: 1.5 }} />
+        <Box sx={{ py: 5, textAlign: "center" }}>
+          <TrainIcon
+            sx={{ fontSize: 56, color: alpha(t.primary, 0.18), mb: 1.5 }}
+          />
           <Typography fontWeight={700} color={t.textMain} gutterBottom>
             No upcoming trips
           </Typography>
@@ -549,7 +817,7 @@ function NextJourneySection({ loading, error, bookings, onRetry, onCancelBooking
             sx={{
               bgcolor: t.primary,
               color: theme.palette.primary.contrastText,
-              '&:hover': { bgcolor: t.primaryDark },
+              "&:hover": { bgcolor: t.primaryDark },
               borderRadius: 2,
             }}
           >
@@ -576,29 +844,31 @@ function NextJourneySection({ loading, error, bookings, onRetry, onCancelBooking
 
 function TicketCard({ booking, onCancelBooking, featured }) {
   const [downloading, setDownloading] = useState(false);
-  const [downloadError, setDownloadError] = useState('');
+  const [downloadError, setDownloadError] = useState("");
   const theme = useTheme();
   const t = getDashboardTokens(theme);
   const greens = getGreenShades(theme);
-  
+
   const showCancel = booking.pnr && canShowCancelButton(booking.status);
-  const src  = booking.sourceCode || booking.sourceName || '—';
-  const dest = booking.destinationCode || booking.destinationName || '—';
+  const src = booking.sourceCode || booking.sourceName || "—";
+  const dest = booking.destinationCode || booking.destinationName || "—";
 
   const handleDownloadTicket = async () => {
     if (!booking.pnr) {
-      setDownloadError('PNR is not available for this booking.');
+      setDownloadError("PNR is not available for this booking.");
       return;
     }
 
     setDownloading(true);
-    setDownloadError('');
+    setDownloadError("");
 
     try {
       await downloadTicketPdf(booking.pnr);
     } catch (error) {
-      console.error('Ticket download failed', error);
-      setDownloadError('Unable to download this ticket right now. Please try again.');
+      console.error("Ticket download failed", error);
+      setDownloadError(
+        "Unable to download this ticket right now. Please try again.",
+      );
     } finally {
       setDownloading(false);
     }
@@ -608,101 +878,190 @@ function TicketCard({ booking, onCancelBooking, featured }) {
     <Box
       sx={{
         borderRadius: 3,
-        border: featured ? `2px solid ${t.primary}` : `1.5px solid ${t.cardBorder}`,
-        boxShadow: featured
-  ? `0 10px 30px ${alpha(t.primary, 0.18)}`
-  : 'none',
+        border: featured
+          ? `2px solid ${t.primary}`
+          : `1.5px solid ${t.cardBorder}`,
+        boxShadow: featured ? `0 10px 30px ${alpha(t.primary, 0.18)}` : "none",
         bgcolor: featured ? alpha(t.primary, 0.04) : t.raisedBg,
-        overflow: 'hidden',
-        position: 'relative',
+        overflow: "hidden",
+        position: "relative",
       }}
     >
       {/* Top stripe */}
       {featured && (
-        <Box sx={{ height: 4, background: `linear-gradient(90deg, ${greens.dark}, ${greens.mid})` }} />
+        <Box
+          sx={{
+            height: 4,
+            background: `linear-gradient(90deg, ${greens.dark}, ${greens.mid})`,
+          }}
+        />
       )}
       <Box sx={{ p: { xs: 2, md: 2.5 } }}>
         {/* Train name + status */}
-        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'flex-start' }} spacing={1} sx={{ mb: 1.5 }}>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          justifyContent="space-between"
+          alignItems={{ xs: "flex-start", sm: "flex-start" }}
+          spacing={1}
+          sx={{ mb: 1.5 }}
+        >
           <Box>
             {featured && (
-              <Typography sx={{ fontSize: 11, fontWeight: 700, color: t.primary, letterSpacing: 1, textTransform: 'uppercase', mb: 0.25 }}>
+              <Typography
+                sx={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: t.primary,
+                  letterSpacing: 1,
+                  textTransform: "uppercase",
+                  mb: 0.25,
+                }}
+              >
                 Next departure
               </Typography>
             )}
-            <Typography variant="h6" fontWeight={900} color={t.textMain} sx={{ lineHeight: 1.2, overflowWrap: 'anywhere' }}>
-              {booking.trainName || 'Train'}
+            <Typography
+              variant="h6"
+              fontWeight={900}
+              color={t.textMain}
+              sx={{ lineHeight: 1.2, overflowWrap: "anywhere" }}
+            >
+              {booking.trainName || "Train"}
             </Typography>
-            <Typography variant="body2" color={t.textSub}>{booking.trainNumber || ''}</Typography>
+            <Typography variant="body2" color={t.textSub}>
+              {booking.trainNumber || ""}
+            </Typography>
           </Box>
           <RailwayStatusChip status={booking.status} />
         </Stack>
 
         {/* Route visual */}
-        <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'stretch', sm: 'center' }} spacing={1.5} sx={{ mb: 1.5 }}>
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography fontWeight={900} fontSize={18} color={t.textMain}>{src}</Typography>
-            <Typography fontSize={10} color={t.textSub} textTransform="uppercase" letterSpacing={0.5}>Origin</Typography>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          alignItems={{ xs: "stretch", sm: "center" }}
+          spacing={1.5}
+          sx={{ mb: 1.5 }}
+        >
+          <Box sx={{ textAlign: "center" }}>
+            <Typography fontWeight={900} fontSize={18} color={t.textMain}>
+              {src}
+            </Typography>
+            <Typography
+              fontSize={10}
+              color={t.textSub}
+              textTransform="uppercase"
+              letterSpacing={0.5}
+            >
+              Origin
+            </Typography>
           </Box>
-          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Box
+            sx={{ flex: 1, display: "flex", alignItems: "center", gap: 0.5 }}
+          >
             <FiberManualRecordIcon sx={{ fontSize: 8, color: t.primary }} />
-            <Box sx={{ flex: 1, height: 2, bgcolor: t.divider, borderRadius: 1, position: 'relative' }}>
-              <Box sx={{ position: 'absolute', top: -3, left: '50%', transform: 'translateX(-50%)' }}>
+            <Box
+              sx={{
+                flex: 1,
+                height: 2,
+                bgcolor: t.divider,
+                borderRadius: 1,
+                position: "relative",
+              }}
+            >
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: -3,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                }}
+              >
                 <TrainIcon sx={{ fontSize: 14, color: t.primary }} />
               </Box>
             </Box>
             <FiberManualRecordIcon sx={{ fontSize: 8, color: t.primary }} />
           </Box>
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography fontWeight={900} fontSize={18} color={t.textMain}>{dest}</Typography>
-            <Typography fontSize={10} color={t.textSub} textTransform="uppercase" letterSpacing={0.5}>Destination</Typography>
+          <Box sx={{ textAlign: "center" }}>
+            <Typography fontWeight={900} fontSize={18} color={t.textMain}>
+              {dest}
+            </Typography>
+            <Typography
+              fontSize={10}
+              color={t.textSub}
+              textTransform="uppercase"
+              letterSpacing={0.5}
+            >
+              Destination
+            </Typography>
           </Box>
         </Stack>
 
         {/* Meta row */}
-        <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>
-            <MetaItem label="Date"   value={formatDate(booking.journeyDate)} />
-            <MetaItem label="PNR"    value={booking.pnr || '—'} />
-            <MetaItem label="Fare"   value={formatFare(booking.totalFare)} bold />
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          flexWrap="wrap"
+          gap={1}
+        >
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25}>
+            <MetaItem label="Date" value={formatDate(booking.journeyDate)} />
+            <MetaItem label="PNR" value={booking.pnr || "—"} />
+            <MetaItem label="Fare" value={formatFare(booking.totalFare)} bold />
           </Stack>
-         <Stack
-  direction={{ xs: 'column', sm: 'row' }}
-  spacing={1}
-  sx={{
-    width: { xs: '100%', sm: 'auto' },
-    '& .MuiButton-root': {
-      width: { xs: '100%', sm: 'auto' }
-    }
-  }}
-><Button
-  size="small"
-  startIcon={<PictureAsPdfIcon />}
-  disabled={!booking.pnr || downloading}
-  onClick={handleDownloadTicket}
-  sx={{ borderRadius: 2 }}
-  variant="contained"
->
-  {downloading ? 'Downloading...' : 'Ticket'}
-</Button>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1}
+            sx={{
+              width: { xs: "100%", sm: "auto" },
+              "& .MuiButton-root": {
+                width: { xs: "100%", sm: "auto" },
+              },
+            }}
+          >
+            <Button
+              size="small"
+              startIcon={<PictureAsPdfIcon />}
+              disabled={!booking.pnr || downloading}
+              onClick={handleDownloadTicket}
+              sx={{ borderRadius: 2 }}
+              variant="contained"
+            >
+              {downloading ? "Downloading..." : "Ticket"}
+            </Button>
             {downloadError && (
-              <Alert severity="error" sx={{ width: '100%', py: 0, alignItems: 'center' }}>
+              <Alert
+                severity="error"
+                sx={{ width: "100%", py: 0, alignItems: "center" }}
+              >
                 {downloadError}
               </Alert>
             )}
             <Button
-              component={Link} to={`/pnr?pnr=${booking.pnr || ''}`}
-              size="small" startIcon={<ConfirmationNumberIcon />}
+              component={Link}
+              to={`/pnr?pnr=${booking.pnr || ""}`}
+              size="small"
+              startIcon={<ConfirmationNumberIcon />}
               disabled={!booking.pnr}
-              sx={{ borderRadius: 2, borderColor: t.primary, color: t.primary, '&:hover': { bgcolor: alpha(t.primary, 0.07) } }}
+              sx={{
+                borderRadius: 2,
+                borderColor: t.primary,
+                color: t.primary,
+                "&:hover": { bgcolor: alpha(t.primary, 0.07) },
+              }}
               variant="outlined"
             >
               Track
             </Button>
             {showCancel && (
-              <Button size="small" color="error" startIcon={<CancelIcon />}
-                sx={{ borderRadius: 2 }} variant="outlined"
-                onClick={() => onCancelBooking(booking.pnr)}>
+              <Button
+                size="small"
+                color="error"
+                startIcon={<CancelIcon />}
+                sx={{ borderRadius: 2 }}
+                variant="outlined"
+                onClick={() => onCancelBooking(booking.pnr)}
+              >
                 Cancel
               </Button>
             )}
@@ -718,8 +1077,26 @@ function MetaItem({ label, value, bold }) {
   const t = getDashboardTokens(theme);
   return (
     <Box>
-      <Typography sx={{ fontSize: 10, color: t.textSub, textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 600 }}>{label}</Typography>
-      <Typography sx={{ fontSize: 13, fontWeight: bold ? 900 : 700, color: bold ? t.primary : t.textMain }}>{value}</Typography>
+      <Typography
+        sx={{
+          fontSize: 10,
+          color: t.textSub,
+          textTransform: "uppercase",
+          letterSpacing: 0.5,
+          fontWeight: 600,
+        }}
+      >
+        {label}
+      </Typography>
+      <Typography
+        sx={{
+          fontSize: 13,
+          fontWeight: bold ? 900 : 700,
+          color: bold ? t.primary : t.textMain,
+        }}
+      >
+        {value}
+      </Typography>
     </Box>
   );
 }
@@ -728,17 +1105,34 @@ function JourneySkeleton() {
   const theme = useTheme();
   const t = getDashboardTokens(theme);
   return (
-    <Box sx={{ borderRadius: 3, border: `1.5px solid ${t.cardBorder}`, overflow: 'hidden' }}>
+    <Box
+      sx={{
+        borderRadius: 3,
+        border: `1.5px solid ${t.cardBorder}`,
+        overflow: "hidden",
+      }}
+    >
       <Skeleton variant="rectangular" height={4} />
       <Box sx={{ p: 2.5 }}>
         <Skeleton width="40%" height={14} sx={{ mb: 0.5 }} />
         <Skeleton width="60%" height={28} sx={{ mb: 1.5 }} />
-        <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'stretch', sm: 'center' }} spacing={1.5} sx={{ mb: 1.5 }}>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          alignItems={{ xs: "stretch", sm: "center" }}
+          spacing={1.5}
+          sx={{ mb: 1.5 }}
+        >
           <Skeleton width={48} height={36} />
-          <Box sx={{ flex: 1 }}><Skeleton height={8} /></Box>
+          <Box sx={{ flex: 1 }}>
+            <Skeleton height={8} />
+          </Box>
           <Skeleton width={48} height={36} />
         </Stack>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}><Skeleton width={60} height={36} /><Skeleton width={60} height={36} /><Skeleton width={60} height={36} /></Stack>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25}>
+          <Skeleton width={60} height={36} />
+          <Skeleton width={60} height={36} />
+          <Skeleton width={60} height={36} />
+        </Stack>
       </Box>
     </Box>
   );
@@ -749,25 +1143,75 @@ function TravelInsightsCard({ loading, error, metrics }) {
   const theme = useTheme();
   const t = getDashboardTokens(theme);
   return (
-    <SectionCard title="Travel Insights" subtitle="Based on your booking history" icon={<TrendingUpIcon sx={{ color: t.primary }} />}>
+    <SectionCard
+      title="Travel Insights"
+      subtitle="Based on your booking history"
+      icon={<TrendingUpIcon sx={{ color: t.primary }} />}
+    >
       {loading && (
-        <Stack spacing={1.5}>{[1,2,3,4].map(i => <Skeleton key={i} height={54} sx={{ borderRadius: 2 }} variant="rectangular" />)}</Stack>
+        <Stack spacing={1.5}>
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton
+              key={i}
+              height={54}
+              sx={{ borderRadius: 2 }}
+              variant="rectangular"
+            />
+          ))}
+        </Stack>
       )}
-      {!loading && error && <ErrorState title="Insights unavailable" message={error} />}
+      {!loading && error && (
+        <ErrorState title="Insights unavailable" message={error} />
+      )}
       {!loading && !error && metrics.totalBookings === 0 && (
-        <Box sx={{ py: 4, textAlign: 'center' }}>
-          <TrendingUpIcon sx={{ fontSize: 44, color: alpha(t.primary, 0.18), mb: 1 }} />
-          <Typography color={t.textSub} variant="body2">Route insights appear after your first booking.</Typography>
+        <Box sx={{ py: 4, textAlign: "center" }}>
+          <TrendingUpIcon
+            sx={{ fontSize: 44, color: alpha(t.primary, 0.18), mb: 1 }}
+          />
+          <Typography color={t.textSub} variant="body2">
+            Route insights appear after your first booking.
+          </Typography>
         </Box>
       )}
       {!loading && !error && metrics.totalBookings > 0 && (
         <Stack spacing={1.5}>
-          <InsightRow icon={<RouteIcon />}      label="Top route"    value={metrics.mostBookedRoute?.label || '—'}    sub={metrics.mostBookedRoute ? `${metrics.mostBookedRoute.count} trips` : ''} />
-          <InsightRow icon={<StarIcon />}        label="Fav. train"  value={metrics.mostTravelledTrain?.label || '—'} sub={metrics.mostTravelledTrain ? `${metrics.mostTravelledTrain.count} trips` : ''} />
-          <InsightRow icon={<CheckCircleIcon />} label="Confirmed"   value={metrics.confirmedCount}   />
-          <InsightRow icon={<CancelOutlinedIcon />} label="Cancelled" value={metrics.cancelledCount}  />
+          <InsightRow
+            icon={<RouteIcon />}
+            label="Top route"
+            value={metrics.mostBookedRoute?.label || "—"}
+            sub={
+              metrics.mostBookedRoute
+                ? `${metrics.mostBookedRoute.count} trips`
+                : ""
+            }
+          />
+          <InsightRow
+            icon={<StarIcon />}
+            label="Fav. train"
+            value={metrics.mostTravelledTrain?.label || "—"}
+            sub={
+              metrics.mostTravelledTrain
+                ? `${metrics.mostTravelledTrain.count} trips`
+                : ""
+            }
+          />
+          <InsightRow
+            icon={<CheckCircleIcon />}
+            label="Confirmed"
+            value={metrics.confirmedCount}
+          />
+          <InsightRow
+            icon={<CancelOutlinedIcon />}
+            label="Cancelled"
+            value={metrics.cancelledCount}
+          />
           {metrics.hasFareData && (
-            <InsightRow icon={<CurrencyRupeeIcon />} label="Total spent" value={formatFare(metrics.totalSpend)} highlight />
+            <InsightRow
+              icon={<CurrencyRupeeIcon />}
+              label="Total spent"
+              value={formatFare(metrics.totalSpend)}
+              highlight
+            />
           )}
         </Stack>
       )}
@@ -779,18 +1223,56 @@ function InsightRow({ icon, label, value, sub, highlight }) {
   const theme = useTheme();
   const t = getDashboardTokens(theme);
   return (
-    <Box sx={{
-      display: 'flex', alignItems: 'center', gap: 1.5,
-      p: 1.5, borderRadius: 2, bgcolor: highlight ? alpha(t.primary, 0.06) : alpha(t.divider, 0.5),
-      border: highlight ? `1.5px solid ${alpha(t.primary, 0.2)}` : '1.5px solid transparent',
-    }}>
-      <Box sx={{ color: highlight ? t.primary : t.textSub, display: 'flex', flexShrink: 0, fontSize: 18 }}>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 1.5,
+        p: 1.5,
+        borderRadius: 2,
+        bgcolor: highlight ? alpha(t.primary, 0.06) : alpha(t.divider, 0.5),
+        border: highlight
+          ? `1.5px solid ${alpha(t.primary, 0.2)}`
+          : "1.5px solid transparent",
+      }}
+    >
+      <Box
+        sx={{
+          color: highlight ? t.primary : t.textSub,
+          display: "flex",
+          flexShrink: 0,
+          fontSize: 18,
+        }}
+      >
         {icon}
       </Box>
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography sx={{ fontSize: 11, color: t.textSub, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.4 }}>{label}</Typography>
-        <Typography sx={{ fontWeight: 800, color: t.textMain, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</Typography>
-        {sub && <Typography sx={{ fontSize: 11, color: t.textSub }}>{sub}</Typography>}
+        <Typography
+          sx={{
+            fontSize: 11,
+            color: t.textSub,
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: 0.4,
+          }}
+        >
+          {label}
+        </Typography>
+        <Typography
+          sx={{
+            fontWeight: 800,
+            color: t.textMain,
+            fontSize: 14,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {value}
+        </Typography>
+        {sub && (
+          <Typography sx={{ fontSize: 11, color: t.textSub }}>{sub}</Typography>
+        )}
       </Box>
     </Box>
   );
@@ -806,69 +1288,82 @@ function RecentActivitySection({ bookings, loading }) {
   if (activities.length === 0) return null;
 
   return (
-    <SectionCard title="Recent Activity" subtitle="Latest booking events on your account" icon={<HistoryIcon sx={{ color: t.primary }} />}>
+    <SectionCard
+      title="Recent Activity"
+      subtitle="Latest booking events on your account"
+      icon={<HistoryIcon sx={{ color: t.primary }} />}
+    >
       <Stack spacing={0}>
         {activities.map((item, idx) => (
-          <Box key={idx} sx={{ display: 'flex', gap: 2, position: 'relative' }}>
+          <Box key={idx} sx={{ display: "flex", gap: 2, position: "relative" }}>
             {/* Timeline spine */}
             {idx < activities.length - 1 && (
-              <Box sx={{
-                position: 'absolute', left: 17, top: 36, bottom: 0, width: 2,
-                bgcolor: t.divider, zIndex: 0,
-              }} />
+              <Box
+                sx={{
+                  position: "absolute",
+                  left: 17,
+                  top: 36,
+                  bottom: 0,
+                  width: 2,
+                  bgcolor: t.divider,
+                  zIndex: 0,
+                }}
+              />
             )}
             {/* Dot */}
-            <Box sx={{
-              width: 36, height: 36, borderRadius: '50%', flexShrink: 0, zIndex: 1,
-              bgcolor: alpha(item.color, 0.12), color: item.color,
-              display: 'grid', placeItems: 'center', fontSize: 16, mt: 1,
-            }}>
+            <Box
+              sx={{
+                width: 36,
+                height: 36,
+                borderRadius: "50%",
+                flexShrink: 0,
+                zIndex: 1,
+                bgcolor: alpha(item.color, 0.12),
+                color: item.color,
+                display: "grid",
+                placeItems: "center",
+                fontSize: 16,
+                mt: 1,
+              }}
+            >
               {item.icon}
             </Box>
             <Box sx={{ pb: 2.5, flex: 1 }}>
-              <Typography fontWeight={800} fontSize={14} color={t.textMain}>{item.title}</Typography>
-            <Typography
-  fontSize={13}
-  color={t.textSub}
-  sx={{ mb: 0.5 }}
->
-  {item.detail}
-</Typography>
+              <Typography fontWeight={800} fontSize={14} color={t.textMain}>
+                {item.title}
+              </Typography>
+              <Typography fontSize={13} color={t.textSub} sx={{ mb: 0.5 }}>
+                {item.detail}
+              </Typography>
 
-<Stack
-  direction="row"
-  spacing={1}
-  alignItems="center"
-  sx={{ mt: 0.5 }}
->
- <Chip
-  component={Link}
-  clickable
-  to={`/pnr?pnr=${item.pnr}`}
-  label={`PNR: ${item.pnr}`}
-  size="small"
-  color="primary"
-  variant="outlined"
-  sx={{
-    fontWeight: 700,
-    cursor: 'pointer'
-  }}
-/>
-  <Typography
-    variant="caption"
-    color={t.textSub}
-  >
-    •
-  </Typography>
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                sx={{ mt: 0.5 }}
+              >
+                <Chip
+                  component={Link}
+                  clickable
+                  to={`/pnr?pnr=${item.pnr}`}
+                  label={`PNR: ${item.pnr}`}
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                  sx={{
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                />
+                <Typography variant="caption" color={t.textSub}>
+                  •
+                </Typography>
 
-  <Typography
-    variant="caption"
-    color={t.textSub}
-  >
-    {item.time}
-  </Typography>
-</Stack>  
-                       </Box>
+                <Typography variant="caption" color={t.textSub}>
+                  {item.time}
+                </Typography>
+              </Stack>
+            </Box>
           </Box>
         ))}
       </Stack>
@@ -879,13 +1374,26 @@ function RecentActivitySection({ bookings, loading }) {
 function buildActivity(bookings, t) {
   return bookings.slice(0, 5).map((b) => {
     const status = normalizeStatus(b.status);
-    const isCancelled = status === 'CANCELLED';
-    const isConfirmed = status === 'CONFIRMED';
+    const isCancelled = status === "CANCELLED";
+    const isConfirmed = status === "CONFIRMED";
     return {
-      title: isCancelled ? 'Booking cancelled' : isConfirmed ? 'Booking confirmed' : 'Booking created',
-      detail: `${b.trainName || 'Train'} · ${formatRoute(b)}`,pnr: b.pnr,
-      time: b.createdAt ? formatDateTime(b.createdAt) : formatDate(b.journeyDate),
-      icon: isCancelled ? <CancelOutlinedIcon fontSize="small" /> : isConfirmed ? <CheckCircleIcon fontSize="small" /> : <AddCircleOutlineIcon fontSize="small" />,
+      title: isCancelled
+        ? "Booking cancelled"
+        : isConfirmed
+          ? "Booking confirmed"
+          : "Booking created",
+      detail: `${b.trainName || "Train"} · ${formatRoute(b)}`,
+      pnr: b.pnr,
+      time: b.createdAt
+        ? formatDateTime(b.createdAt)
+        : formatDate(b.journeyDate),
+      icon: isCancelled ? (
+        <CancelOutlinedIcon fontSize="small" />
+      ) : isConfirmed ? (
+        <CheckCircleIcon fontSize="small" />
+      ) : (
+        <AddCircleOutlineIcon fontSize="small" />
+      ),
       color: isCancelled ? t.error : isConfirmed ? t.primary : t.secondary,
     };
   });
@@ -903,8 +1411,8 @@ function BookingHistoryCard({
   historyLoaded,
   onRetry,
   onCancelBooking,
-  action
-}){
+  action,
+}) {
   const theme = useTheme();
   const t = getDashboardTokens(theme);
   return (
@@ -913,69 +1421,119 @@ function BookingHistoryCard({
       title="Booking History"
       subtitle="Search reservations by PNR, train, route, or status"
       icon={<HistoryIcon sx={{ color: t.primary }} />}
-     action={
-  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
-    {action}
+      action={
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={1}
+          sx={{ "& .MuiButton-root": { width: { xs: "100%", sm: "auto" } } }}
+        >
+          {action}
 
-    <Button
-      component={Link}
-      to="/pnr"
-      startIcon={<ConfirmationNumberIcon />}
-      variant="outlined"
-      size="small"
-      sx={{
-        borderRadius: 2,
-        borderColor: t.primary,
-        color: t.primary,
-        '&:hover': {
-          bgcolor: alpha(t.primary, 0.07)
-        }
-      }}
-    >
-      Track PNR
-    </Button>
-  </Stack>
-}
+          <Button
+            component={Link}
+            to="/pnr"
+            startIcon={<ConfirmationNumberIcon />}
+            variant="outlined"
+            size="small"
+            sx={{
+              borderRadius: 2,
+              borderColor: t.primary,
+              color: t.primary,
+              "&:hover": {
+                bgcolor: alpha(t.primary, 0.07),
+              },
+            }}
+          >
+            Track PNR
+          </Button>
+        </Stack>
+      }
     >
       {loading && <LoadingState message="Loading booking history..." />}
-      {!loading && error && <ErrorState title="Booking history unavailable" message={error} actionLabel="Retry" onAction={onRetry} />}
+      {!loading && error && (
+        <ErrorState
+          title="Booking history unavailable"
+          message={error}
+          actionLabel="Retry"
+          onAction={onRetry}
+        />
+      )}
       {historyLoaded && (
         <Stack spacing={2.5}>
           {/* Filters */}
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1.5}
+            sx={{ "& .MuiButton-root": { width: { xs: "100%", sm: "auto" } } }}
+          >
             <TextField
-              fullWidth size="small" label="Search by PNR, train, or route"
+              fullWidth
+              size="small"
+              label="Search by PNR, train, or route"
               value={filters.search}
-              onChange={(e) => setFilters((c) => ({ ...c, search: e.target.value }))}
+              onChange={(e) =>
+                setFilters((c) => ({ ...c, search: e.target.value }))
+              }
               InputProps={{
-                startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" sx={{ color: t.textSub }} /></InputAdornment>,
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" sx={{ color: t.textSub }} />
+                  </InputAdornment>
+                ),
                 sx: { borderRadius: 2 },
               }}
             />
             <TextField
-              select size="small" label="Status" value={filters.status}
-              onChange={(e) => setFilters((c) => ({ ...c, status: e.target.value }))}
-              sx={{ minWidth: { xs: '100%', sm: 180 }, '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+              select
+              size="small"
+              label="Status"
+              value={filters.status}
+              onChange={(e) =>
+                setFilters((c) => ({ ...c, status: e.target.value }))
+              }
+              sx={{
+                minWidth: { xs: "100%", sm: 180 },
+                "& .MuiOutlinedInput-root": { borderRadius: 2 },
+              }}
             >
               <MenuItem value="ALL">All statuses</MenuItem>
-              {statusOptions.map((s) => <MenuItem key={s} value={s}>{formatStatus(s)}</MenuItem>)}
+              {statusOptions.map((s) => (
+                <MenuItem key={s} value={s}>
+                  {formatStatus(s)}
+                </MenuItem>
+              ))}
             </TextField>
           </Stack>
 
           {allRows.length === 0 && (
-            <Box sx={{ py: 5, textAlign: 'center' }}>
-              <ConfirmationNumberIcon sx={{ fontSize: 48, color: alpha(t.primary, 0.2), mb: 1 }} />
-              <Typography fontWeight={700} color={t.textMain} gutterBottom>No bookings yet</Typography>
-              <Typography color={t.textSub} variant="body2">Search trains and book your first journey.</Typography>
+            <Box sx={{ py: 5, textAlign: "center" }}>
+              <ConfirmationNumberIcon
+                sx={{ fontSize: 48, color: alpha(t.primary, 0.2), mb: 1 }}
+              />
+              <Typography fontWeight={700} color={t.textMain} gutterBottom>
+                No bookings yet
+              </Typography>
+              <Typography color={t.textSub} variant="body2">
+                Search trains and book your first journey.
+              </Typography>
             </Box>
           )}
           {allRows.length > 0 && rows.length === 0 && (
-            <Box sx={{ py: 4, textAlign: 'center' }}>
-              <SearchIcon sx={{ fontSize: 40, color: alpha(t.primary, 0.2), mb: 1 }} />
-              <Typography color={t.textSub} variant="body2">No bookings match your search.</Typography>
+            <Box sx={{ py: 4, textAlign: "center" }}>
+              <SearchIcon
+                sx={{ fontSize: 40, color: alpha(t.primary, 0.2), mb: 1 }}
+              />
+              <Typography color={t.textSub} variant="body2">
+                No bookings match your search.
+              </Typography>
             </Box>
           )}
-          {rows.length > 0 && <BookingHistoryTable rows={rows} onCancelBooking={onCancelBooking} />}
+          {rows.length > 0 && (
+            <BookingHistoryTable
+              rows={rows}
+              onCancelBooking={onCancelBooking}
+            />
+          )}
         </Stack>
       )}
     </SectionCard>
@@ -986,12 +1544,42 @@ function BookingHistoryTable({ rows, onCancelBooking }) {
   const theme = useTheme();
   const t = getDashboardTokens(theme);
   return (
-    <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2.5, border: `1.5px solid ${t.cardBorder}`, overflowX: 'auto' }}>
-      <Table size="small" aria-label="Booking history table" sx={{ minWidth: { xs: 720, md: 760 } }}>
+    <TableContainer
+      component={Paper}
+      variant="outlined"
+      sx={{
+        borderRadius: 2.5,
+        border: `1.5px solid ${t.cardBorder}`,
+        overflowX: "auto",
+      }}
+    >
+      <Table
+        size="small"
+        aria-label="Booking history table"
+        sx={{ minWidth: { xs: 840, md: 900 } }}
+      >
         <TableHead>
           <TableRow sx={{ bgcolor: alpha(t.primary, 0.04) }}>
-            {['PNR', 'Train', 'Route', 'Journey date', 'Status', 'Fare', 'Actions'].map((h) => (
-              <TableCell key={h} sx={{ fontWeight: 800, color: t.textMain, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: `2px solid ${t.divider}` }}>
+            {[
+              "PNR",
+              "Train",
+              "Route",
+              "Journey date",
+              "Status",
+              "Fare",
+              "Actions",
+            ].map((h) => (
+              <TableCell
+                key={h}
+                sx={{
+                  fontWeight: 800,
+                  color: t.textMain,
+                  fontSize: 12,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
+                  borderBottom: `2px solid ${t.divider}`,
+                }}
+              >
                 {h}
               </TableCell>
             ))}
@@ -999,40 +1587,12 @@ function BookingHistoryTable({ rows, onCancelBooking }) {
         </TableHead>
         <TableBody>
           {rows.map((booking) => (
-            <TableRow
+            <BookingHistoryRow
               key={booking.id || booking.pnr}
-              hover
-              sx={{ '&:hover': { bgcolor: alpha(t.primary, 0.03) }, '&:last-child td': { borderBottom: 0 } }}
-            >
-              <TableCell sx={{ whiteSpace: 'nowrap', fontWeight: 700, color: t.primary, fontSize: 13 }}>{booking.pnr || '—'}</TableCell>
-              <TableCell sx={{ minWidth: 170 }}>
-                <Typography fontWeight={800} fontSize={14} color={t.textMain}>{booking.trainName || 'Train'}</Typography>
-                <Typography color={t.textSub} variant="body2">{booking.trainNumber || '—'}</Typography>
-              </TableCell>
-              <TableCell sx={{ minWidth: 150, fontSize: 13, color: t.textMain }}>{formatRoute(booking)}</TableCell>
-              <TableCell sx={{ whiteSpace: 'nowrap', fontSize: 13, color: t.textMain }}>{formatDate(booking.journeyDate)}</TableCell>
-              <TableCell><RailwayStatusChip status={booking.status} /></TableCell>
-              <TableCell sx={{ whiteSpace: 'nowrap', fontWeight: 800, fontSize: 13, color: t.textMain }}>{formatFare(booking.totalFare)}</TableCell>
-              <TableCell>
-                <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-                  <Button
-                    component={Link} to={`/pnr?pnr=${booking.pnr || ''}`}
-                    size="small" disabled={!booking.pnr}
-                    sx={{ borderRadius: 1.5, fontSize: 12, borderColor: t.primary, color: t.primary, '&:hover': { bgcolor: alpha(t.primary, 0.07) } }}
-                    variant="outlined"
-                  >
-                    Track
-                  </Button>
-                  {booking.pnr && canShowCancelButton(booking.status) && (
-                    <Button size="small" color="error" startIcon={<CancelIcon />}
-                      sx={{ borderRadius: 1.5, fontSize: 12 }} variant="outlined"
-                      onClick={() => onCancelBooking(booking.pnr)}>
-                      Cancel
-                    </Button>
-                  )}
-                </Stack>
-              </TableCell>
-            </TableRow>
+              booking={booking}
+              onCancelBooking={onCancelBooking}
+              tokens={t}
+            />
           ))}
         </TableBody>
       </Table>
@@ -1040,23 +1600,191 @@ function BookingHistoryTable({ rows, onCancelBooking }) {
   );
 }
 
+function BookingHistoryRow({ booking, onCancelBooking, tokens: t }) {
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState("");
+  const canDownload = Boolean(booking.pnr);
+  const canCancel = booking.pnr && canShowCancelButton(booking.status);
+
+  const handleDownloadTicket = async () => {
+    if (!booking.pnr) {
+      setDownloadError("PNR is not available for this booking.");
+      return;
+    }
+
+    setDownloading(true);
+    setDownloadError("");
+
+    try {
+      await downloadTicketPdf(booking.pnr);
+    } catch (error) {
+      console.error("Ticket download failed", error);
+      setDownloadError("Unable to download this ticket right now.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  return (
+    <TableRow
+      hover
+      sx={{
+        "&:hover": { bgcolor: alpha(t.primary, 0.03) },
+        "&:last-child td": { borderBottom: 0 },
+      }}
+    >
+      <TableCell
+        sx={{
+          whiteSpace: "nowrap",
+          fontWeight: 700,
+          color: t.primary,
+          fontSize: 13,
+        }}
+      >
+        {booking.pnr || "—"}
+      </TableCell>
+      <TableCell sx={{ minWidth: 180, maxWidth: 260 }}>
+        <Typography
+          fontWeight={800}
+          fontSize={14}
+          color={t.textMain}
+          sx={{ overflowWrap: "anywhere" }}
+        >
+          {booking.trainName || "Train"}
+        </Typography>
+        <Typography
+          color={t.textSub}
+          variant="body2"
+          sx={{ overflowWrap: "anywhere" }}
+        >
+          {booking.trainNumber || "—"}
+        </Typography>
+      </TableCell>
+      <TableCell
+        sx={{
+          minWidth: 160,
+          maxWidth: 240,
+          fontSize: 13,
+          color: t.textMain,
+          overflowWrap: "anywhere",
+        }}
+      >
+        {formatRoute(booking)}
+      </TableCell>
+      <TableCell sx={{ whiteSpace: "nowrap", fontSize: 13, color: t.textMain }}>
+        {formatDate(booking.journeyDate)}
+      </TableCell>
+      <TableCell>
+        <RailwayStatusChip status={booking.status} />
+      </TableCell>
+      <TableCell
+        sx={{
+          whiteSpace: "nowrap",
+          fontWeight: 800,
+          fontSize: 13,
+          color: t.textMain,
+        }}
+      >
+        {formatFare(booking.totalFare)}
+      </TableCell>
+      <TableCell sx={{ minWidth: 260 }}>
+        <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+          <Button
+            size="small"
+            startIcon={<PictureAsPdfIcon />}
+            disabled={!canDownload || downloading}
+            onClick={handleDownloadTicket}
+            sx={{ borderRadius: 1.5, fontSize: 12 }}
+            variant="contained"
+          >
+            {downloading ? "Downloading..." : "Ticket"}
+          </Button>
+          <Button
+            component={Link}
+            to={`/pnr?pnr=${booking.pnr || ""}`}
+            size="small"
+            disabled={!booking.pnr}
+            sx={{
+              borderRadius: 1.5,
+              fontSize: 12,
+              borderColor: t.primary,
+              color: t.primary,
+              "&:hover": { bgcolor: alpha(t.primary, 0.07) },
+            }}
+            variant="outlined"
+          >
+            Track
+          </Button>
+          {canCancel && (
+            <Button
+              size="small"
+              color="error"
+              startIcon={<CancelIcon />}
+              sx={{ borderRadius: 1.5, fontSize: 12 }}
+              variant="outlined"
+              onClick={() => onCancelBooking(booking.pnr)}
+            >
+              Cancel
+            </Button>
+          )}
+          {downloadError && (
+            <Alert severity="error" sx={{ width: "100%", py: 0 }}>
+              {downloadError}
+            </Alert>
+          )}
+        </Stack>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 // ─── Notifications ────────────────────────────────────────────────────────────
-function NotificationsCard({ loading, error, notifications, notificationsLoaded, onRetry }) {
+function NotificationsCard({
+  loading,
+  error,
+  notifications,
+  notificationsLoaded,
+  onRetry,
+}) {
   const theme = useTheme();
   const t = getDashboardTokens(theme);
   return (
-    <SectionCard title="Notifications" subtitle="Booking and travel updates from SouthRail" icon={<NotificationsIcon sx={{ color: t.primary }} />}>
+    <SectionCard
+      title="Notifications"
+      subtitle="Booking and travel updates from SouthRail"
+      icon={<NotificationsIcon sx={{ color: t.primary }} />}
+    >
       {loading && (
         <Stack spacing={1.5}>
-          {[1,2,3].map(i => <Skeleton key={i} height={64} sx={{ borderRadius: 2 }} variant="rectangular" />)}
+          {[1, 2, 3].map((i) => (
+            <Skeleton
+              key={i}
+              height={64}
+              sx={{ borderRadius: 2 }}
+              variant="rectangular"
+            />
+          ))}
         </Stack>
       )}
-      {!loading && error && <ErrorState title="Notifications unavailable" message={error} actionLabel="Retry" onAction={onRetry} />}
+      {!loading && error && (
+        <ErrorState
+          title="Notifications unavailable"
+          message={error}
+          actionLabel="Retry"
+          onAction={onRetry}
+        />
+      )}
       {notificationsLoaded && notifications.length === 0 && (
-        <Box sx={{ py: 5, textAlign: 'center' }}>
-          <NotificationsIcon sx={{ fontSize: 48, color: alpha(t.primary, 0.18), mb: 1 }} />
-          <Typography fontWeight={700} color={t.textMain} gutterBottom>All caught up</Typography>
-          <Typography color={t.textSub} variant="body2">Booking and travel updates will appear here.</Typography>
+        <Box sx={{ py: 5, textAlign: "center" }}>
+          <NotificationsIcon
+            sx={{ fontSize: 48, color: alpha(t.primary, 0.18), mb: 1 }}
+          />
+          <Typography fontWeight={700} color={t.textMain} gutterBottom>
+            All caught up
+          </Typography>
+          <Typography color={t.textSub} variant="body2">
+            Booking and travel updates will appear here.
+          </Typography>
         </Box>
       )}
       {notificationsLoaded && notifications.length > 0 && (
@@ -1065,34 +1793,80 @@ function NotificationsCard({ loading, error, notifications, notificationsLoaded,
             <Box
               key={item.id}
               sx={{
-                display: 'flex', gap: 1.5, p: 1.75, borderRadius: 2.5,
-                bgcolor: item.read ? 'transparent' : alpha(t.primary, 0.05),
+                display: "flex",
+                gap: 1.5,
+                p: 1.75,
+                borderRadius: 2.5,
+                bgcolor: item.read ? "transparent" : alpha(t.primary, 0.05),
                 border: `1.5px solid ${item.read ? t.divider : alpha(t.primary, 0.2)}`,
-                transition: 'background 0.15s',
+                transition: "background 0.15s",
               }}
             >
               <Box
                 sx={{
-                  width: 8, height: 8, borderRadius: '50%', flexShrink: 0, mt: 0.75,
-                  bgcolor: item.read ? 'transparent' : t.primary,
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  flexShrink: 0,
+                  mt: 0.75,
+                  bgcolor: item.read ? "transparent" : t.primary,
                 }}
               />
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ sm: 'flex-start' }} gap={0.5}>
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  justifyContent="space-between"
+                  alignItems={{ sm: "flex-start" }}
+                  gap={0.5}
+                >
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center" sx={{ mb: 0.25 }}>
+                    <Stack
+                      direction="row"
+                      spacing={0.75}
+                      flexWrap="wrap"
+                      useFlexGap
+                      alignItems="center"
+                      sx={{ mb: 0.25 }}
+                    >
                       {item.channel && (
-                        <Chip size="small" label={item.channel}
-                          sx={{ height: 18, fontSize: 10, fontWeight: 700, bgcolor: alpha(t.primary, 0.1), color: t.primary }} />
+                        <Chip
+                          size="small"
+                          label={item.channel}
+                          sx={{
+                            height: 18,
+                            fontSize: 10,
+                            fontWeight: 700,
+                            bgcolor: alpha(t.primary, 0.1),
+                            color: t.primary,
+                          }}
+                        />
                       )}
-                      <Typography fontWeight={800} fontSize={13} color={t.textMain}>{item.title || 'Notification'}</Typography>
+                      <Typography
+                        fontWeight={800}
+                        fontSize={13}
+                        color={t.textMain}
+                      >
+                        {item.title || "Notification"}
+                      </Typography>
                     </Stack>
-                    <Typography fontSize={13} color={t.textSub} sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {item.message || '—'}
+                    <Typography
+                      fontSize={13}
+                      color={t.textSub}
+                      sx={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {item.message || "—"}
                     </Typography>
                   </Box>
-                  <Typography fontSize={11} color={t.textSub} sx={{ flexShrink: 0, mt: { xs: 0, sm: 0.25 } }}>
-                    {item.createdAt ? formatDateTime(item.createdAt) : ''}
+                  <Typography
+                    fontSize={11}
+                    color={t.textSub}
+                    sx={{ flexShrink: 0, mt: { xs: 0, sm: 0.25 } }}
+                  >
+                    {item.createdAt ? formatDateTime(item.createdAt) : ""}
                   </Typography>
                 </Stack>
               </Box>
@@ -1113,18 +1887,36 @@ function SectionCard({ id, title, subtitle, icon, action, children }) {
       id={id}
       elevation={0}
       sx={{
-        bgcolor: t.cardBg, borderRadius: 3,
+        bgcolor: t.cardBg,
+        borderRadius: 3,
         border: `1.5px solid ${t.cardBorder}`,
-        overflow: 'hidden',
+        overflow: "hidden",
       }}
     >
       <Box sx={{ px: { xs: 2, md: 3 }, pt: { xs: 2, md: 2.5 }, pb: 1.5 }}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ sm: 'center' }} spacing={1} sx={{ mb: 2 }}>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          justifyContent="space-between"
+          alignItems={{ sm: "center" }}
+          spacing={1}
+          sx={{ mb: 2 }}
+        >
           <Stack direction="row" spacing={1.25} alignItems="center">
             {icon}
             <Box sx={{ minWidth: 0 }}>
-              <Typography variant="h6" fontWeight={900} color={t.textMain} sx={{ lineHeight: 1.2, overflowWrap: 'anywhere' }}>{title}</Typography>
-              {subtitle && <Typography variant="body2" color={t.textSub}>{subtitle}</Typography>}
+              <Typography
+                variant="h6"
+                fontWeight={900}
+                color={t.textMain}
+                sx={{ lineHeight: 1.2, overflowWrap: "anywhere" }}
+              >
+                {title}
+              </Typography>
+              {subtitle && (
+                <Typography variant="body2" color={t.textSub}>
+                  {subtitle}
+                </Typography>
+              )}
             </Box>
           </Stack>
           {action}
@@ -1140,39 +1932,91 @@ function SectionCard({ id, title, subtitle, icon, action, children }) {
 function buildDashboardMetrics(bookings) {
   const today = new Date().toISOString().slice(0, 10);
   const upcomingBookings = bookings
-    .filter((b) => b.journeyDate >= today && normalizeStatus(b.status) !== 'CANCELLED')
-    .sort((a, b) => String(a.journeyDate || '').localeCompare(String(b.journeyDate || '')));
-  const confirmedCount = bookings.filter((b) => normalizeStatus(b.status) === 'CONFIRMED').length;
-  const cancelledCount = bookings.filter((b) => normalizeStatus(b.status) === 'CANCELLED').length;
-  const completedCount = bookings.filter((b) => b.journeyDate < today && !['CANCELLED', 'FAILED'].includes(normalizeStatus(b.status))).length;
-  const fareValues = bookings.map((b) => Number(b.totalFare)).filter(Number.isFinite);
+    .filter(
+      (b) =>
+        b.journeyDate >= today && normalizeStatus(b.status) !== "CANCELLED",
+    )
+    .sort((a, b) =>
+      String(a.journeyDate || "").localeCompare(String(b.journeyDate || "")),
+    );
+  const confirmedCount = bookings.filter(
+    (b) => normalizeStatus(b.status) === "CONFIRMED",
+  ).length;
+  const cancelledCount = bookings.filter(
+    (b) => normalizeStatus(b.status) === "CANCELLED",
+  ).length;
+  const completedCount = bookings.filter(
+    (b) =>
+      b.journeyDate < today &&
+      !["CANCELLED", "FAILED"].includes(normalizeStatus(b.status)),
+  ).length;
+  const fareValues = bookings
+    .map((b) => Number(b.totalFare))
+    .filter(Number.isFinite);
   const totalSpend = fareValues.reduce((sum, v) => sum + v, 0);
-  const statusOptions = Array.from(new Set(bookings.map((b) => normalizeStatus(b.status)).filter(Boolean))).sort();
+  const statusOptions = Array.from(
+    new Set(bookings.map((b) => normalizeStatus(b.status)).filter(Boolean)),
+  ).sort();
   return {
-    totalBookings: bookings.length, upcomingBookings, upcomingCount: upcomingBookings.length,
-    confirmedCount, cancelledCount, completedCount,
-    hasFareData: fareValues.length > 0, totalSpend, statusOptions,
+    totalBookings: bookings.length,
+    upcomingBookings,
+    upcomingCount: upcomingBookings.length,
+    confirmedCount,
+    cancelledCount,
+    completedCount,
+    hasFareData: fareValues.length > 0,
+    totalSpend,
+    statusOptions,
     mostBookedRoute: topBookingGroup(bookings, formatRoute),
-    mostTravelledTrain: topBookingGroup(bookings, (b) => b.trainNumber ? `${b.trainNumber} – ${b.trainName || 'Train'}` : ''),
+    mostTravelledTrain: topBookingGroup(bookings, (b) =>
+      b.trainNumber ? `${b.trainNumber} – ${b.trainName || "Train"}` : "",
+    ),
   };
 }
 function topBookingGroup(bookings, getKey) {
-  const counts = bookings.reduce((cur, b) => { const k = getKey(b); if (!k) return cur; cur[k] = (cur[k] || 0) + 1; return cur; }, {});
-  const [label, count] = Object.entries(counts).sort((a, b) => b[1] - a[1])[0] || [];
+  const counts = bookings.reduce((cur, b) => {
+    const k = getKey(b);
+    if (!k) return cur;
+    cur[k] = (cur[k] || 0) + 1;
+    return cur;
+  }, {});
+  const [label, count] =
+    Object.entries(counts).sort((a, b) => b[1] - a[1])[0] || [];
   return label ? { label, count } : null;
 }
 function filterBookings(bookings, filters) {
-  const query = String(filters.search || '').trim().toLowerCase();
+  const query = String(filters.search || "")
+    .trim()
+    .toLowerCase();
   return bookings.filter((b) => {
-    const matchesQuery = !query || [b.pnr, b.trainNumber, b.trainName, b.sourceCode, b.sourceName, b.destinationCode, b.destinationName, b.status].some((v) => String(v || '').toLowerCase().includes(query));
-    const matchesStatus = filters.status === 'ALL' || normalizeStatus(b.status) === filters.status;
+    const matchesQuery =
+      !query ||
+      [
+        b.pnr,
+        b.trainNumber,
+        b.trainName,
+        b.sourceCode,
+        b.sourceName,
+        b.destinationCode,
+        b.destinationName,
+        b.status,
+      ].some((v) =>
+        String(v || "")
+          .toLowerCase()
+          .includes(query),
+      );
+    const matchesStatus =
+      filters.status === "ALL" || normalizeStatus(b.status) === filters.status;
     return matchesQuery && matchesStatus;
   });
 }
 function sortBookings(bookings) {
   return [...bookings].sort((a, b) => {
-    if (a.createdAt || b.createdAt) return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
-    return String(b.journeyDate || '').localeCompare(String(a.journeyDate || ''));
+    if (a.createdAt || b.createdAt)
+      return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
+    return String(b.journeyDate || "").localeCompare(
+      String(a.journeyDate || ""),
+    );
   });
 }
 function normalizePage(data) {
@@ -1183,24 +2027,36 @@ function normalizeRows(data) {
   if (Array.isArray(data)) return data;
   return data?.content || [];
 }
-function normalizeStatus(status) { return String(status || '').trim().toUpperCase(); }
+function normalizeStatus(status) {
+  return String(status || "")
+    .trim()
+    .toUpperCase();
+}
 function formatRoute(booking) {
-  const src  = booking.sourceCode || booking.sourceName || '—';
-  const dest = booking.destinationCode || booking.destinationName || '—';
+  const src = booking.sourceCode || booking.sourceName || "—";
+  const dest = booking.destinationCode || booking.destinationName || "—";
   return `${src} to ${dest}`;
 }
-function formatDate(value) { return value ? String(value) : '—'; }
+function formatDate(value) {
+  return value ? String(value) : "—";
+}
 function formatDateTime(value) {
-  if (!value) return '';
-  try { return new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)); }
-  catch { return String(value); }
+  if (!value) return "";
+  try {
+    return new Intl.DateTimeFormat("en-IN", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date(value));
+  } catch {
+    return String(value);
+  }
 }
 function formatFare(value) {
   const amount = Number(value);
-  if (!Number.isFinite(amount)) return 'Rs —';
-  return `Rs ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (!Number.isFinite(amount)) return "Rs —";
+  return `Rs ${amount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 function getDashboardErrorMessage(error, fallback) {
-  if (isAuthError(error)) return 'Please login again to continue.';
+  if (isAuthError(error)) return "Please login again to continue.";
   return getApiErrorMessage(error, fallback);
 }
