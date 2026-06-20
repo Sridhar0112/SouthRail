@@ -73,7 +73,7 @@ public class SupportTicketService {
                 .orElseThrow(() ->
                         new ApiException(
                                 HttpStatus.NOT_FOUND,
-                                "User not found"));
+                                "Ticket not found"));
     }
 
     @Transactional(readOnly = true)
@@ -90,7 +90,7 @@ public class SupportTicketService {
                 .orElseThrow(() ->
                         new ApiException(
                                 HttpStatus.NOT_FOUND,
-                                "User not found"));
+                                "Ticket not found"));
 
         String status = request.getStatus();
 
@@ -135,7 +135,7 @@ public class SupportTicketService {
                 .orElseThrow(() ->
                         new ApiException(
                                 HttpStatus.NOT_FOUND,
-                                "User not found"));
+                                "Ticket not found"));
 
         SupportTicket ticket = getUserTicket(email,ticketId);
         if ("CLOSED".equals(ticket.getStatus())) {

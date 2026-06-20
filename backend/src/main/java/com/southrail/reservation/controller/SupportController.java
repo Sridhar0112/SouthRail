@@ -45,12 +45,14 @@ public class SupportController {
                 service.getMyTicket(principal.getName(), ticketId)
         );
     }
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/admin/tickets")
     public ResponseEntity<List<SupportTicket>> getAllTickets() {
         return ResponseEntity.ok(
                 service.getAllTickets()
         );
     }
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/admin/tickets/{ticketId}/status")
     public ResponseEntity<?> updateTicketStatus(
             @PathVariable UUID ticketId,
@@ -80,7 +82,7 @@ public class SupportController {
                 .status(HttpStatus.CREATED)
                 .body(service.addUserMessage(principal.getName(), ticketId, request));
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/admin/tickets/{ticketId}/messages")
     public ResponseEntity<?> getAdminTicketMessages(
             @PathVariable UUID ticketId) {
@@ -89,7 +91,7 @@ public class SupportController {
                 service.getAdminMessages(ticketId)
         );
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/tickets/{ticketId}/messages")
     public ResponseEntity<?> addAdminTicketMessage(Principal principal,
             @PathVariable UUID ticketId,

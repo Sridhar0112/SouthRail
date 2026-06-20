@@ -218,6 +218,13 @@ public class AuthService {
     }
     token.setRevoked(true);
     refreshTokens.save(token);
+    auditLogService.log(
+            user.getId(),
+            user.getEmail(),
+            "TOKEN_REFRESHED",
+            "AUTH",
+            "Access token refreshed successfully"
+    );
     return issueTokens(user);
   }
 
@@ -228,6 +235,20 @@ public class AuthService {
         throw new ApiException(
                 HttpStatus.FORBIDDEN,
                 "Account has been deleted");
+      }
+      AccountToken latestToken =
+              accountTokens
+                      .findTopByUserAndTokenTypeOrderByCreatedAtDesc(
+                              user,
+                              RESET_PASSWORD)
+                      .orElse(null);
+      if (latestToken != null &&
+              latestToken.getCreatedAt().isAfter(
+                      Instant.now().minusSeconds(300))) {
+
+        throw new ApiException(
+                HttpStatus.TOO_MANY_REQUESTS,
+                "Please wait 5 minutes before requesting another password reset email.");
       }
       String resetToken = createAccountToken(user, RESET_PASSWORD, Duration.ofMinutes(30));
       trySendPasswordReset(user, resetToken);
