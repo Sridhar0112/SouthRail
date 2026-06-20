@@ -777,8 +777,8 @@ function NextJourneySection({
       action={
         bookings?.length > 3 ? (
           <Button
-            component={Link}
-            to="#booking-history"
+            component="a"
+            href="#booking-history"
             size="small"
             variant="outlined"
           >
