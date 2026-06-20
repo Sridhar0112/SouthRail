@@ -3,11 +3,8 @@ package com.southrail.reservation.service;
 import com.southrail.reservation.dto.BookingDtos;
 import com.southrail.reservation.entity.*;
 import com.southrail.reservation.exception.ApiException;
-import com.southrail.reservation.repository.BookingRepository;
-import com.southrail.reservation.repository.PassengerRepository;
-import com.southrail.reservation.repository.StationRepository;
-import com.southrail.reservation.repository.TrainRepository;
-import com.southrail.reservation.repository.UserRepository;
+import com.southrail.reservation.repository.*;
+
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.LocalDate;
@@ -34,9 +31,11 @@ public class BookingService {
   private final SeatAllocationService seatAllocationService;
   private final SecureRandom random = new SecureRandom();
   private AccountEmailService accountEmailService;
+  private final AuditLogService auditLogService;
   private static final Logger log = LoggerFactory.getLogger(BookingService.class);
+  private static final int RAC_LIMIT = 10;
   public BookingService(BookingRepository bookings, PassengerRepository passengers, UserRepository users,
-      TrainRepository trains, StationRepository stations, SeatAllocationService seatAllocationService,AccountEmailService accountEmailService) {
+      TrainRepository trains, StationRepository stations, SeatAllocationService seatAllocationService,AccountEmailService accountEmailService,AuditLogService auditLogService) {
     this.bookings = bookings;
     this.passengers = passengers;
     this.users = users;
@@ -44,6 +43,7 @@ public class BookingService {
     this.stations = stations;
     this.seatAllocationService = seatAllocationService;
     this.accountEmailService=accountEmailService;
+    this.auditLogService=auditLogService;
   }
 
   @Transactional
@@ -52,9 +52,42 @@ public class BookingService {
     Train train = trains.findById(parseTrainId(request.getTrainId())).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Train not found"));
     Station source = stations.findByCodeIgnoreCase(request.getSourceStationCode()).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Source station not found"));
     Station destination = stations.findByCodeIgnoreCase(request.getDestinationStationCode()).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Destination station not found"));
-    int availableSeats = seatAllocationService.getAvailableSeatCount(train, request.getJourneyDate(), request.getTravelClass());
-    if (availableSeats < request.getPassengers().size()) {
-      throw new ApiException(HttpStatus.CONFLICT, "Only " + availableSeats + " seats are available for the selected train, date, and class");
+    int passengerCount = request.getPassengers().size();
+
+    int availableSeats = seatAllocationService.getAvailableSeatCount(
+            train,
+            request.getJourneyDate(),
+            request.getTravelClass());
+
+    BookingStatus bookingStatus;
+    Integer queuePosition = null;
+    String reservationLabel;
+
+    if (availableSeats >= passengerCount) {
+      bookingStatus = BookingStatus.CONFIRMED;
+      reservationLabel = "CNF";
+    } else {
+      long racCount = bookings.countByTrainIdAndJourneyDateAndTravelClassAndStatus(
+              train.getId(),
+              request.getJourneyDate(),
+              request.getTravelClass(),
+              BookingStatus.RAC);
+
+      if (racCount < RAC_LIMIT) {
+        bookingStatus = BookingStatus.RAC;
+        queuePosition = Math.toIntExact(racCount + 1);
+        reservationLabel = "RAC " + queuePosition;
+      } else {
+        long waitlistCount = bookings.countByTrainIdAndJourneyDateAndTravelClassAndStatus(
+                train.getId(),
+                request.getJourneyDate(),
+                request.getTravelClass(),
+                BookingStatus.WAITLISTED);
+
+        bookingStatus = BookingStatus.WAITLISTED;
+        queuePosition = Math.toIntExact(waitlistCount + 1);
+        reservationLabel = "WL " + queuePosition;
+      }
     }
 
     Booking booking = new Booking();
@@ -66,7 +99,9 @@ public class BookingService {
     booking.setTravelClass(request.getTravelClass());
     booking.setQuota(request.getQuota());
     booking.setPnr(generatePnr());
-    booking.setStatus(BookingStatus.CONFIRMED);
+    booking.setStatus(bookingStatus);
+    booking.setQueuePosition(queuePosition);
+    booking.setReservationLabel(reservationLabel);
     booking.setTotalFare(calculateFare(request).getTotal());
     bookings.save(booking);
 
@@ -77,24 +112,33 @@ public class BookingService {
       passenger.setAge(item.getAge());
       passenger.setGender(item.getGender());
       passenger.setBerthPreference(item.getBerthPreference());
-      passenger.setStatus(BookingStatus.CONFIRMED);
+      passenger.setStatus(bookingStatus);
       return passengers.save(passenger);
     }).collect(Collectors.toList());
-    List<BookingSeat> allocatedSeats =
-            seatAllocationService.allocateSeats(
-                    booking,
-                    savedPassengers
-            );
-    try {
+    List<BookingSeat> allocatedSeats = List.of();
 
-      accountEmailService.sendBookingConfirmation(
+    if (bookingStatus == BookingStatus.CONFIRMED) {
+      allocatedSeats = seatAllocationService.allocateSeats(
               booking,
-              savedPassengers,
-              allocatedSeats
-      );
-
+              savedPassengers);
+    }
+    auditLogService.log(
+            user.getId(),
+            user.getEmail(),
+            "BOOKING_CREATED",
+            "BOOKING",
+            "Ticket booked with status " + booking.getReservationLabel()
+                    + " and PNR: " + booking.getPnr()
+    );
+    try {
+      if (bookingStatus == BookingStatus.CONFIRMED) {
+        accountEmailService.sendBookingConfirmation(
+                booking,
+                savedPassengers,
+                allocatedSeats);
+      }
     } catch (Exception ignored) {
-          log.error("Unable to send mail for "+ allocatedSeats +" "+ignored.getMessage());
+      log.error("Unable to send mail for " + allocatedSeats + " " + ignored.getMessage());
     }
     return new BookingDtos.BookingResponse(booking.getId().toString(), booking.getPnr(), booking.getStatus().name(),
         train.getNumber(), train.getName(),
@@ -123,7 +167,13 @@ public class BookingService {
         fare.getGst(),
         fare.getTotal(),
         availableSeats,
-        availableSeats == 0 ? "Sold out" : availableSeats < request.getPassengers().size() ? "Not enough seats" : availableSeats < 18 ? "Limited seats" : "Available",
+            availableSeats == 0
+                    ? "Confirmed seats full. RAC may be available"
+                    : availableSeats < request.getPassengers().size()
+                      ? "Limited confirmed seats. RAC may be assigned"
+                      : availableSeats < 18
+                        ? "Limited seats"
+                        : "Available",
         Arrays.asList(
             new BookingDtos.FareLine("Base fare", fare.getBaseFare()),
             new BookingDtos.FareLine("Reservation charge", fare.getReservationCharge()),

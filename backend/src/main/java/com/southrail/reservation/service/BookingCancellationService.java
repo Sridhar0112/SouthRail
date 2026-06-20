@@ -24,15 +24,16 @@ public class BookingCancellationService {
   private final RefundCalculationService refundCalculationService;
   private final NotificationService notificationService;
   private final SeatAllocationService seatAllocationService;
-
+  private final AuditLogService auditLogService;
   public BookingCancellationService(BookingRepository bookings, UserRepository users,
       RefundCalculationService refundCalculationService, NotificationService notificationService,
-      SeatAllocationService seatAllocationService) {
+      SeatAllocationService seatAllocationService,AuditLogService auditLogService) {
     this.bookings = bookings;
     this.users = users;
     this.refundCalculationService = refundCalculationService;
     this.notificationService = notificationService;
     this.seatAllocationService = seatAllocationService;
+    this.auditLogService=auditLogService;
   }
 
   @Transactional(readOnly = true)
@@ -60,10 +61,16 @@ public class BookingCancellationService {
     RefundQuoteDto quote = refundCalculationService.calculate(booking);
     booking.setStatus(BookingStatus.CANCELLED);
     seatAllocationService.releaseSeatsForBooking(booking);
+    auditLogService.log(
+            booking.getUser().getId(),
+            booking.getUser().getEmail(),
+            "BOOKING_CANCELLED",
+            "BOOKING",
+            "Ticket cancelled successfully with PNR: " + booking.getPnr()
+    );
     try {
       notificationService.notifyBookingCancelled(booking.getUser(), booking, quote);
     } catch (RuntimeException ignored) {
-      // Cancellation should not fail because an optional notification could not be created.
     }
 
     return new CancellationResponse(

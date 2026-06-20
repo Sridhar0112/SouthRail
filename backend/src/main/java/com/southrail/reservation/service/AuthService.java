@@ -41,11 +41,12 @@ public class AuthService {
   private final JwtService jwtService;
   private final AccountEmailService accountEmailService;
   private final long refreshDays;
+  private final AuditLogService auditLogService;
 
   public AuthService(UserRepository users, RefreshTokenRepository refreshTokens, AccountTokenRepository accountTokens,
                      PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService,
                      AccountEmailService accountEmailService,
-                     @Value("${app.jwt.refresh-token-days}") long refreshDays) {
+                     @Value("${app.jwt.refresh-token-days}") long refreshDays,AuditLogService auditLogService) {
     this.users = users;
     this.refreshTokens = refreshTokens;
     this.accountTokens = accountTokens;
@@ -54,6 +55,7 @@ public class AuthService {
     this.jwtService = jwtService;
     this.accountEmailService = accountEmailService;
     this.refreshDays = refreshDays;
+    this.auditLogService=auditLogService;
   }
 
   @Transactional
@@ -190,6 +192,13 @@ public class AuthService {
         user.setAccountLockedUntil(null);
 
         users.save(user);
+    auditLogService.log(
+            user.getId(),
+            user.getEmail(),
+            "USER_LOGIN",
+            "AUTH",
+            "User logged in successfully"
+    );
 
         return issueTokens(user);
     }
@@ -233,7 +242,15 @@ public class AuthService {
                       request.getPassword()));
       user.setFailedLoginAttempts(0);
       user.setAccountLockedUntil(null);
+    auditLogService.log(
+            user.getId(),
+            user.getEmail(),
+            "PASSWORD_CHANGED",
+            "ACCOUNT",
+            "Password changed successfully"
+    );
     refreshTokens.revokeActiveTokens(token.getUser());
+
   }
 
   @Transactional

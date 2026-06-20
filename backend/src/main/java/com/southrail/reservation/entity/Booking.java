@@ -60,4 +60,9 @@ public class Booking extends BaseEntity {
 
   @Column(nullable = false, precision = 10, scale = 2)
   private BigDecimal totalFare;
+  @Column(name = "queue_position")
+  private Integer queuePosition;
+
+  @Column(name = "reservation_label", length = 20)
+  private String reservationLabel;
 }

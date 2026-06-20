@@ -90,4 +90,5 @@ public final class AdminDtos {
     private String status;
     private BigDecimal totalFare;
   }
+
 }

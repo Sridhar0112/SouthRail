@@ -18,11 +18,13 @@ public class ProfileService {
   private final UserRepository users;
   private final PasswordEncoder passwordEncoder;
   private final RefreshTokenRepository refreshTokens;
+  private final AuditLogService auditLogService;
 
-  public ProfileService(UserRepository users,PasswordEncoder passwordEncoder,RefreshTokenRepository refreshTokenRepository) {
+  public ProfileService(UserRepository users,PasswordEncoder passwordEncoder,RefreshTokenRepository refreshTokenRepository,AuditLogService auditLogService) {
     this.users = users;
     this.passwordEncoder=passwordEncoder;
     this.refreshTokens=refreshTokenRepository;
+    this.auditLogService=auditLogService;
   }
 
   @Transactional(readOnly = true)
@@ -35,6 +37,13 @@ public class ProfileService {
     User user = findUser(email);
     user.setFullName(request.getFullName());
     user.setPhone(request.getPhone());
+    auditLogService.log(
+            user.getId(),
+            user.getEmail(),
+            "PROFILE_UPDATED",
+            "PROFILE",
+            "Profile updated successfully"
+    );
     return toResponse(user);
   }
 
@@ -72,6 +81,13 @@ public class ProfileService {
     user.setDeleted(true);
     user.setDeletedAt(Instant.now());
     refreshTokens.revokeActiveTokens(user);
+    auditLogService.log(
+            user.getId(),
+            user.getEmail(),
+            "ACCOUNT_DELETED",
+            "ACCOUNT",
+            "User account deleted"
+    );
   }
   @Transactional
   public void changePassword(
@@ -101,6 +117,13 @@ public class ProfileService {
     user.setPasswordHash(
             passwordEncoder.encode(
                     request.getNewPassword()));
+    auditLogService.log(
+            user.getId(),
+            user.getEmail(),
+            "PASSWORD_CHANGED",
+            "ACCOUNT",
+            "Password changed successfully"
+    );
 
     refreshTokens.revokeActiveTokens(user);
   }
