@@ -31,9 +31,13 @@ import TaskAltOutlinedIcon from '@mui/icons-material/TaskAltOutlined';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
+import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import api from '../../services/api.js';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
+// All values, keys, and filtering semantics below are UNCHANGED from the
+// original implementation. Only presentation (the JSX/sx below) has been
+// redesigned.
 
 const STATUS_FILTERS = ['All', 'OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'];
 
@@ -44,8 +48,9 @@ const STATUS_META = {
   CLOSED:      { label: 'Closed',      color: 'default' },
 };
 
-// Accent bar + soft background per status — purely decorative, used for the
-// timeline indicator and status icon tinting on each ticket card.
+// Accent identity per status — used for the timeline indicator, the status
+// icon tinting on each ticket card, and the left rail on each card. These
+// are read through theme.palette where possible so dark mode stays correct.
 const STATUS_ACCENT = {
   OPEN:        { bar: '#1976d2', soft: 'rgba(25,118,210,0.08)', solid: '#1976d2' },
   IN_PROGRESS: { bar: '#ed6c02', soft: 'rgba(237,108,2,0.09)',  solid: '#ed6c02' },
@@ -62,10 +67,9 @@ const TOPIC_LABELS = {
   complaint: 'Complaint',
 };
 
-// Quick filter definitions — these are purely additive, client-side-only
-// shortcuts layered on top of the existing search/status filtering. They do
-// not replace or alter the original filteredTickets logic; they narrow the
-// already-filtered list further.
+// Quick filter definitions — additive, client-side-only shortcuts layered on
+// top of the existing search/status filtering. They do not replace or alter
+// the original filteredTickets logic; they narrow the already-filtered list.
 const QUICK_FILTERS = [
   { key: 'recent',     label: 'Recent',       days: null, openOnly: false },
   { key: '7d',         label: 'Last 7 Days',  days: 7,    openOnly: false },
@@ -98,6 +102,7 @@ function withinDays(iso, days) {
   return created >= cutoff;
 }
 
+
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function StatusChip({ status, size = 'small' }) {
@@ -117,6 +122,107 @@ function StatusChip({ status, size = 'small' }) {
   );
 }
 
+// ── Premium hero header ──
+
+function PageHero({ ticketCount, loading }) {
+  return (
+    <Box
+      sx={(theme) => ({
+        position: 'relative',
+        borderRadius: 4,
+        overflow: 'hidden',
+        mb: 3.5,
+        px: { xs: 2.5, sm: 4 },
+        py: { xs: 3, sm: 4 },
+        color: theme.palette.primary.contrastText,
+        backgroundImage: `linear-gradient(120deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 130%)`,
+        boxShadow: theme.palette.custom.cardShadow,
+      })}
+    >
+      {/* Decorative ambient glow — purely visual, no layout impact */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: -60,
+          right: -60,
+          width: 220,
+          height: 220,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(255,255,255,0.16), transparent 70%)',
+          pointerEvents: 'none',
+        }}
+      />
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: -80,
+          left: -40,
+          width: 240,
+          height: 240,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between"
+        alignItems={{ xs: 'flex-start', sm: 'center' }}
+        spacing={2}
+        sx={{ position: 'relative', zIndex: 1 }}
+      >
+        <Stack direction="row" alignItems="center" spacing={2}>
+          <Avatar
+            sx={{
+              width: 52,
+              height: 52,
+              bgcolor: 'rgba(255,255,255,0.16)',
+              color: 'inherit',
+              border: '1px solid rgba(255,255,255,0.28)',
+            }}
+          >
+            <SupportAgentIcon />
+          </Avatar>
+          <Box>
+            <Typography
+              variant="overline"
+              sx={{ opacity: 0.78, fontWeight: 700, letterSpacing: 1.1 }}
+            >
+              Support Center
+            </Typography>
+            <Typography
+              variant="h4"
+              fontWeight={800}
+              sx={{ fontSize: { xs: '1.5rem', sm: '1.85rem' }, lineHeight: 1.15 }}
+            >
+              My Support Tickets
+            </Typography>
+            <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5, maxWidth: 440 }}>
+              Track every conversation with our support team, follow up on open cases, and
+              review resolutions — all in one place.
+            </Typography>
+          </Box>
+        </Stack>
+
+        {!loading && (
+          <Chip
+            label={`${ticketCount} ticket${ticketCount !== 1 ? 's' : ''} on file`}
+            sx={{
+              fontWeight: 700,
+              borderRadius: 2,
+              bgcolor: 'rgba(255,255,255,0.14)',
+              color: 'inherit',
+              border: '1px solid rgba(255,255,255,0.3)',
+              backdropFilter: 'blur(4px)',
+            }}
+          />
+        )}
+      </Stack>
+    </Box>
+  );
+}
+
 // ── Statistics dashboard ──
 
 function StatCard({ icon, label, value, color, delay }) {
@@ -124,27 +230,29 @@ function StatCard({ icon, label, value, color, delay }) {
     <Fade in timeout={500} style={{ transitionDelay: `${delay}ms` }}>
       <Card
         variant="outlined"
-        sx={{
+        sx={(theme) => ({
           borderRadius: 3,
-          borderColor: 'divider',
+          borderColor: theme.palette.custom.cardBorder,
           height: '100%',
-          transition: 'box-shadow 0.25s ease, transform 0.25s ease',
+          transition: 'box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease',
           '&:hover': {
-            boxShadow: '0 10px 24px -10px rgba(0,0,0,0.16)',
-            transform: 'translateY(-2px)',
+            boxShadow: theme.palette.custom.cardShadow,
+            borderColor: color.solid,
+            transform: 'translateY(-3px)',
           },
-        }}
+        })}
       >
         <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
           <Stack direction="row" alignItems="center" spacing={1.5}>
             <Avatar
               variant="rounded"
               sx={{
-                width: 44,
-                height: 44,
+                width: 46,
+                height: 46,
                 borderRadius: 2.5,
                 bgcolor: color.soft,
                 color: color.solid,
+                boxShadow: 'none',
               }}
             >
               {icon}
@@ -222,7 +330,7 @@ function StatsDashboard({ tickets, loading }) {
             <Card variant="outlined" sx={{ borderRadius: 3 }}>
               <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
                 <Stack direction="row" alignItems="center" spacing={1.5}>
-                  <Skeleton variant="rounded" width={44} height={44} sx={{ borderRadius: 2.5 }} />
+                  <Skeleton variant="rounded" width={46} height={46} sx={{ borderRadius: 2.5 }} />
                   <Box sx={{ flex: 1 }}>
                     <Skeleton width={36} height={28} />
                     <Skeleton width={70} height={16} />
@@ -257,7 +365,7 @@ function StatsDashboard({ tickets, loading }) {
 
 function TicketCard({ ticket, onViewDetails, isLast }) {
   const accent = STATUS_ACCENT[ticket.status] ?? STATUS_ACCENT.CLOSED;
-const shortId = ticket.id?.slice(0, 8).toUpperCase();
+  const shortId = ticket.id?.slice(0, 8).toUpperCase();
   return (
     <Box sx={{ position: 'relative', display: 'flex' }}>
       {/* Timeline rail */}
@@ -300,18 +408,18 @@ const shortId = ticket.id?.slice(0, 8).toUpperCase();
 
       <Card
         variant="outlined"
-        sx={{
+        sx={(theme) => ({
           borderRadius: 3,
           position: 'relative',
           overflow: 'hidden',
-          borderColor: 'divider',
+          borderColor: theme.palette.custom.cardBorder,
           flex: 1,
           mb: 2,
           transition: 'box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease',
           '&:hover': {
-            boxShadow: '0 14px 30px -10px rgba(0,0,0,0.16)',
+            boxShadow: theme.palette.custom.cardShadow,
             transform: 'translateY(-3px)',
-            borderColor: 'rgba(0,0,0,0.12)',
+            borderColor: accent.solid,
           },
           '&::before': {
             content: '""',
@@ -322,7 +430,7 @@ const shortId = ticket.id?.slice(0, 8).toUpperCase();
             width: 5,
             bgcolor: accent.bar,
           },
-        }}
+        })}
       >
         <CardContent sx={{ p: { xs: 2, sm: 2.75 }, pl: { xs: 2.75, sm: 3.5 } }}>
           {/* Header: ticket number, created date, status chip */}
@@ -484,15 +592,15 @@ function EmptyState({ onCreate, onFaq }) {
   return (
     <Card
       variant="outlined"
-      sx={{
+      sx={(theme) => ({
         borderRadius: 4,
         textAlign: 'center',
         py: { xs: 5, sm: 7 },
         px: 3,
         borderStyle: 'dashed',
         borderWidth: 1.5,
-        bgcolor: 'rgba(25,118,210,0.025)',
-      }}
+        bgcolor: theme.palette.surface.elevated,
+      })}
     >
       <Avatar
         sx={{
@@ -520,7 +628,7 @@ function EmptyState({ onCreate, onFaq }) {
           onClick={onCreate}
           size="large"
           startIcon={<AddCircleOutlineOutlinedIcon />}
-          sx={{ borderRadius: 2.5, px: 3, fontWeight: 700, boxShadow: 'none' }}
+          sx={{ borderRadius: 2.5, px: 3, fontWeight: 700 }}
         >
           Create Support Ticket
         </Button>
@@ -542,7 +650,7 @@ function ErrorState({ message, onRetry }) {
   return (
     <Card
       variant="outlined"
-      sx={{
+      sx={(theme) => ({
         borderRadius: 4,
         textAlign: 'center',
         py: { xs: 5, sm: 7 },
@@ -550,11 +658,9 @@ function ErrorState({ message, onRetry }) {
         borderStyle: 'dashed',
         borderWidth: 1.5,
         borderColor: 'error.main',
-        bgcolor: (theme) =>
-          theme.palette.mode === 'dark'
-            ? 'rgba(211,47,47,0.06)'
-            : 'rgba(211,47,47,0.04)',
-      }}
+        bgcolor:
+          theme.palette.mode === 'dark' ? 'rgba(211,47,47,0.08)' : 'rgba(211,47,47,0.04)',
+      })}
     >
       <Avatar
         sx={{
@@ -580,7 +686,7 @@ function ErrorState({ message, onRetry }) {
         startIcon={<RefreshIcon />}
         onClick={onRetry}
         size="large"
-        sx={{ borderRadius: 2.5, px: 3.5, fontWeight: 700, boxShadow: 'none' }}
+        sx={{ borderRadius: 2.5, px: 3.5, fontWeight: 700 }}
       >
         Try Again
       </Button>
@@ -589,6 +695,9 @@ function ErrorState({ message, onRetry }) {
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
+// NOTE: all state, effects, memoized derivations, handlers, and the
+// GET /support/my-tickets call below are UNCHANGED from the original file.
+// Only the JSX returned has been redesigned for visual presentation.
 
 export default function MyTicketsPage() {
   const navigate = useNavigate();
@@ -668,62 +777,12 @@ export default function MyTicketsPage() {
   }, []);
 
   return (
-    <Box
-      sx={{
-        py: { xs: 2.5, sm: 5 },
-        minHeight: '80vh',
-        background: (theme) =>
-          theme.palette.mode === 'dark'
-            ? 'transparent'
-            : 'linear-gradient(180deg, rgba(25,118,210,0.035) 0%, rgba(25,118,210,0) 240px)',
-      }}
-    >
+    <Box sx={{ py: { xs: 2.5, sm: 5 }, minHeight: '80vh' }}>
       <Container maxWidth="md">
         <Fade in timeout={450}>
           <Box>
-            {/* ── Header ── */}
-            <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              justifyContent="space-between"
-              alignItems={{ xs: 'flex-start', sm: 'center' }}
-              spacing={1.5}
-              mb={3}
-            >
-              <Stack direction="row" alignItems="center" spacing={2}>
-                <Avatar
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    bgcolor: 'rgba(25,118,210,0.1)',
-                    color: 'primary.main',
-                    display: { xs: 'none', sm: 'flex' },
-                  }}
-                >
-                  <SupportAgentIcon />
-                </Avatar>
-                <Box>
-                  <Typography
-                    variant="h5"
-                    fontWeight={800}
-                    sx={{ mb: 0.25, fontSize: { xs: '1.3rem', sm: '1.5rem' } }}
-                  >
-                    My Support Tickets
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Track and manage your support requests.
-                  </Typography>
-                </Box>
-              </Stack>
-
-              {!loading && !error && (
-                <Chip
-                  label={`${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}`}
-                  color="primary"
-                  variant="outlined"
-                  sx={{ fontWeight: 700, borderRadius: 2, borderWidth: 1.5 }}
-                />
-              )}
-            </Stack>
+            {/* ── Premium hero header ── */}
+            <PageHero ticketCount={tickets.length} loading={loading} />
 
             {/* ── Statistics dashboard ── */}
             {!error && <StatsDashboard tickets={tickets} loading={loading} />}
@@ -732,7 +791,12 @@ export default function MyTicketsPage() {
             {!error && (
               <Card
                 variant="outlined"
-                sx={{ borderRadius: 3, p: { xs: 1.5, sm: 2.25 }, mb: 3, borderColor: 'divider' }}
+                sx={(theme) => ({
+                  borderRadius: 3,
+                  p: { xs: 1.5, sm: 2.25 },
+                  mb: 3,
+                  borderColor: theme.palette.custom.cardBorder,
+                })}
               >
                 <Stack spacing={1.75}>
                   <TextField
@@ -741,13 +805,14 @@ export default function MyTicketsPage() {
                     onChange={(e) => setSearch(e.target.value)}
                     size="small"
                     fullWidth
+                    inputProps={{ 'aria-label': 'Search tickets' }}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
                           <SearchIcon fontSize="small" color="action" />
                         </InputAdornment>
                       ),
-                      sx: { borderRadius: 2, bgcolor: 'background.paper' },
+                      sx: { borderRadius: 2 },
                     }}
                   />
 
@@ -764,6 +829,7 @@ export default function MyTicketsPage() {
                           color={active && meta ? meta.color : active ? 'primary' : 'default'}
                           variant={active ? 'filled' : 'outlined'}
                           size="small"
+                          aria-pressed={active}
                           sx={{
                             fontWeight: active ? 700 : 500,
                             cursor: 'pointer',
@@ -805,6 +871,7 @@ export default function MyTicketsPage() {
                           onClick={() => handleQuickFilterClick(f.key)}
                           variant={active ? 'filled' : 'outlined'}
                           color={active ? 'secondary' : 'default'}
+                          aria-pressed={active}
                           sx={{
                             fontWeight: active ? 700 : 500,
                             cursor: 'pointer',

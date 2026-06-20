@@ -16,7 +16,7 @@ import TrainIcon from '@mui/icons-material/Train';
 import { ColorModeContext } from '../theme/AppThemeProvider.jsx';
 import { logout } from '../features/auth/authSlice.js';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
-
+import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 function getInitials(name = '') {
   return name.trim().split(/\s+/).map((w) => w[0]).join('').toUpperCase().slice(0, 2);
 }
@@ -175,6 +175,19 @@ export function Shell() {
   </ListItemIcon>
   My Tickets
 </MenuItem>
+{auth.user?.roles?.includes('ROLE_ADMIN') && (
+  <MenuItem
+    component={Link}
+    to="/admin/support-tickets"
+    onClick={handleMenuClose}
+    sx={{ py: 1.25 }}
+  >
+    <ListItemIcon>
+      <SupportAgentIcon fontSize="small" />
+    </ListItemIcon>
+    Support Tickets
+  </MenuItem>
+)}
                   <Divider />
 
                   <MenuItem onClick={signOut} sx={{ py: 1.25, color: 'error.main' }}>

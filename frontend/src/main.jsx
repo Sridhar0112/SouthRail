@@ -31,6 +31,9 @@ const MyTicketsPage = lazy(
 const TicketDetailsPage = lazy(
   () => import('./features/auth/TicketDetailsPage.jsx')
 );
+const AdminSupportTicketsPage = lazy(
+  () => import('./features/dashboard/AdminSupportTicketsPage.jsx')
+);
 const router = createBrowserRouter([
   {
     path: '/',
@@ -54,6 +57,13 @@ const router = createBrowserRouter([
       {
   path: 'support/tickets/:ticketId',
   element: <TicketDetailsPage />
+},{
+  path: 'admin/support-tickets',
+  element: (
+    <ProtectedRoute role="ROLE_ADMIN">
+      <AdminSupportTicketsPage />
+    </ProtectedRoute>
+  )
 }
     ]
   }
