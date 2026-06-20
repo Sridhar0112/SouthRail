@@ -60,7 +60,7 @@ const checkPasswordStrength = (password) => {
 
   if (successMessage) {
     return (
-      <Container maxWidth="sm" sx={{ py: 8 }}>
+      <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 8 } }}>
         <Paper sx={{ p: { xs: 3, sm: 5 }, textAlign: 'center' }}>
           <Typography variant="h4" fontWeight={800} gutterBottom>
             Verify your email
@@ -89,7 +89,7 @@ const checkPasswordStrength = (password) => {
   }
 
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
+    <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 8 } }}>
       <Paper sx={{ p: { xs: 3, sm: 5 } }}>
         <Typography variant="h4" fontWeight={800} gutterBottom>
           Create account

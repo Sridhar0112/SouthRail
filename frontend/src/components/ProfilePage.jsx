@@ -299,7 +299,7 @@ onProfileUpdated?.(data);
               )}
 
               {editing && (
-                <Stack direction="row" spacing={1.5} justifyContent="flex-end" pt={1}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent="flex-end" pt={1}>
                   <Button variant="outlined" onClick={discardEdit} sx={{ borderRadius: 2 }}>
                     Discard
                   </Button>
@@ -398,7 +398,7 @@ const navigate = useNavigate();
             {message && (
               <Alert severity={message.type} sx={{ borderRadius: 2 }}>{message.text}</Alert>
             )}
-            <Stack direction="row" justifyContent="flex-end">
+            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="flex-end">
               <Button
                 type="submit" variant="contained"
                 startIcon={<LockIcon />}
@@ -624,7 +624,7 @@ function NotificationsTab() {
 
         {message && <Alert severity={message.type} sx={{ borderRadius: 2 }}>{message.text}</Alert>}
 
-        <Stack direction="row" justifyContent="flex-end">
+        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="flex-end">
           <Button
             variant="contained" startIcon={<SaveIcon />}
             onClick={handleSave} disabled={saving}

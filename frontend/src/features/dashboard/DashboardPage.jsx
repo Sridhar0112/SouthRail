@@ -938,7 +938,7 @@ function BookingHistoryTable({ rows, onCancelBooking }) {
   const t = getDashboardTokens(theme);
   return (
     <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2.5, border: `1.5px solid ${t.cardBorder}`, overflowX: 'auto' }}>
-      <Table size="small" aria-label="Booking history table">
+      <Table size="small" aria-label="Booking history table" sx={{ minWidth: 760 }}>
         <TableHead>
           <TableRow sx={{ bgcolor: alpha(t.primary, 0.04) }}>
             {['PNR', 'Train', 'Route', 'Journey date', 'Status', 'Fare', 'Actions'].map((h) => (
@@ -965,7 +965,7 @@ function BookingHistoryTable({ rows, onCancelBooking }) {
               <TableCell><RailwayStatusChip status={booking.status} /></TableCell>
               <TableCell sx={{ whiteSpace: 'nowrap', fontWeight: 800, fontSize: 13, color: t.textMain }}>{formatFare(booking.totalFare)}</TableCell>
               <TableCell>
-                <Stack direction="row" spacing={0.75}>
+                <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
                   <Button
                     component={Link} to={`/pnr?pnr=${booking.pnr || ''}`}
                     size="small" disabled={!booking.pnr}

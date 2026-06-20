@@ -143,7 +143,7 @@ export default function LoginPage() {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
+    <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 8 } }}>
       <Paper sx={{ p: { xs: 3, sm: 5 } }}>
         <Typography variant="h4" fontWeight={800} gutterBottom>Welcome back</Typography>
         <Typography color="text.secondary" sx={{ mb: 3 }}>
