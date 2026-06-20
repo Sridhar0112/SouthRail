@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import TablePagination from '@mui/material/TablePagination';
 import {
+  Alert,
   Box,
   Button,
   Chip,
@@ -511,7 +512,7 @@ function NextJourneySection({ loading, error, bookings, onRetry, onCancelBooking
         bookings?.length > 3 ? (
           <Button
             component={Link}
-            to="/bookings"
+            to="#booking-history"
             size="small"
             variant="outlined"
           >
@@ -575,6 +576,7 @@ function NextJourneySection({ loading, error, bookings, onRetry, onCancelBooking
 
 function TicketCard({ booking, onCancelBooking, featured }) {
   const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState('');
   const theme = useTheme();
   const t = getDashboardTokens(theme);
   const greens = getGreenShades(theme);
@@ -584,20 +586,23 @@ function TicketCard({ booking, onCancelBooking, featured }) {
   const dest = booking.destinationCode || booking.destinationName || '—';
 
   const handleDownloadTicket = async () => {
-  if (!booking.pnr) {
-    return;
-  }
+    if (!booking.pnr) {
+      setDownloadError('PNR is not available for this booking.');
+      return;
+    }
 
-  setDownloading(true);
+    setDownloading(true);
+    setDownloadError('');
 
-  try {
-    await downloadTicketPdf(booking.pnr);
-  } catch (error) {
-    console.error('Ticket download failed', error);
-  } finally {
-    setDownloading(false);
-  }
-};
+    try {
+      await downloadTicketPdf(booking.pnr);
+    } catch (error) {
+      console.error('Ticket download failed', error);
+      setDownloadError('Unable to download this ticket right now. Please try again.');
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   return (
     <Box
@@ -680,6 +685,11 @@ function TicketCard({ booking, onCancelBooking, featured }) {
 >
   {downloading ? 'Downloading...' : 'Ticket'}
 </Button>
+            {downloadError && (
+              <Alert severity="error" sx={{ width: '100%', py: 0, alignItems: 'center' }}>
+                {downloadError}
+              </Alert>
+            )}
             <Button
               component={Link} to={`/pnr?pnr=${booking.pnr || ''}`}
               size="small" startIcon={<ConfirmationNumberIcon />}
@@ -899,6 +909,7 @@ function BookingHistoryCard({
   const t = getDashboardTokens(theme);
   return (
     <SectionCard
+      id="booking-history"
       title="Booking History"
       subtitle="Search reservations by PNR, train, route, or status"
       icon={<HistoryIcon sx={{ color: t.primary }} />}
@@ -1094,11 +1105,12 @@ function NotificationsCard({ loading, error, notifications, notificationsLoaded,
 }
 
 // ─── Shared SectionCard ───────────────────────────────────────────────────────
-function SectionCard({ title, subtitle, icon, action, children }) {
+function SectionCard({ id, title, subtitle, icon, action, children }) {
   const theme = useTheme();
   const t = getDashboardTokens(theme);
   return (
     <Paper
+      id={id}
       elevation={0}
       sx={{
         bgcolor: t.cardBg, borderRadius: 3,

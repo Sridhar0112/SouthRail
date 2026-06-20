@@ -363,7 +363,7 @@ export default function LoginPage() {
             sx={{
               flex: 2, textTransform: 'none', borderRadius: '50px',
               fontWeight: 600, py: 1, fontSize: '0.82rem',
-              bgcolor: '#c62828', '&:hover': { bgcolor: '#b71c1c' },
+              bgcolor: '#c62828',
               boxShadow: '0 4px 14px rgba(198,40,40,0.35)',
               '&:hover': { bgcolor: '#b71c1c', boxShadow: '0 6px 18px rgba(198,40,40,0.45)' }
             }}

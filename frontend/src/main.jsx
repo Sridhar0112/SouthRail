@@ -9,8 +9,6 @@ import { Shell } from './components/Shell.jsx';
 import { ErrorBoundary } from './components/ErrorBoundary.jsx';
 import { ProtectedRoute } from './components/ProtectedRoute.jsx';
 import './styles.css';
-import SupportPage from './features/auth/SupportPage.jsx';
-import ProfilePage from './components/ProfilePage.jsx';
 
 const HomePage = lazy(() => import('./features/trains/HomePage.jsx'));
 const LoginPage = lazy(() => import('./features/auth/LoginPage.jsx'));
@@ -31,6 +29,8 @@ const MyTicketsPage = lazy(
 const TicketDetailsPage = lazy(
   () => import('./features/auth/TicketDetailsPage.jsx')
 );
+const SupportPage = lazy(() => import('./features/auth/SupportPage.jsx'));
+const ProfilePage = lazy(() => import('./components/ProfilePage.jsx'));
 const AdminSupportTicketsPage = lazy(
   () => import('./features/dashboard/AdminSupportTicketsPage.jsx')
 );
@@ -51,20 +51,18 @@ const router = createBrowserRouter([
       { path: 'dashboard', element: <ProtectedRoute><DashboardPage /></ProtectedRoute> },
       { path: 'admin', element: <ProtectedRoute role="ROLE_ADMIN"><AdminPage /></ProtectedRoute> },
       { path: 'unlock-account', element: <UnlockAccountPage /> },
-      {path:'support',element:<SupportPage/>},
-      {path:'profile',element:<ProfilePage/>},
-      {path:'my-tickets',element:<MyTicketsPage/>},
+      { path: 'support', element: <SupportPage /> },
+      { path: 'profile', element: <ProtectedRoute><ProfilePage /></ProtectedRoute> },
+      { path: 'my-tickets', element: <ProtectedRoute><MyTicketsPage /></ProtectedRoute> },
+      { path: 'support/tickets/:ticketId', element: <ProtectedRoute><TicketDetailsPage /></ProtectedRoute> },
       {
-  path: 'support/tickets/:ticketId',
-  element: <TicketDetailsPage />
-},{
-  path: 'admin/support-tickets',
-  element: (
-    <ProtectedRoute role="ROLE_ADMIN">
-      <AdminSupportTicketsPage />
-    </ProtectedRoute>
-  )
-}
+        path: 'admin/support-tickets',
+        element: (
+          <ProtectedRoute role="ROLE_ADMIN">
+            <AdminSupportTicketsPage />
+          </ProtectedRoute>
+        )
+      }
     ]
   }
 ]);

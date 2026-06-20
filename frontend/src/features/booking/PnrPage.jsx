@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import {
   Box,
   Button,
@@ -41,6 +42,7 @@ export default function PnrPage() {
   const [loading, setLoading] = useState(false);
   const [cancellationOpen, setCancellationOpen] = useState(false);
   const searchedQueryRef = useRef('');
+  const user = useSelector((state) => state.auth.user);
 
   const validationMessage = useMemo(() => validatePnr(pnr), [pnr]);
   const canTrack = !validationMessage && !loading;
@@ -173,7 +175,7 @@ export default function PnrPage() {
         )}
 
         {!loading && !error && result && (
-          <PnrResult result={result} onClear={clearSearch} onCancelBooking={() => setCancellationOpen(true)} />
+          <PnrResult result={result} onClear={clearSearch} onCancelBooking={() => setCancellationOpen(true)} canRequestCancellation={Boolean(user)} />
         )}
 
         <BookingCancellationDialog
@@ -187,10 +189,10 @@ export default function PnrPage() {
   );
 }
 
-function PnrResult({ result, onClear, onCancelBooking }) {
+function PnrResult({ result, onClear, onCancelBooking, canRequestCancellation }) {
   const passengers = parsePassengerStatuses(result.passengerStatuses);
   const lifecycle = buildLifecycle(result);
-  const showCancel = result.pnr && canShowCancelButton(result.status);
+  const showCancel = canRequestCancellation && result.pnr && canShowCancelButton(result.status);
 
   return (
     <Stack spacing={3}>
@@ -200,7 +202,7 @@ function PnrResult({ result, onClear, onCancelBooking }) {
             <Box>
               <Typography color="text.secondary">PNR</Typography>
               <Typography variant="h3" fontWeight={900} sx={{ fontSize: { xs: '2rem', sm: '3rem' }, overflowWrap: 'anywhere' }}>{result.pnr || '-'}</Typography>
-              <Typography variant="h6" fontWeight={800} sx={{ mt: 1 }}>
+              <Typography variant="h6" fontWeight={800} sx={{ mt: 1, overflowWrap: 'anywhere' }}>
                 {result.trainName || 'Train'} {result.trainNumber ? `- ${result.trainNumber}` : ''}
               </Typography>
             </Box>
@@ -286,7 +288,7 @@ function StationBlock({ label, code, name, align = 'left' }) {
     <Box sx={{ flex: 1, p: 2, border: 1, borderColor: 'divider', borderRadius: 2, bgcolor: 'action.hover', textAlign: { xs: 'left', sm: align } }}>
       <Typography color="text.secondary" variant="body2">{label}</Typography>
       <Typography variant="h5" fontWeight={900}>{code || '-'}</Typography>
-      <Typography color="text.secondary">{name || 'Station name not available'}</Typography>
+      <Typography color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>{name || 'Station name not available'}</Typography>
     </Box>
   );
 }
@@ -310,7 +312,7 @@ function PassengerSection({ passengers }) {
               <TableBody>
                 {passengers.map((passenger) => (
                   <TableRow key={`${passenger.name}-${passenger.status}`}>
-                    <TableCell>{passenger.name}</TableCell>
+                    <TableCell sx={{ overflowWrap: 'anywhere' }}>{passenger.name}</TableCell>
                     <TableCell><RailwayStatusChip status={passenger.status} /></TableCell>
                   </TableRow>
                 ))}
@@ -350,7 +352,7 @@ function LifecycleSection({ lifecycle }) {
             <Grid item xs={12} sm={4} key={item.label}>
               <Box sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 2, bgcolor: 'action.hover', height: '100%' }}>
                 <Typography fontWeight={900}>{item.label}</Typography>
-                <Typography color="text.secondary">{item.value}</Typography>
+                <Typography color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>{item.value}</Typography>
               </Box>
             </Grid>
           ))}
@@ -364,7 +366,7 @@ function Detail({ label, value }) {
   return (
     <Grid item xs={12} sm={6} md={4}>
       <Typography color="text.secondary">{label}</Typography>
-      <Typography fontWeight={800}>{value || '-'}</Typography>
+      <Typography fontWeight={800} sx={{ overflowWrap: 'anywhere' }}>{value || '-'}</Typography>
     </Grid>
   );
 }
