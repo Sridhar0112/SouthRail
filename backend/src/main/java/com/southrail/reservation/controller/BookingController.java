@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import java.security.Principal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,8 +35,13 @@ public class BookingController {
   }
 
   @PostMapping("/bookings")
-  BookingDtos.BookingResponse create(Principal principal, @Valid @RequestBody BookingDtos.BookingRequest request) {
-    return bookingService.create(principal.getName(), request);
+  ResponseEntity<BookingDtos.BookingResponse> create(
+          Principal principal,
+          @Valid @RequestBody BookingDtos.BookingRequest request) {
+
+    return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body(bookingService.create(principal.getName(), request));
   }
 
   @PostMapping("/bookings/review")
@@ -69,7 +75,7 @@ public class BookingController {
   }
 
   @PostMapping("/pnr/{pnr}/cancel")
-  ResponseEntity<BookingDtos.PnrStatus> cancel(@PathVariable String pnr) {
-    return ResponseEntity.ok(bookingService.cancel(pnr));
+  CancellationResponse cancelByPnr(Principal principal, @PathVariable String pnr) {
+    return bookingCancellationService.cancel(principal.getName(), pnr);
   }
 }

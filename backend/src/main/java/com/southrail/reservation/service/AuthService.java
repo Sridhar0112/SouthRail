@@ -213,9 +213,11 @@ public class AuthService {
     }
     if (token.getExpiresAt().isBefore(Instant.now())) {
       token.setRevoked(true);
+      refreshTokens.save(token);
       throw new ApiException(HttpStatus.UNAUTHORIZED, "Refresh token expired");
     }
     token.setRevoked(true);
+    refreshTokens.save(token);
     return issueTokens(user);
   }
 
@@ -444,5 +446,14 @@ public class AuthService {
 
         user.setFailedLoginAttempts(0);
         user.setAccountLockedUntil(null);
+      users.save(user);
+
+      auditLogService.log(
+              user.getId(),
+              user.getEmail(),
+              "ACCOUNT_UNLOCKED",
+              "SECURITY",
+              "Account unlocked successfully"
+      );
     }
 }

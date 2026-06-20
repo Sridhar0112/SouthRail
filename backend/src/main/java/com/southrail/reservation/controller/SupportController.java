@@ -8,7 +8,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import java.security.Principal;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,24 +22,27 @@ public class SupportController {
     private final SupportTicketService service;
     @PostMapping("/tickets")
     public ResponseEntity<?> createTicket(
-            @Valid @RequestBody SupportDtos.SupportTicketRequest request){
-            return ResponseEntity.ok(
-                    service.createTicket(request)
-            );
-        }
+            Principal principal,
+            @Valid @RequestBody SupportDtos.SupportTicketRequest request) {
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(service.createTicket(request, principal.getName()));
+    }
     @GetMapping("/my-tickets")
-    public ResponseEntity<?> getMyTickets() {
+    public ResponseEntity<?> getMyTickets(Principal principal) {
         return ResponseEntity.ok(
-                service.getMyTickets()
+                service.getMyTickets(principal.getName())
         );
     }
 
     @GetMapping("/my-tickets/{ticketId}")
     public ResponseEntity<?> getMyTicket(
+            Principal principal,
             @PathVariable UUID ticketId) {
 
         return ResponseEntity.ok(
-                service.getMyTicket(ticketId)
+                service.getMyTicket(principal.getName(), ticketId)
         );
     }
     @GetMapping("/admin/tickets")
@@ -57,21 +62,23 @@ public class SupportController {
     }
     @GetMapping("/my-tickets/{ticketId}/messages")
     public ResponseEntity<?> getMyTicketMessages(
+            Principal principal,
             @PathVariable UUID ticketId) {
 
         return ResponseEntity.ok(
-                service.getUserMessages(ticketId)
+                service.getUserMessages(principal.getName(), ticketId)
         );
     }
 
     @PostMapping("/my-tickets/{ticketId}/messages")
     public ResponseEntity<?> addMyTicketMessage(
+            Principal principal,
             @PathVariable UUID ticketId,
             @Valid @RequestBody SupportDtos.TicketMessageRequest request) {
 
-        return ResponseEntity.ok(
-                service.addUserMessage(ticketId, request)
-        );
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(service.addUserMessage(principal.getName(), ticketId, request));
     }
 
     @GetMapping("/admin/tickets/{ticketId}/messages")
@@ -84,12 +91,12 @@ public class SupportController {
     }
 
     @PostMapping("/admin/tickets/{ticketId}/messages")
-    public ResponseEntity<?> addAdminTicketMessage(
+    public ResponseEntity<?> addAdminTicketMessage(Principal principal,
             @PathVariable UUID ticketId,
             @Valid @RequestBody SupportDtos.TicketMessageRequest request) {
 
         return ResponseEntity.ok(
-                service.addAdminMessage(ticketId, request)
+                service.addAdminMessage(principal.getName(),ticketId, request)
         );
     }
 }

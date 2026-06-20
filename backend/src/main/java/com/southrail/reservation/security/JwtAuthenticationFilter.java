@@ -1,6 +1,7 @@
 package com.southrail.reservation.security;
 
 import com.southrail.reservation.repository.UserRepository;
+import com.southrail.reservation.service.AuthService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,6 +9,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +22,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private final JwtService jwtService;
   private final UserRepository users;
+  private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
 
   public JwtAuthenticationFilter(JwtService jwtService, UserRepository users) {
     this.jwtService = jwtService;
@@ -38,7 +44,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user.getEmail(), null, authorities);
           SecurityContextHolder.getContext().setAuthentication(auth);
         });
-      } catch (RuntimeException ignored) {
+      } catch (RuntimeException ex) {
+        log.debug("JWT validation failed", ex);
         SecurityContextHolder.clearContext();
       }
     }

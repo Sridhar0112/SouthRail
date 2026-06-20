@@ -8,12 +8,10 @@ import com.southrail.reservation.repository.SupportTicketMessageRepository;
 import com.southrail.reservation.repository.SupportTicketRepository;
 import com.southrail.reservation.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import com.southrail.reservation.exception.ApiException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -25,23 +23,19 @@ public class SupportTicketService {
     private final SupportTicketRepository repository;
     private final UserRepository userRepository;
     private final SupportTicketMessageRepository messageRepository;
-
+    @Transactional
     public SupportTicket createTicket(
-            SupportDtos.SupportTicketRequest request) {
+            SupportDtos.SupportTicketRequest request,
+            String email){
 
         SupportTicket ticket = new SupportTicket();
-
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
-
-        String email = authentication.getName();
 
         User user = userRepository
                 .findByEmailIgnoreCase(email)
                 .orElseThrow(() ->
-                        new IllegalStateException("User not found"));
+                        new ApiException(
+                                HttpStatus.NOT_FOUND,
+                                "User not found"));
         ticket.setFullName(user.getFullName());
         ticket.setEmail(user.getEmail());
 
@@ -66,27 +60,20 @@ public class SupportTicketService {
 
         return savedTicket;
     }
-
-    public List<SupportTicket> getMyTickets() {
-
-        String email = SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getName();
+    @Transactional(readOnly = true)
+    public List<SupportTicket> getMyTickets(String email){
 
         return repository.findByEmailOrderByCreatedAtDesc(email);
     }
+    @Transactional(readOnly = true)
+    public SupportTicket getMyTicket(String email, UUID ticketId){
 
-    public SupportTicket getMyTicket(UUID ticketId) {
-
-        String email = SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getName();
 
         return repository.findByIdAndEmail(ticketId, email)
                 .orElseThrow(() ->
-                        new IllegalStateException("Ticket not found"));
+                        new ApiException(
+                                HttpStatus.NOT_FOUND,
+                                "User not found"));
     }
 
     @Transactional(readOnly = true)
@@ -101,12 +88,16 @@ public class SupportTicketService {
 
         SupportTicket ticket = repository.findById(ticketId)
                 .orElseThrow(() ->
-                        new IllegalStateException("Ticket not found"));
+                        new ApiException(
+                                HttpStatus.NOT_FOUND,
+                                "User not found"));
 
         String status = request.getStatus();
 
         if (!List.of("OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED").contains(status)) {
-            throw new IllegalArgumentException("Invalid ticket status");
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid ticket status");
         }
 
         ticket.setStatus(status);
@@ -134,26 +125,23 @@ public class SupportTicketService {
 
     @Transactional
     public SupportDtos.TicketMessageResponse addUserMessage(
+            String email,
             UUID ticketId,
             SupportDtos.TicketMessageRequest request) {
 
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
-
-        String email = authentication.getName();
 
         User user = userRepository
                 .findByEmailIgnoreCase(email)
                 .orElseThrow(() ->
-                        new IllegalStateException("User not found"));
+                        new ApiException(
+                                HttpStatus.NOT_FOUND,
+                                "User not found"));
 
-        SupportTicket ticket = getUserTicket(ticketId);
+        SupportTicket ticket = getUserTicket(email,ticketId);
         if ("CLOSED".equals(ticket.getStatus())) {
-            throw new IllegalStateException(
-                    "Ticket is closed. Messages cannot be added."
-            );
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST,
+                    "Ticket is closed. Messages cannot be added.");
         }
         SupportTicketMessage message =
                 new SupportTicketMessage();
@@ -178,26 +166,21 @@ public class SupportTicketService {
 
     @Transactional
     public SupportDtos.TicketMessageResponse addAdminMessage(
+            String email,
             UUID ticketId,
-            SupportDtos.TicketMessageRequest request) {
-
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
-
-        String email = authentication.getName();
+            SupportDtos.TicketMessageRequest request){
 
         User admin = userRepository
                 .findByEmailIgnoreCase(email)
                 .orElseThrow(() ->
-                        new IllegalStateException("Admin not found"));
+                        new ApiException(
+                                HttpStatus.NOT_FOUND,
+                                "Admin not found"));
 
         SupportTicket ticket =
                 repository
                         .findById(ticketId)
-                        .orElseThrow(() ->
-                                new IllegalStateException("Ticket not found"));
+                        .orElseThrow(()-> new ApiException(HttpStatus.BAD_REQUEST,"Ticket not found"));
 
         SupportTicketMessage message =
                 new SupportTicketMessage();
@@ -209,7 +192,7 @@ public class SupportTicketService {
         message.setMessage(request.getMessage());
         message.setCreatedAt(LocalDateTime.now());
         if ("CLOSED".equals(ticket.getStatus())) {
-            throw new IllegalStateException(
+            throw new ApiException(HttpStatus.BAD_REQUEST,
                     "Ticket is closed. Messages cannot be added."
             );
         }
@@ -230,22 +213,18 @@ public class SupportTicketService {
         );
     }
 
-    private SupportTicket getUserTicket(UUID ticketId) {
-
-        String email = SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getName();
-
+    private SupportTicket getUserTicket(String email, UUID ticketId) {
         return repository
                 .findByIdAndEmail(ticketId, email)
                 .orElseThrow(() ->
-                        new IllegalStateException("Ticket not found"));
+                        new ApiException(
+                                HttpStatus.FORBIDDEN,
+                                "Ticket not found or access denied"));
     }
     @Transactional(readOnly = true)
-    public List<SupportDtos.TicketMessageResponse> getUserMessages(UUID ticketId) {
+    public List<SupportDtos.TicketMessageResponse> getUserMessages(String email,UUID ticketId) {
 
-        getUserTicket(ticketId);
+        getUserTicket(email,ticketId);
 
         return messageRepository
                 .findByTicketIdOrderByCreatedAtAsc(ticketId)

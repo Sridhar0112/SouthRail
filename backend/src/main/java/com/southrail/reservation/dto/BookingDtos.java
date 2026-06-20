@@ -83,6 +83,8 @@ public final class BookingDtos {
     private int passengerCount;
     private BigDecimal totalFare;
     private String paymentStatus;
+    private String reservationLabel;
+    private Integer queuePosition;
   }
 
   @Getter
@@ -138,6 +140,8 @@ public final class BookingDtos {
     private LocalDate journeyDate;
     private String status;
     private BigDecimal totalFare;
+    private String reservationLabel;
+    private Integer queuePosition;
   }
 
   @Getter
@@ -159,5 +163,7 @@ public final class BookingDtos {
     private List<String> passengerStatuses;
     private BigDecimal refundAmount;
     private BigDecimal totalFare;
+    private String reservationLabel;
+    private Integer queuePosition;
   }
 }

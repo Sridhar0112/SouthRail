@@ -7,7 +7,6 @@ import com.southrail.reservation.repository.*;
 
 import java.math.BigDecimal;
 import java.security.SecureRandom;
-import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -148,7 +147,8 @@ public class BookingService {
         booking.getTravelClass(),
         request.getPassengers().size(),
         booking.getTotalFare(),
-        "NOT_COLLECTED");
+        "NOT_COLLECTED",booking.getReservationLabel(),
+            booking.getQueuePosition());
   }
 
   @Transactional(readOnly = true)
@@ -205,7 +205,8 @@ public class BookingService {
         booking.getStatus().name(),
         passengers.findByBooking(booking).stream().map(passenger -> passenger.getFullName() + " - " + passenger.getStatus()).collect(Collectors.toList()),
         booking.getStatus() == BookingStatus.CANCELLED ? booking.getTotalFare().multiply(BigDecimal.valueOf(0.82)) : BigDecimal.ZERO,
-        booking.getTotalFare());
+        booking.getTotalFare(),booking.getReservationLabel(),
+            booking.getQueuePosition());
   }
 
   @Transactional(readOnly = true)
@@ -224,15 +225,8 @@ public class BookingService {
             booking.getDestinationStation().getName(),
             booking.getJourneyDate(),
             booking.getStatus().name(),
-            booking.getTotalFare()));
-  }
-
-  @Transactional
-  public BookingDtos.PnrStatus cancel(String pnr) {
-    Booking booking = bookings.findByPnr(pnr).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "PNR not found"));
-    booking.setStatus(BookingStatus.CANCELLED);
-    seatAllocationService.releaseSeatsForBooking(booking);
-    return pnr(pnr);
+            booking.getTotalFare(),booking.getReservationLabel(),
+                booking.getQueuePosition()));
   }
 
   private String generatePnr() {
