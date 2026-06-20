@@ -7,6 +7,9 @@ import com.southrail.reservation.dto.NotificationDtos;
 import com.southrail.reservation.service.BookingCancellationService;
 import com.southrail.reservation.service.BookingService;
 import com.southrail.reservation.service.NotificationService;
+import com.southrail.reservation.service.TicketPdfService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import jakarta.validation.Valid;
 import java.security.Principal;
 import org.springframework.data.domain.Page;
@@ -26,12 +29,13 @@ public class BookingController {
   private final BookingService bookingService;
   private final BookingCancellationService bookingCancellationService;
   private final NotificationService notificationService;
+  private final TicketPdfService ticketPdfService;
 
-  public BookingController(BookingService bookingService, BookingCancellationService bookingCancellationService,
-      NotificationService notificationService) {
+  public BookingController(BookingService bookingService, BookingCancellationService bookingCancellationService, NotificationService notificationService, TicketPdfService ticketPdfService) {
     this.bookingService = bookingService;
     this.bookingCancellationService = bookingCancellationService;
     this.notificationService = notificationService;
+    this.ticketPdfService = ticketPdfService;
   }
 
   @PostMapping("/bookings")
@@ -77,5 +81,21 @@ public class BookingController {
   @PostMapping("/pnr/{pnr}/cancel")
   CancellationResponse cancelByPnr(Principal principal, @PathVariable String pnr) {
     return bookingCancellationService.cancel(principal.getName(), pnr);
+  }
+  @GetMapping("/bookings/{pnr}/ticket")
+  ResponseEntity<byte[]> downloadTicket(
+          Principal principal,
+          @PathVariable String pnr) {
+
+    byte[] pdf = ticketPdfService.generateTicket(
+            principal.getName(),
+            pnr);
+
+    return ResponseEntity.ok()
+            .header(
+                    HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=\"SouthRail-Ticket-" + pnr + ".pdf\"")
+            .contentType(MediaType.APPLICATION_PDF)
+            .body(pdf);
   }
 }

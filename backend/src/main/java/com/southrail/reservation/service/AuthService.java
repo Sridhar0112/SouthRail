@@ -81,7 +81,7 @@ public class AuthService {
     }
     User user = new User();
     user.setFullName(request.getFullName());
-    user.setEmail(request.getEmail().toLowerCase());
+    user.setEmail(request.getEmail().trim().toLowerCase());
     user.setPhone(request.getPhone());
     user.setEmailVerified(false);
     user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
@@ -103,7 +103,6 @@ public class AuthService {
     user.setDeleted(false);
     user.setDeletedAt(null);
     user.setEnabled(true);
-    refreshTokens.revokeActiveTokens(user);
     user.setEmailVerified(false);
 
     user.setFailedLoginAttempts(0);
@@ -114,6 +113,10 @@ public class AuthService {
 
     user.setPasswordHash(
             passwordEncoder.encode(request.getPassword()));
+
+    refreshTokens.revokeActiveTokens(user);
+
+    users.saveAndFlush(user);
 
     String verificationToken =
             createAccountToken(

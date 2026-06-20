@@ -95,11 +95,6 @@ public class ProfileService {
           ProfileDtos.ChangePasswordRequest request) {
 
     User user = findUser(email);
-    if (!request.getNewPassword().equals(request.getConfirmPassword())) {
-      throw new ApiException(
-              HttpStatus.BAD_REQUEST,
-              "New password and confirm password do not match");
-    }
 
     if (!passwordEncoder.matches(
             request.getCurrentPassword(),

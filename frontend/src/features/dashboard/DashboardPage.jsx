@@ -44,6 +44,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import { downloadTicketPdf } from '../../services/downloadTicket.js';
 import api from '../../services/api.js';
 import BookingCancellationDialog, { canShowCancelButton } from '../../components/BookingCancellationDialog.jsx';
 import { EmptyState, ErrorState, LoadingState } from '../../components/StateFeedback.jsx';
@@ -572,12 +574,30 @@ function NextJourneySection({ loading, error, bookings, onRetry, onCancelBooking
 }
 
 function TicketCard({ booking, onCancelBooking, featured }) {
+  const [downloading, setDownloading] = useState(false);
   const theme = useTheme();
   const t = getDashboardTokens(theme);
   const greens = getGreenShades(theme);
+  
   const showCancel = booking.pnr && canShowCancelButton(booking.status);
   const src  = booking.sourceCode || booking.sourceName || '—';
   const dest = booking.destinationCode || booking.destinationName || '—';
+
+  const handleDownloadTicket = async () => {
+  if (!booking.pnr) {
+    return;
+  }
+
+  setDownloading(true);
+
+  try {
+    await downloadTicketPdf(booking.pnr);
+  } catch (error) {
+    console.error('Ticket download failed', error);
+  } finally {
+    setDownloading(false);
+  }
+};
 
   return (
     <Box
@@ -641,7 +661,25 @@ function TicketCard({ booking, onCancelBooking, featured }) {
             <MetaItem label="PNR"    value={booking.pnr || '—'} />
             <MetaItem label="Fare"   value={formatFare(booking.totalFare)} bold />
           </Stack>
-          <Stack direction="row" spacing={1}>
+         <Stack
+  direction={{ xs: 'column', sm: 'row' }}
+  spacing={1}
+  sx={{
+    width: { xs: '100%', sm: 'auto' },
+    '& .MuiButton-root': {
+      width: { xs: '100%', sm: 'auto' }
+    }
+  }}
+><Button
+  size="small"
+  startIcon={<PictureAsPdfIcon />}
+  disabled={!booking.pnr || downloading}
+  onClick={handleDownloadTicket}
+  sx={{ borderRadius: 2 }}
+  variant="contained"
+>
+  {downloading ? 'Downloading...' : 'Ticket'}
+</Button>
             <Button
               component={Link} to={`/pnr?pnr=${booking.pnr || ''}`}
               size="small" startIcon={<ConfirmationNumberIcon />}

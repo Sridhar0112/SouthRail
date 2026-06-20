@@ -5,6 +5,8 @@ import { Alert, Box, Button, Chip, Container, Grid, LinearProgress, MenuItem, Pa
 import AddIcon from '@mui/icons-material/Add';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import PrintIcon from '@mui/icons-material/Print';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import { downloadTicketPdf } from '../../services/downloadTicket.js';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import SearchIcon from '@mui/icons-material/Search';
 import api from '../../services/api.js';
@@ -318,6 +320,26 @@ function ReviewPanel({ review, isCurrent, passengerCount }) {
 }
 
 function BookingSuccess({ response, fallbackValues }) {
+  const [downloading, setDownloading] = useState(false);
+const [downloadError, setDownloadError] = useState('');
+const handleDownloadTicket = async () => {
+  if (!response?.pnr) {
+    setDownloadError('PNR is not available for this booking.');
+    return;
+  }
+
+  setDownloading(true);
+  setDownloadError('');
+
+  try {
+    await downloadTicketPdf(response.pnr);
+  } catch (error) {
+    console.error('Ticket download failed', error);
+    setDownloadError('Unable to download ticket right now. Please try again.');
+  } finally {
+    setDownloading(false);
+  }
+};
   const hasPnr = Boolean(response?.pnr);
   return (
     <SuccessState title="Booking confirmed" message={hasPnr ? `Your ticket has been booked. PNR ${response.pnr}` : 'Booking completed, but PNR was not returned by the booking API.'}>
@@ -339,6 +361,19 @@ function BookingSuccess({ response, fallbackValues }) {
         <Button component={Link} to="/dashboard">View My Bookings</Button>
         <Button startIcon={<PrintIcon />} onClick={() => window.print()}>Print Ticket</Button>
         <Button component={Link} to="/" startIcon={<SearchIcon />}>Back to Search</Button>
+        {downloadError && (
+  <Alert severity="error" sx={{ width: '100%' }}>
+    {downloadError}
+  </Alert>
+)}
+<Button
+  variant="contained"
+  startIcon={<PictureAsPdfIcon />}
+  onClick={handleDownloadTicket}
+  disabled={!hasPnr || downloading}
+>
+  {downloading ? 'Downloading...' : 'Download Ticket'}
+</Button>
       </Stack>
     </SuccessState>
   );
