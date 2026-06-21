@@ -250,16 +250,16 @@ function EmptyState({ hasFilters }) {
 /* ─── Section Header (drawer) ───────────────────────────────────────────── */
 function SectionHeader({ icon, label, action }) {
   return (
-    <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.25 }}>
+    <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 0.9 }}>
       <Stack direction="row" alignItems="center" spacing={1}>
-        <Box sx={{ color: 'primary.main', display: 'grid', placeItems: 'center', '& svg': { fontSize: 18 } }}>
+        <Box sx={{ color: 'primary.main', display: 'grid', placeItems: 'center', '& svg': { fontSize: 16 } }}>
           {icon}
         </Box>
         <Typography
           variant="caption"
           fontWeight={800}
           color="text.secondary"
-          sx={{ textTransform: 'uppercase', letterSpacing: 0.7, fontSize: '0.7rem' }}
+          sx={{ textTransform: 'uppercase', letterSpacing: 0.6, fontSize: '0.66rem' }}
         >
           {label}
         </Typography>
@@ -272,14 +272,14 @@ function SectionHeader({ icon, label, action }) {
 /* ─── Summary Field (compact grid item inside summary card) ────────────── */
 function SummaryField({ icon, label, children }) {
   return (
-    <Stack direction="row" spacing={1.25} alignItems="flex-start" sx={{ minWidth: 0 }}>
+    <Stack direction="row" spacing={1} alignItems="flex-start" sx={{ minWidth: 0 }}>
       <Box
         sx={{
           mt: 0.2,
           color: 'text.secondary',
           opacity: 0.85,
           flexShrink: 0,
-          '& svg': { fontSize: 17 },
+          '& svg': { fontSize: 15 },
         }}
       >
         {icon}
@@ -289,7 +289,7 @@ function SummaryField({ icon, label, children }) {
           variant="caption"
           color="text.secondary"
           fontWeight={600}
-          sx={{ textTransform: 'uppercase', letterSpacing: 0.4, fontSize: '0.65rem', display: 'block' }}
+          sx={{ textTransform: 'uppercase', letterSpacing: 0.35, fontSize: '0.62rem', display: 'block' }}
         >
           {label}
         </Typography>
@@ -302,7 +302,7 @@ function SummaryField({ icon, label, children }) {
 /* ─── Conversation Skeleton ─────────────────────────────────────────────── */
 function ConversationSkeleton() {
   return (
-    <Stack spacing={2} sx={{ p: 2 }}>
+    <Stack spacing={1.25} sx={{ p: 1.25 }}>
       {[0, 1, 2].map((i) => (
         <Stack
           key={i}
@@ -346,8 +346,8 @@ function MessageBubble({ message, theme }) {
     >
       <Avatar
         sx={{
-          width: 28,
-          height: 28,
+          width: 24,
+          height: 24,
           fontSize: '0.7rem',
           fontWeight: 800,
           flexShrink: 0,
@@ -358,7 +358,7 @@ function MessageBubble({ message, theme }) {
         {initialsOf(message.senderName)}
       </Avatar>
 
-      <Box sx={{ maxWidth: '76%', display: 'flex', flexDirection: 'column', alignItems: isAdmin ? 'flex-end' : 'flex-start' }}>
+      <Box sx={{ maxWidth: '82%', display: 'flex', flexDirection: 'column', alignItems: isAdmin ? 'flex-end' : 'flex-start' }}>
         <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mb: 0.4, flexDirection: isAdmin ? 'row-reverse' : 'row' }}>
           <Typography variant="caption" fontWeight={700} color="text.primary" sx={{ fontSize: '0.72rem' }}>
             {message.senderName}
@@ -383,8 +383,8 @@ function MessageBubble({ message, theme }) {
         <Paper
           elevation={0}
           sx={{
-            px: 1.75,
-            py: 1.1,
+            px: 1.25,
+            py: 0.9,
             bgcolor: isAdmin
               ? 'primary.main'
               : isLight
@@ -398,7 +398,7 @@ function MessageBubble({ message, theme }) {
             wordBreak: 'break-word',
           }}
         >
-          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
+          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
             {message.message}
           </Typography>
         </Paper>
@@ -454,7 +454,7 @@ function TicketDrawer({
       aria-labelledby="ticket-drawer-title"
       PaperProps={{
         sx: {
-          width: { xs: 'calc(100vw - 24px)', sm: 520, md: 640 },
+          width: { xs: '100vw', sm: 'min(92vw, 460px)', md: 500 },
           maxWidth: '100vw',
           bgcolor: 'background.paper',
           backgroundImage: 'none',
@@ -469,8 +469,8 @@ function TicketDrawer({
           position: 'sticky',
           top: 0,
           zIndex: 5,
-          px: { xs: 2.5, sm: 3.5 },
-          py: 2.5,
+          px: { xs: 2, sm: 2.5 },
+          py: { xs: 1.5, sm: 1.75 },
           background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
           color: theme.palette.primary.contrastText,
           flexShrink: 0,
@@ -480,8 +480,8 @@ function TicketDrawer({
           <Stack direction="row" spacing={1.5} alignItems="center">
             <Box
               sx={{
-                width: 40,
-                height: 40,
+                width: 34,
+                height: 34,
                 borderRadius: 2,
                 display: 'grid',
                 placeItems: 'center',
@@ -489,7 +489,7 @@ function TicketDrawer({
                 flexShrink: 0,
               }}
             >
-              <ConfirmationNumberIcon sx={{ fontSize: 20 }} />
+              <ConfirmationNumberIcon sx={{ fontSize: 18 }} />
             </Box>
             <Box>
               <Typography variant="overline" sx={{ opacity: 0.78, letterSpacing: 1.4, fontSize: '0.66rem', lineHeight: 1 }}>
@@ -499,7 +499,7 @@ function TicketDrawer({
                 id="ticket-drawer-title"
                 variant="h6"
                 fontWeight={900}
-                sx={{ lineHeight: 1.2, fontFamily: 'monospace' }}
+                sx={{ lineHeight: 1.2, fontFamily: 'monospace', fontSize: '1rem' }}
               >
                 #{ticket.id}
               </Typography>
@@ -512,7 +512,7 @@ function TicketDrawer({
               size="small"
               sx={{
                 fontWeight: 800,
-                fontSize: '0.72rem',
+                fontSize: '0.68rem',
                 bgcolor: alpha('#fff', 0.2),
                 color: '#fff',
                 border: `1px solid ${alpha('#fff', 0.35)}`,
@@ -534,20 +534,20 @@ function TicketDrawer({
       </Box>
 
       {/* ── Scrollable Body ── */}
-      <Box sx={{ overflowY: 'auto', flex: 1, px: { xs: 2.5, sm: 3.5 }, py: 3 }}>
-        <Stack spacing={2}>
+      <Box sx={{ overflowY: 'auto', overflowX: 'hidden', flex: 1, px: { xs: 2, sm: 2.5 }, py: { xs: 1.75, sm: 2 } }}>
+        <Stack spacing={1.5}>
           {/* Summary Card */}
           <Paper
             variant="outlined"
             sx={{
-              p: 2,
-              borderRadius: 2.25,
+              p: { xs: 1.35, sm: 1.5 },
+              borderRadius: 2,
               borderColor: theme.palette.divider,
               bgcolor: 'background.paper',
             }}
           >
             <SectionHeader icon={<PersonIcon />} label="Customer & Ticket Summary" />
-            <Grid container spacing={2.25}>
+            <Grid container spacing={1.35}>
               <Grid item xs={12} sm={6}>
                 <SummaryField icon={<PersonIcon />} label="Customer">
                   <Typography variant="body2" fontWeight={700}>
@@ -608,13 +608,13 @@ function TicketDrawer({
             <Paper
               variant="outlined"
               sx={{
-                p: 2,
-                borderRadius: 2.25,
+                p: { xs: 1.35, sm: 1.5 },
+                borderRadius: 2,
                 bgcolor: isLight ? alpha(theme.palette.primary.main, 0.03) : alpha(theme.palette.primary.main, 0.07),
                 borderColor: theme.palette.divider,
               }}
             >
-              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.7 }}>
+              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.55 }}>
                 {ticket.description || 'No description provided.'}
               </Typography>
             </Paper>
@@ -657,9 +657,10 @@ function TicketDrawer({
                 role="log"
                 aria-label="Conversation messages"
                 sx={{
-                  height: 300,
+                  height: { xs: 240, sm: 'clamp(240px, 34vh, 300px)' },
                   overflowY: 'auto',
-                  p: 2,
+                  overflowX: 'hidden',
+                  p: { xs: 1.25, sm: 1.5 },
                   scrollBehavior: 'smooth',
                 }}
               >
@@ -686,8 +687,8 @@ function TicketDrawer({
           flexShrink: 0,
           position: 'sticky',
           bottom: 0,
-          px: { xs: 2.5, sm: 3.5 },
-          py: 2.25,
+          px: { xs: 2, sm: 2.5 },
+          py: { xs: 1.35, sm: 1.5 },
           bgcolor: 'background.paper',
           borderTop: `1px solid ${theme.palette.divider}`,
           boxShadow: isLight ? '0 -8px 24px rgba(19,35,30,0.06)' : '0 -8px 24px rgba(0,0,0,0.3)',
@@ -696,8 +697,8 @@ function TicketDrawer({
         <Paper
           variant="outlined"
           sx={{
-            p: 1.75,
-            borderRadius: 2.25,
+            p: { xs: 1.25, sm: 1.35 },
+            borderRadius: 2,
             borderColor: theme.palette.divider,
             bgcolor: 'background.default',
           }}
@@ -713,8 +714,8 @@ function TicketDrawer({
             <TextField
               fullWidth
               multiline
-              minRows={3}
-              maxRows={6}
+              minRows={2}
+              maxRows={4}
               value={replyMessage}
               onChange={(e) => setReplyMessage(e.target.value)}
               onKeyDown={handleReplyKeyDown}
@@ -729,13 +730,14 @@ function TicketDrawer({
             />
           )}
 
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} sx={{ mt: 1.5 }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: 1.25 }}>
             <Button
               fullWidth
               variant="contained"
               startIcon={sending ? <CircularProgress size={16} color="inherit" /> : <SendIcon fontSize="small" />}
               onClick={sendReply}
               disabled={isClosed || !replyMessage.trim() || sending}
+              size="small"
               sx={{ borderRadius: 2, fontWeight: 700 }}
             >
               {sending ? 'Sending…' : 'Send Reply'}
@@ -746,6 +748,7 @@ function TicketDrawer({
               variant="outlined"
               startIcon={<EditIcon fontSize="small" />}
               onClick={() => onUpdateStatus(ticket)}
+              size="small"
               sx={{ borderRadius: 2, fontWeight: 700 }}
             >
               Update Status
@@ -783,9 +786,9 @@ function StatusDialog({ open, ticket, onClose, onSubmit, loading }) {
       onClose={loading ? undefined : onClose}
       fullWidth
       maxWidth="xs"
-      PaperProps={{ sx: { borderRadius: 2.25 } }}
+      PaperProps={{ sx: { borderRadius: 2.25, width: { xs: 'calc(100vw - 24px)', sm: 400 } } }}
     >
-      <DialogTitle sx={{ pb: 1 }}>
+      <DialogTitle sx={{ px: { xs: 2, sm: 2.5 }, pt: 2, pb: 0.75 }}>
         <Typography variant="h6" fontWeight={900}>
           Update Ticket Status
         </Typography>
@@ -794,7 +797,7 @@ function StatusDialog({ open, ticket, onClose, onSubmit, loading }) {
         </Typography>
       </DialogTitle>
 
-      <DialogContent>
+      <DialogContent sx={{ px: { xs: 2, sm: 2.5 }, py: 1.5 }}>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <FormControl fullWidth>
             <Select
@@ -837,7 +840,7 @@ function StatusDialog({ open, ticket, onClose, onSubmit, loading }) {
         </Stack>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
+      <DialogActions sx={{ px: { xs: 2, sm: 2.5 }, pb: 2, gap: 1 }}>
         <Button onClick={onClose} disabled={loading} variant="outlined" sx={{ flex: 1, borderRadius: 2 }}>
           Cancel
         </Button>
