@@ -95,7 +95,7 @@ export default function UnlockAccountPage() {
         bgcolor: 'background.default',
       }}
     >
-      <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 6 } }}>
+      <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
         {/* Brand header */}
         <Stack alignItems="center" spacing={0.5} sx={{ mb: { xs: 2.5, sm: 4 } }}>
           <TrainIcon color="primary" />
@@ -129,7 +129,7 @@ export default function UnlockAccountPage() {
                 borderColor: 'divider',
               }}
             >
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'center', sm: 'flex-start' }} textAlign={{ xs: 'center', sm: 'left' }}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ xs: 'center', sm: 'flex-start' }} textAlign={{ xs: 'center', sm: 'left' }}>
                 {Icon && (
                   <Icon sx={{ fontSize: 28, color: cfg.color, mt: 0.3, flexShrink: 0 }} />
                 )}
@@ -150,7 +150,7 @@ export default function UnlockAccountPage() {
             </Box>
 
             {/* Detail body */}
-            <Box sx={{ px: { xs: 2, sm: 5 }, py: { xs: 3, sm: 4 } }}>
+            <Box sx={{ px: { xs: 1.75, sm: 2.5 }, py: { xs: 2, sm: 2.5 } }}>
 
               {status === 'loading' && (
                 <Typography variant="body2" color="text.secondary">

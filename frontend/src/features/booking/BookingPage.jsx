@@ -113,8 +113,8 @@ export default function BookingPage() {
 
   if (response) {
     return (
-      <Container maxWidth="lg" sx={{ py: { xs: 2.25, md: 3.5 } }}>
-        <Stepper activeStep={2} sx={{ mb: 2 }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 1.5, md: 2.25 } }}>
+        <Stepper activeStep={2} sx={{ mb: 1.5, '& .MuiStepLabel-label': { fontSize: '0.78rem' }, '& .MuiStepIcon-root': { fontSize: 20 } }}>
           {steps.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
         </Stepper>
         <BookingSuccess response={response} fallbackValues={currentValues} />
@@ -123,13 +123,13 @@ export default function BookingPage() {
   }
 
   return (
-    <Container maxWidth={showReview && review ? "xl" : "lg"} sx={{ py: { xs: 2.25, md: 3.5 }, px: { xs: 2, sm: 3, lg: 4 } }}>
-      <Typography variant="h5" fontWeight={850} gutterBottom>Book ticket</Typography>
-      <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 2, overflowX: 'auto', pb: 1 }}>
+    <Container maxWidth={showReview && review ? "xl" : "lg"} sx={{ py: { xs: 1.5, md: 2.25 }, px: { xs: 2, sm: 3, lg: 4 } }}>
+      <Typography variant="h5" fontWeight={850} sx={{ mb: 1 }}>Book ticket</Typography>
+      <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 1.5, overflowX: 'auto', pb: 0.5, '& .MuiStepLabel-label': { fontSize: '0.78rem' }, '& .MuiStepIcon-root': { fontSize: 20 } }}>
         {steps.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
       </Stepper>
 
-      <Stack spacing={2}>
+      <Stack spacing={1.35}>
         {loadingTrain && <LoadingState message="Loading train details..." />}
         {trainError && <Alert severity="warning">{trainError}</Alert>}
         {train && <TrainSummary train={train} values={currentValues} />}
@@ -137,7 +137,7 @@ export default function BookingPage() {
         {submitError && <BookingFailure message={submitError} retry={form.handleSubmit(submit)} />}
         {loadingReview && <LoadingState message="Preparing booking review..." />}
         {submitting && (
-          <Paper sx={{ p: 1.5 }}>
+          <Paper sx={{ p: 1.25 }}>
             <Stack spacing={1}>
               <LinearProgress />
               <Typography fontWeight={800}>Processing your booking...</Typography>
@@ -160,15 +160,15 @@ export default function BookingPage() {
             onConfirmBooking={form.handleSubmit(submit)}
           />
         ) : (
-          <Paper elevation={1} sx={{ p: { xs: 1.5, md: 2.25 }, borderRadius: 2.5, width: '100%', maxWidth: '100%', minWidth: 0 }}>
+          <Paper elevation={1} sx={{ p: { xs: 1.35, md: 1.75 }, borderRadius: 2.5, width: '100%', maxWidth: '100%', minWidth: 0 }}>
             <Box component="form" onSubmit={form.handleSubmit(submit)}>
-              <Stack spacing={1.75}>
+              <Stack spacing={1.35}>
                 <SectionHeader
                   overline="Journey details"
                   title="Choose your route and fare options"
                   description="Confirm the stations, journey date, class, and quota before preparing the final booking review."
                 />
-                <Grid container spacing={1.75}>
+                <Grid container spacing={1.35}>
                   <Grid item xs={12} sm={6} md={4}>
                     <TextField fullWidth label="From station code" disabled={submitting} error={!!form.formState.errors.sourceStationCode}
                       helperText={form.formState.errors.sourceStationCode?.message}
@@ -205,16 +205,16 @@ export default function BookingPage() {
                   title="Add passenger information"
                   description="Passenger details are used for ticket generation, berth planning, and final booking validation."
                 />
-                <Stack spacing={2}>
+                <Stack spacing={1.35}>
                   {fields.map((field, index) => (
                     <Card key={field.id} variant="outlined" sx={{ borderRadius: 2.5, overflow: 'visible' }}>
-                      <CardContent sx={{ p: { xs: 1.5, md: 1.75 }, '&:last-child': { pb: { xs: 1.5, md: 1.75 } } }}>
-                        <Stack spacing={2}>
+                      <CardContent sx={{ p: { xs: 1.25, md: 1.5 }, '&:last-child': { pb: { xs: 1.25, md: 1.5 } } }}>
+                        <Stack spacing={1.35}>
                           <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
                             <Typography variant="subtitle1" fontWeight={900}>Passenger {index + 1}</Typography>
                             <Chip size="small" color={index === 0 ? 'primary' : 'default'} variant={index === 0 ? 'filled' : 'outlined'} label={index === 0 ? 'Primary traveller' : 'Co-passenger'} />
                           </Stack>
-                          <Grid container spacing={2}>
+                          <Grid container spacing={1.35}>
                             <Grid item xs={12} md={4}>
                               <TextField fullWidth label="Passenger name" disabled={submitting}
                                 error={!!form.formState.errors.passengers?.[index]?.fullName}
@@ -247,12 +247,12 @@ export default function BookingPage() {
 
                 <ReviewPanel review={review} isCurrent={reviewIsCurrent} passengerCount={passengerCount} />
 
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.35} justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }}>
                   <Button type="button" startIcon={<AddIcon />} disabled={submitting}
                     onClick={() => append({ fullName: '', age: 30, gender: 'Male', berthPreference: 'NO_PREFERENCE' })}>
                     Add passenger
                   </Button>
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.35} sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
                     <Button type="button" variant="outlined" startIcon={<RateReviewIcon />} onClick={form.handleSubmit(prepareReview)} disabled={loadingReview || submitting}>
                       {loadingReview ? 'Preparing review...' : 'Review booking'}
                     </Button>
@@ -302,7 +302,7 @@ function SectionHeader({ overline, title, description }) {
   return (
     <Stack spacing={0.5}>
       <Typography variant="overline" color="secondary" fontWeight={900} letterSpacing={1}>{overline}</Typography>
-      <Typography variant="h5" fontWeight={900}>{title}</Typography>
+      <Typography variant="subtitle1" fontWeight={900}>{title}</Typography>
       <Typography color="text.secondary">{description}</Typography>
     </Stack>
   );
@@ -314,10 +314,10 @@ function formatLabel(value) {
 
 function TrainSummary({ train, values }) {
   return (
-    <Paper sx={{ p: 1.5 }}>
-      <Grid container spacing={2} alignItems="center">
+    <Paper sx={{ p: 1.25 }}>
+      <Grid container spacing={1.35} alignItems="center">
         <Grid item xs={12} md={5}>
-          <Typography variant="h6" fontWeight={800} sx={{ overflowWrap: 'anywhere' }}>{train.name} - {train.number}</Typography>
+          <Typography variant="subtitle1" fontWeight={800} sx={{ overflowWrap: 'anywhere' }}>{train.name} - {train.number}</Typography>
           <Typography color="text.secondary">{train.category}</Typography>
         </Grid>
         <Grid item xs={12} sm={6} md={2}>
@@ -346,15 +346,15 @@ function ReviewPanel({ review, isCurrent, passengerCount }) {
     return <EmptyState title="Booking review required" message="Review fare, availability, passengers, and cancellation policy before confirming this booking." />;
   }
   return (
-    <Paper variant="outlined" sx={{ p: 2, borderColor: isCurrent ? 'divider' : 'warning.main' }}>
-      <Grid container spacing={2}>
+    <Paper variant="outlined" sx={{ p: 1.35, borderColor: isCurrent ? 'divider' : 'warning.main' }}>
+      <Grid container spacing={1.35}>
         {!isCurrent && (
           <Grid item xs={12}>
             <Alert severity="warning">Booking details changed. Please review again before confirming.</Alert>
           </Grid>
         )}
         <Grid item xs={12} md={5}>
-          <Typography variant="h6" fontWeight={800}>Fare breakdown</Typography>
+          <Typography variant="subtitle1" fontWeight={800}>Fare breakdown</Typography>
           {review.fareBreakdown?.map((line) => (
             <Stack key={line.label} direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between">
               <Typography color="text.secondary">{line.label}</Typography>
@@ -367,20 +367,20 @@ function ReviewPanel({ review, isCurrent, passengerCount }) {
           </Stack>
         </Grid>
         <Grid item xs={12} md={3}>
-          <Typography variant="h6" fontWeight={800}>Availability</Typography>
+          <Typography variant="subtitle1" fontWeight={800}>Availability</Typography>
           <Stack spacing={1} alignItems="flex-start">
-            <Chip color={review.availableSeats >= passengerCount ? 'success' : 'error'} label={`${review.availableSeats} seats - ${review.availabilityStatus}`} />
+            <Chip size="small" color={review.availableSeats >= passengerCount ? 'success' : 'error'} label={`${review.availableSeats} seats`} />
             <Typography color="text.secondary">Passengers: {passengerCount}</Typography>
           </Stack>
         </Grid>
         <Grid item xs={12} md={4}>
-          <Typography variant="h6" fontWeight={800}>Berth suggestions</Typography>
+          <Typography variant="subtitle1" fontWeight={800}>Berth suggestions</Typography>
           {review.berthSuggestions?.length ? review.berthSuggestions.map((item) => (
             <Typography key={item.passengerName}>{item.passengerName}: {item.suggestion}</Typography>
           )) : <Typography color="text.secondary">No berth preference selected.</Typography>}
         </Grid>
         <Grid item xs={12}>
-          <Typography variant="h6" fontWeight={800}>Cancellation policy</Typography>
+          <Typography variant="subtitle1" fontWeight={800}>Cancellation policy</Typography>
           <Stack direction="row" spacing={1} flexWrap="wrap">
             {review.cancellationPolicy?.map((item) => <Chip key={item} label={item} variant="outlined" />)}
           </Stack>
@@ -424,7 +424,7 @@ function BookingSuccess({ response, fallbackValues }) {
   return (
     <SuccessState title={title} message={message}>
       <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, width: '100%', maxWidth: '100%', minWidth: 0 }}>
-        <Grid container spacing={2}>
+        <Grid container spacing={1.35}>
           <Detail label="PNR" value={safeText(response?.pnr, 'Not returned')} />
           <Detail label="Train" value={`${safeText(response?.trainName, 'Train')} ${response?.trainNumber ? `- ${response.trainNumber}` : ''}`} />
           <Detail label="From" value={safeText(response?.sourceName || response?.sourceCode || fallbackValues.sourceStationCode)} />
@@ -440,7 +440,7 @@ function BookingSuccess({ response, fallbackValues }) {
         </Grid>
       </Paper>
       {downloadError && <Alert severity="error" sx={{ width: '100%' }}>{downloadError}</Alert>}
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.35} sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
         <Button component={Link} to={hasPnr ? `/pnr?pnr=${response.pnr}` : '/pnr'} variant="contained">View PNR</Button>
         <Button component={Link} to="/dashboard">View My Bookings</Button>
         <Button startIcon={<PrintIcon />} onClick={() => window.print()}>Print Ticket</Button>
@@ -456,7 +456,7 @@ function BookingSuccess({ response, fallbackValues }) {
 function BookingFailure({ message, retry }) {
   return (
     <ErrorState title="Booking could not be completed" message={message}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.35} sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
         <Button variant="contained" onClick={retry}>Retry Booking</Button>
         <Button component={Link} to="/">Back to Search</Button>
       </Stack>

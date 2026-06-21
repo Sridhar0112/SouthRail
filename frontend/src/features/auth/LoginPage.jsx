@@ -156,17 +156,17 @@ export default function LoginPage() {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 8 } }}>
-      <Paper sx={{ p: { xs: 2, sm: 5 }, width: "100%", maxWidth: "100%", minWidth: 0 }}>
+    <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+      <Paper sx={{ p: { xs: 1.5, sm: 2.25 }, width: "100%", maxWidth: "100%", minWidth: 0 }}>
         <Typography
-          variant="h4"
+          variant="h5"
           fontWeight={800}
           gutterBottom
-          sx={{ fontSize: { xs: "1.65rem", sm: "2.125rem" } }}
+          sx={{ fontSize: { xs: "1.35rem", sm: "1.65rem" } }}
         >
           Welcome back
         </Typography>
-        <Typography color="text.secondary" sx={{ mb: 3, overflowWrap: 'anywhere' }}>
+        <Typography color="text.secondary" sx={{ mb: 1.5, overflowWrap: 'anywhere' }}>
           Book faster across Chennai, Bengaluru, Kochi, Hyderabad, Madurai,
           Mangaluru, and more.
         </Typography>
@@ -201,7 +201,7 @@ export default function LoginPage() {
         )}
 
         <Box component="form" onSubmit={handleSubmit(onSubmit)}>
-          <Stack spacing={2} sx={{ "& .MuiTextField-root": { width: "100%" } }}>
+          <Stack spacing={1.5} sx={{ "& .MuiTextField-root": { width: "100%" } }}>
             <TextField
               label="Email"
               autoComplete="email"

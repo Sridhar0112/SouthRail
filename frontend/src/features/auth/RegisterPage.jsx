@@ -60,23 +60,23 @@ const checkPasswordStrength = (password) => {
 
   if (successMessage) {
     return (
-      <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 8 } }}>
-        <Paper sx={{ p: { xs: 2, sm: 5 }, textAlign: 'center', width: '100%', maxWidth: '100%', minWidth: 0 }}>
-          <Typography variant="h4" fontWeight={800} gutterBottom sx={{ fontSize: { xs: '1.65rem', sm: '2.125rem' } }}>
+      <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+        <Paper sx={{ p: { xs: 1.5, sm: 2.25 }, textAlign: 'center', width: '100%', maxWidth: '100%', minWidth: 0 }}>
+          <Typography variant="h5" fontWeight={800} gutterBottom sx={{ fontSize: { xs: '1.35rem', sm: '1.65rem' } }}>
             Verify your email
           </Typography>
 
-          <Alert severity="success" sx={{ mb: 3, textAlign: 'left' }}>
+          <Alert severity="success" sx={{ mb: 1.5, textAlign: 'left' }}>
             {successMessage}
           </Alert>
 
           {registeredEmail && (
-            <Typography color="text.secondary" sx={{ mb: 3, overflowWrap: 'anywhere' }}>
+            <Typography color="text.secondary" sx={{ mb: 1.5, overflowWrap: 'anywhere' }}>
               Verification email sent to: <strong>{registeredEmail}</strong>
             </Typography>
           )}
 
-          <Typography color="text.secondary" sx={{ mb: 3, overflowWrap: 'anywhere' }}>
+          <Typography color="text.secondary" sx={{ mb: 1.5, overflowWrap: 'anywhere' }}>
             Please open the verification link from your email. After verification, you can login and access your dashboard.
           </Typography>
 
@@ -89,20 +89,20 @@ const checkPasswordStrength = (password) => {
   }
 
   return (
-    <Container maxWidth="sm" sx={{ py: { xs: 4, sm: 8 } }}>
-      <Paper sx={{ p: { xs: 2, sm: 5 }, width: '100%', maxWidth: '100%', minWidth: 0 }}>
-        <Typography variant="h4" fontWeight={800} gutterBottom sx={{ fontSize: { xs: '1.65rem', sm: '2.125rem' } }}>
+    <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
+      <Paper sx={{ p: { xs: 1.5, sm: 2.25 }, width: '100%', maxWidth: '100%', minWidth: 0 }}>
+        <Typography variant="h5" fontWeight={800} gutterBottom sx={{ fontSize: { xs: '1.35rem', sm: '1.65rem' } }}>
           Create account
         </Typography>
 
-        <Typography color="text.secondary" sx={{ mb: 3, overflowWrap: 'anywhere' }}>
+        <Typography color="text.secondary" sx={{ mb: 1.5, overflowWrap: 'anywhere' }}>
           Create your SouthRail account. You will need to verify your email before logging in.
         </Typography>
 
         {apiError && <Alert severity="error" sx={{ mb: 2 }}>{apiError}</Alert>}
 
         <Box component="form" onSubmit={form.handleSubmit(onSubmit)}>
-          <Stack spacing={2} sx={{ '& .MuiTextField-root': { width: '100%' } }}>
+          <Stack spacing={1.5} sx={{ '& .MuiTextField-root': { width: '100%' } }}>
             <TextField
               label="Full name"
               error={!!form.formState.errors.fullName}

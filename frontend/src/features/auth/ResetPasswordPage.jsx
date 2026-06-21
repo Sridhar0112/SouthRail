@@ -74,11 +74,11 @@ function SuccessPanel({ onNavigate, theme }) {
       <Typography variant="h5" sx={{ fontWeight: 800, color: theme.palette.text.primary, mb: 1 }}>
         Password Updated Successfully
       </Typography>
-      <Typography sx={{ color: theme.palette.text.secondary, mb: 3, lineHeight: 1.6 }}>
+      <Typography sx={{ color: theme.palette.text.secondary, mb: 1.5, lineHeight: 1.6 }}>
         Your SouthRail account password has been updated successfully.
       </Typography>
 
-      <Alert severity="success" icon={false} sx={{ mb: 3, textAlign: 'left' }}>
+      <Alert severity="success" icon={false} sx={{ mb: 1.5, textAlign: 'left' }}>
         <Stack spacing={0.5}>
           {[
             'Future logins will require the new password',
@@ -90,7 +90,7 @@ function SuccessPanel({ onNavigate, theme }) {
         </Stack>
       </Alert>
 
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1.5 }}>
         <CircularProgress size={14} thickness={5} color="primary" />
         <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
           Redirecting to login in 3 seconds…
@@ -149,7 +149,7 @@ export default function ResetPasswordPage() {
 
       <Container
         maxWidth="sm"
-        sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', py: { xs: 5, sm: 8 } }}
+        sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', py: { xs: 2, sm: 3 } }}
       >
         {/* Brand mark */}
         <Box sx={{ textAlign: 'center', mb: 4 }}>
@@ -185,17 +185,17 @@ export default function ResetPasswordPage() {
           </Box>
 
           {/* Card body */}
-          <Box sx={{ px: { xs: 3, sm: 5 }, py: { xs: 3, sm: 4 } }}>
+          <Box sx={{ px: { xs: 1.75, sm: 2.5 }, py: { xs: 2, sm: 2.5 } }}>
             {/* Missing token error */}
             {missingToken && (
-              <Alert severity="error" sx={{ mb: 3 }}>
+              <Alert severity="error" sx={{ mb: 1.5 }}>
                 Reset link is invalid or missing. Please request a new password reset link.
               </Alert>
             )}
 
             {/* API error */}
             {error && !missingToken && (
-              <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>
+              <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert>
             )}
 
             {success ? (

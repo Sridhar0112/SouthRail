@@ -117,17 +117,17 @@ export default function PnrPage() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 2.25, md: 3.5 } }}>
-      <Stack spacing={3}>
-        <Paper sx={{ p: { xs: 1.5, md: 2 } }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 1.5, md: 2.25 } }}>
+      <Stack spacing={1.5}>
+        <Paper sx={{ p: { xs: 1.25, md: 1.5 } }}>
           <Stack
             direction={{ xs: "column", md: "row" }}
-            spacing={2}
+            spacing={1.5}
             justifyContent="space-between"
             alignItems={{ xs: "flex-start", md: "center" }}
           >
             <Box>
-              <Typography variant="h4" fontWeight={800}>
+              <Typography variant="h5" fontWeight={800}>
                 PNR Status
               </Typography>
               <Typography color="text.secondary">
@@ -143,7 +143,7 @@ export default function PnrPage() {
 
         <Card>
           <CardContent>
-            <Stack spacing={2}>
+            <Stack spacing={1.5}>
               <Stack direction="row" spacing={1.5} alignItems="center">
                 <ConfirmationNumberIcon color="primary" />
                 <Box>
@@ -158,7 +158,7 @@ export default function PnrPage() {
               <Stack
                 component="form"
                 direction={{ xs: "column", sm: "row" }}
-                spacing={2}
+                spacing={1.5}
                 onSubmit={(event) => {
                   event.preventDefault();
                   search();
@@ -258,19 +258,19 @@ function PnrResult({
     canRequestCancellation && result.pnr && canShowCancelButton(result.status);
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={1.5}>
       <Card>
         <CardContent>
           <Stack
             direction={{ xs: "column", md: "row" }}
-            spacing={2}
+            spacing={1.5}
             justifyContent="space-between"
             alignItems={{ xs: "flex-start", md: "center" }}
           >
             <Box>
               <Typography color="text.secondary">PNR</Typography>
               <Typography
-                variant="h3"
+                variant="h5"
                 fontWeight={900}
                 sx={{
                   fontSize: { xs: "1.55rem", sm: "2rem" },
@@ -292,7 +292,7 @@ function PnrResult({
               spacing={1}
               alignItems={{ xs: "flex-start", md: "flex-end" }}
             >
-              <RailwayStatusChip status={result.status} size="medium" />
+              <RailwayStatusChip status={result.status} size="small" />
               <Typography color="text.secondary" sx={{ maxWidth: 360 }}>{getBookingStatusMessage(result.status)}</Typography>
               <Typography fontWeight={800}>Reservation: {getBookingStatusLabel(result.status, result.reservationLabel)}</Typography>
               {result.queuePosition && <Typography color="text.secondary">Queue position: {getQueueText(result.queuePosition)}</Typography>}
@@ -310,7 +310,7 @@ function PnrResult({
 
           <Divider sx={{ my: 2 }} />
 
-          <Grid container spacing={2}>
+          <Grid container spacing={1.5}>
             <Detail
               label="From"
               value={formatStation(result.sourceCode, result.sourceName)}
@@ -339,7 +339,7 @@ function PnrResult({
 
       <RouteStrip result={result} />
 
-      <Grid container spacing={2}>
+      <Grid container spacing={1.5}>
         <Grid item xs={12} md={7}>
           <PassengerSection passengers={passengers} />
         </Grid>
@@ -389,7 +389,7 @@ function RouteStrip({ result }) {
   return (
     <Card>
       <CardContent>
-        <Stack spacing={2}>
+        <Stack spacing={1.5}>
           <Stack direction="row" spacing={1.5} alignItems="center">
             <TrainIcon color="primary" />
             <Box>
@@ -403,7 +403,7 @@ function RouteStrip({ result }) {
           </Stack>
           <Stack
             direction={{ xs: "column", sm: "row" }}
-            spacing={2}
+            spacing={1.5}
             alignItems={{ xs: "stretch", sm: "center" }}
           >
             <StationBlock
