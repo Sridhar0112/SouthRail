@@ -331,36 +331,91 @@ function HorizontalBarChart({ rows, valueKey, valueFormatter, color }) {
   );
 }
 
-function MiniBarChart({ rows, valueKey, valueFormatter, color, getTooltip }) {
+const JOURNEY_STATUS_SEGMENTS = [
+  { key: 'confirmed', label: 'Confirmed', color: 'success.main' },
+  { key: 'rac', label: 'RAC', color: 'info.main' },
+  { key: 'waitlisted', label: 'Waitlisted', color: 'warning.main' },
+  { key: 'cancelled', label: 'Cancelled', color: 'error.light' },
+  { key: 'failed', label: 'Failed', color: 'error.dark' }
+];
+
+function JourneyStatusLegend() {
   const theme = useTheme();
-  const max = Math.max(...rows.map((row) => Number(row[valueKey]) || 0), 1);
+  return (
+    <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" sx={{ mb: 1.25 }}>
+      {JOURNEY_STATUS_SEGMENTS.map((item) => (
+        <Chip
+          key={item.key}
+          size="small"
+          label={item.label}
+          icon={<Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: resolveColor(theme, item.color), ml: '7px' }} />}
+          sx={(chipTheme) => ({
+            height: 24,
+            borderRadius: 99,
+            fontWeight: 800,
+            bgcolor: alpha(resolveColor(chipTheme, item.color), chipTheme.palette.mode === 'dark' ? 0.18 : 0.11),
+            color: 'text.primary',
+            '& .MuiChip-icon': { mr: -0.25 }
+          })}
+        />
+      ))}
+    </Stack>
+  );
+}
+
+function JourneyDemandStackedBarChart({ rows, valueFormatter, getTooltip }) {
+  const theme = useTheme();
+  const max = Math.max(...rows.map((row) => Number(row.totalBookings || row.bookings) || 0), 1);
   const width = 640;
-  const height = 190;
-  const pad = { top: 22, right: 10, bottom: 42, left: 10 };
-  const barGap = rows.length > 14 ? 6 : 10;
-  const barWidth = rows.length ? (width - pad.left - pad.right - barGap * (rows.length - 1)) / rows.length : 0;
+  const height = 220;
+  const pad = { top: 28, right: 12, bottom: 52, left: 12 };
+  const chartHeight = height - pad.top - pad.bottom;
+  const gap = rows.length <= 2 ? 76 : rows.length > 14 ? 7 : 14;
+  const rawBarWidth = rows.length ? (width - pad.left - pad.right - gap * (rows.length - 1)) / rows.length : 0;
+  const barWidth = Math.max(8, Math.min(rawBarWidth, rows.length <= 2 ? 54 : 42));
+  const step = rows.length > 1 ? (width - pad.left - pad.right - barWidth) / (rows.length - 1) : 0;
 
   if (!rows.length) return <ChartEmpty message="No journey dates available yet." />;
 
   return (
-    <Box sx={{ width: '100%', overflowX: rows.length > 14 ? 'auto' : 'hidden', pb: 0.5 }}>
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Journey demand by date chart" style={{ minWidth: rows.length > 14 ? 680 : '100%', width: '100%', height: 'auto', display: 'block' }}>
+    <Box sx={{ width: '100%', overflow: 'hidden', pb: 0.5 }}>
+      <JourneyStatusLegend />
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Journey demand by date stacked status chart" style={{ width: '100%', height: 'auto', display: 'block' }}>
         {rows.map((row, index) => {
-          const value = Number(row[valueKey]) || 0;
-          const barHeight = (value / max) * (height - pad.top - pad.bottom);
-          const x = pad.left + index * (barWidth + barGap);
+          const total = Number(row.totalBookings || row.bookings) || 0;
+          const barHeight = Math.max((total / max) * chartHeight, total ? 4 : 0);
+          const x = rows.length === 1 ? (width - barWidth) / 2 : pad.left + index * step;
           const y = height - pad.bottom - barHeight;
-          const label = rows.length > 18 ? String(row.label).replace(' ', '\n') : row.label;
+          const labelParts = String(row.label).split(' ');
+          let segmentY = height - pad.bottom;
+
           return (
             <g key={row.periodKey || row.label}>
-              <title>{getTooltip ? getTooltip(row) : `${row.label} · ${valueFormatter(value)}`}</title>
-              <text x={x + barWidth / 2} y={Math.max(y - 6, 12)} textAnchor="middle" fontSize="10.5" fontWeight="800" fill={theme.palette.text.primary}>
-                {valueFormatter(value)}
+              <title>{getTooltip(row)}</title>
+              <text x={x + barWidth / 2} y={Math.max(y - 7, 13)} textAnchor="middle" fontSize="11" fontWeight="900" fill={theme.palette.text.primary}>
+                {valueFormatter(total)}
               </text>
-              <rect x={x} y={y} width={Math.max(barWidth, 3)} height={Math.max(barHeight, 1)} rx="5" fill={resolveColor(theme, color)} />
-              <text x={x + barWidth / 2} y={height - 24} textAnchor="middle" fontSize="9.5" fill={theme.palette.text.secondary}>
-                {String(label).split('\n').map((part, partIndex) => (
-                  <tspan key={part} x={x + barWidth / 2} dy={partIndex ? 10 : 0}>{part}</tspan>
+              <rect x={x} y={y} width={barWidth} height={barHeight} rx="7" fill={alpha(theme.palette.text.primary, theme.palette.mode === 'dark' ? 0.1 : 0.06)} />
+              {JOURNEY_STATUS_SEGMENTS.map((segment, segmentIndex) => {
+                const count = Number(row[segment.key]) || 0;
+                if (!count || !total) return null;
+                const segmentHeight = Math.max((count / total) * barHeight, 1.5);
+                segmentY -= segmentHeight;
+                return (
+                  <rect
+                    key={segment.key}
+                    x={x}
+                    y={segmentY}
+                    width={barWidth}
+                    height={segmentHeight}
+                    rx={segmentIndex === 0 ? 0 : 2}
+                    fill={resolveColor(theme, segment.color)}
+                  />
+                );
+              })}
+              <text x={x + barWidth / 2} y={height - 34} textAnchor="middle" fontSize="9.5" fontWeight="700" fill={theme.palette.text.secondary}>
+                {labelParts.map((part, partIndex) => (
+                  <tspan key={`${row.periodKey || row.label}-${part}-${partIndex}`} x={x + barWidth / 2} dy={partIndex ? 10 : 0}>{part}</tspan>
                 ))}
               </text>
             </g>
@@ -460,7 +515,17 @@ function journeyStatusSummary(row) {
 }
 
 function journeyTooltip(row) {
-  return `${row.label} · ${formatNumber(row.totalBookings || row.bookings)} bookings · Active ${formatCurrency(row.activeRevenue)} · Excluded ${formatCurrency(row.excludedFare)} · Confirmed ${formatNumber(row.confirmed)} · RAC ${formatNumber(row.rac)} · Waitlisted ${formatNumber(row.waitlisted)} · Cancelled ${formatNumber(row.cancelled)} · Failed ${formatNumber(row.failed)}`;
+  return [
+    row.label,
+    `${formatNumber(row.totalBookings || row.bookings)} bookings`,
+    `Confirmed: ${formatNumber(row.confirmed)}`,
+    `RAC: ${formatNumber(row.rac)}`,
+    `Waitlisted: ${formatNumber(row.waitlisted)}`,
+    `Cancelled: ${formatNumber(row.cancelled)}`,
+    `Failed: ${formatNumber(row.failed)}`,
+    `Active fare: ${formatCurrency(row.activeRevenue)}`,
+    `Excluded fare: ${formatCurrency(row.excludedFare)}`
+  ].join('\n');
 }
 
 function riskChipColor(row) {
@@ -594,15 +659,13 @@ export function JourneyDateSection({ journeyDateAnalyticsByPeriod }) {
           <Grid item xs={12} lg={7}>
             <AdminChartCard
               title="Journey demand by date"
-              subtitle="Booking count grouped by journeyDate"
+              subtitle="Booking count and status split grouped by journeyDate"
               icon={<TimelineIcon fontSize="small" />}
               accent="primary"
             >
-              <MiniBarChart
+              <JourneyDemandStackedBarChart
                 rows={analytics.periods}
-                valueKey="bookings"
                 valueFormatter={formatNumber}
-                color="primary.main"
                 getTooltip={journeyTooltip}
               />
             </AdminChartCard>
