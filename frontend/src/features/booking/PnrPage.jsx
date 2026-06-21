@@ -183,7 +183,7 @@ export default function PnrPage() {
                   variant="contained"
                   startIcon={<SearchIcon />}
                   disabled={!canTrack}
-                  sx={{ minWidth: { xs: "100%", sm: 150 } }}
+                  sx={{ minWidth: { xs: "100%", sm: 100 } }}
                 >
                   {loading ? "Tracking..." : "Track"}
                 </Button>

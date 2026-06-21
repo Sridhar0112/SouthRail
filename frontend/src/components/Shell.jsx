@@ -102,7 +102,7 @@ export function Shell() {
     pageSettleTimerRef.current = window.setTimeout(() => {
       setIsPageSettling(false);
       pageSettleTimerRef.current = null;
-    }, 450);
+    }, 1000);
 
     return () => {
       if (pageSettleTimerRef.current) {

@@ -2,6 +2,10 @@
 .env
 .env.*
 
+# Frontend build output
+frontend/dist/
+dist/
+
 # Maven build output
 target/
 
