@@ -189,8 +189,8 @@ export default function HomePage() {
         className="hero-rail"
         sx={{
           color: 'white',
-          minHeight: compactSearch ? 'auto' : { xs: 'auto', md: 520 },
-          py: compactSearch ? { xs: 3, md: 4 } : { xs: 4, sm: 5, md: 8 },
+          minHeight: compactSearch ? 'auto' : { xs: 'auto', md: 430 },
+          py: compactSearch ? { xs: 3, md: 4 } : { xs: 4, sm: 5, md: 5 },
           display: 'flex',
           alignItems: 'center'
         }}
@@ -200,10 +200,10 @@ export default function HomePage() {
             {!compactSearch && (
               <Grid item xs={12} md={6}>
                 <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-                  <Typography variant="h2" sx={{ fontSize: { xs: '2.15rem', sm: '2.75rem', md: 64 }, lineHeight: 1.05, mb: 2, overflowWrap: 'anywhere' }}>
+                  <Typography variant="h2" sx={{ fontSize: { xs: '1.7rem', sm: '2.25rem', md: 46 }, lineHeight: 1.05, mb: 2, overflowWrap: 'anywhere' }}>
                     South Indian railway booking, refined.
                   </Typography>
-                  <Typography variant="h6" sx={{ maxWidth: 660, color: 'rgba(255,255,255,.84)', fontSize: { xs: '1rem', sm: '1.25rem' } }}>
+                  <Typography variant="h6" sx={{ maxWidth: 660, color: 'rgba(255,255,255,.84)', fontSize: { xs: '1rem', sm: '1.05rem' } }}>
                     Search trains, check availability, review fare, and book tickets across supported South Indian routes.
                   </Typography>
                 </motion.div>
@@ -326,7 +326,7 @@ export default function HomePage() {
                       </TextField>
                     </Grid>
                     <Grid item xs={12}>
-                      <Button fullWidth type="submit" variant="contained" size="large" startIcon={<SearchIcon />} disabled={trains.loading}>
+                      <Button fullWidth type="submit" variant="contained" size="medium" startIcon={<SearchIcon />} disabled={trains.loading}>
                         {trains.loading ? 'Searching...' : 'Search trains'}
                       </Button>
                     </Grid>

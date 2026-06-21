@@ -1118,7 +1118,7 @@ function JourneySkeleton() {
       }}
     >
       <Skeleton variant="rectangular" height={4} />
-      <Box sx={{ p: 2.5 }}>
+      <Box sx={{ p: 2 }}>
         <Skeleton width="40%" height={14} sx={{ mb: 0.5 }} />
         <Skeleton width="60%" height={28} sx={{ mb: 1.5 }} />
         <Stack
@@ -1307,7 +1307,7 @@ function RecentActivitySection({ bookings, loading }) {
                 sx={{
                   position: "absolute",
                   left: 14,
-                  top: 32,
+                  top: 22,
                   bottom: 0,
                   width: 2,
                   bgcolor: t.divider,

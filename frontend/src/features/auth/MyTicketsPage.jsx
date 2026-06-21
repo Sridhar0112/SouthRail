@@ -133,7 +133,7 @@ function PageHero({ ticketCount, loading }) {
         overflow: 'hidden',
         mb: 3.5,
         px: { xs: 2.5, sm: 4 },
-        py: { xs: 3, sm: 4 },
+        py: { xs: 2, sm: 2.75 },
         color: theme.palette.primary.contrastText,
         backgroundImage: `linear-gradient(120deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 55%, ${theme.palette.secondary.dark} 130%)`,
         boxShadow: theme.palette.custom.cardShadow,
@@ -176,7 +176,7 @@ function PageHero({ ticketCount, loading }) {
           <Avatar
             sx={{
               width: 52,
-              height: 52,
+              height: 44,
               bgcolor: 'rgba(255,255,255,0.16)',
               color: 'inherit',
               border: '1px solid rgba(255,255,255,0.28)',
@@ -194,7 +194,7 @@ function PageHero({ ticketCount, loading }) {
             <Typography
               variant="h4"
               fontWeight={800}
-              sx={{ fontSize: { xs: '1.5rem', sm: '1.85rem' }, lineHeight: 1.15, overflowWrap: 'anywhere' }}
+              sx={{ fontSize: { xs: '1.25rem', sm: '1.55rem' }, lineHeight: 1.15, overflowWrap: 'anywhere' }}
             >
               My Support Tickets
             </Typography>
@@ -242,13 +242,13 @@ function StatCard({ icon, label, value, color, delay }) {
           },
         })}
       >
-        <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
+        <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
           <Stack direction="row" alignItems="center" spacing={1.5}>
             <Avatar
               variant="rounded"
               sx={{
                 width: 46,
-                height: 46,
+                height: 38,
                 borderRadius: 2.5,
                 bgcolor: color.soft,
                 color: color.solid,
@@ -328,7 +328,7 @@ function StatsDashboard({ tickets, loading }) {
         {[1, 2, 3, 4].map((n) => (
           <Grid item xs={12} sm={6} md={3} key={n}>
             <Card variant="outlined" sx={{ borderRadius: 3 }}>
-              <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
+              <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
                 <Stack direction="row" alignItems="center" spacing={1.5}>
                   <Skeleton variant="rounded" width={46} height={46} sx={{ borderRadius: 2.5 }} />
                   <Box sx={{ flex: 1 }}>
@@ -598,7 +598,7 @@ function EmptyState({ onCreate, onFaq }) {
       sx={(theme) => ({
         borderRadius: 4,
         textAlign: 'center',
-        py: { xs: 5, sm: 7 },
+        py: { xs: 3, sm: 4.5 },
         px: 3,
         borderStyle: 'dashed',
         borderWidth: 1.5,
@@ -608,14 +608,14 @@ function EmptyState({ onCreate, onFaq }) {
       <Avatar
         sx={{
           width: 76,
-          height: 76,
+          height: 58,
           bgcolor: 'rgba(25,118,210,0.08)',
           color: 'primary.main',
           mx: 'auto',
           mb: 2.5,
         }}
       >
-        <SupportAgentIcon sx={{ fontSize: 38 }} />
+        <SupportAgentIcon sx={{ fontSize: 30 }} />
       </Avatar>
       <Typography variant="h6" fontWeight={800} gutterBottom>
         No support tickets yet
@@ -629,7 +629,7 @@ function EmptyState({ onCreate, onFaq }) {
         <Button
           variant="contained"
           onClick={onCreate}
-          size="large"
+          size="medium"
           startIcon={<AddCircleOutlineOutlinedIcon />}
           sx={{ borderRadius: 2.5, px: 3, fontWeight: 700 }}
         >
@@ -638,7 +638,7 @@ function EmptyState({ onCreate, onFaq }) {
         <Button
           variant="outlined"
           onClick={onFaq}
-          size="large"
+          size="medium"
           startIcon={<HelpOutlineOutlinedIcon />}
           sx={{ borderRadius: 2.5, px: 3, fontWeight: 700 }}
         >
@@ -656,7 +656,7 @@ function ErrorState({ message, onRetry }) {
       sx={(theme) => ({
         borderRadius: 4,
         textAlign: 'center',
-        py: { xs: 5, sm: 7 },
+        py: { xs: 3, sm: 4.5 },
         px: 3,
         borderStyle: 'dashed',
         borderWidth: 1.5,
@@ -668,14 +668,14 @@ function ErrorState({ message, onRetry }) {
       <Avatar
         sx={{
           width: 76,
-          height: 76,
+          height: 58,
           bgcolor: 'rgba(211,47,47,0.1)',
           color: 'error.main',
           mx: 'auto',
           mb: 2.5,
         }}
       >
-        <ErrorOutlineIcon sx={{ fontSize: 38 }} />
+        <ErrorOutlineIcon sx={{ fontSize: 30 }} />
       </Avatar>
       <Typography variant="h6" fontWeight={800} gutterBottom>
         Something went wrong
@@ -688,7 +688,7 @@ function ErrorState({ message, onRetry }) {
         color="error"
         startIcon={<RefreshIcon />}
         onClick={onRetry}
-        size="large"
+        size="medium"
         sx={{ borderRadius: 2.5, px: 3.5, fontWeight: 700 }}
       >
         Try Again

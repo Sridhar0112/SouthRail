@@ -15,10 +15,22 @@ body,
 #root {
   width: 100%;
   min-width: 320px;
+  max-width: 100%;
+}
+
+html {
+  font-size: 15.5px;
+  overflow-x: clip;
+}
+
+#root {
+  overflow-x: clip;
 }
 
 body {
   margin: 0;
+  overflow-x: clip;
+  line-height: 1.45;
 }
 
 a {
