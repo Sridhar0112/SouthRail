@@ -139,7 +139,7 @@ export function Shell() {
     <Box sx={{ minHeight: '100vh' }}>
       <AppBar position="sticky" elevation={0} color="inherit">
         <Container maxWidth="xl">
-          <Toolbar disableGutters sx={{ gap: { xs: 1, md: 2 }, minHeight: { xs: 48, sm: 52 }, py: { xs: 0.25, md: 0 } }}>
+          <Toolbar disableGutters sx={{ gap: { xs: 1, md: 2 }, minHeight: { xs: 44, sm: 48 }, py: { xs: 0.25, md: 0 } }}>
             {/* Logo */}
             <Stack
               component={Link}
@@ -160,8 +160,8 @@ export function Shell() {
                 '&:hover': { bgcolor: 'action.hover' }
               }}
             >
-              <TrainIcon color="primary" sx={{ flexShrink: 0, fontSize: 21 }} />
-              <Typography variant="h6" fontWeight={800} noWrap sx={{ fontSize: { xs: '0.95rem', sm: '1.02rem' }, minWidth: 0 }}>SouthRail</Typography>
+              <TrainIcon color="primary" sx={{ flexShrink: 0, fontSize: 19 }} />
+              <Typography variant="h6" fontWeight={800} noWrap sx={{ fontSize: { xs: '0.9rem', sm: '0.96rem' }, minWidth: 0 }}>SouthRail</Typography>
             </Stack>
 
             {/* Nav links */}
@@ -181,7 +181,7 @@ export function Shell() {
                   toggleColorMode();
                 }}
                 color="primary"
-                sx={{ width: 32, height: 30, bgcolor: 'action.hover', flexShrink: 0, '&:hover': { bgcolor: 'action.selected' } }}
+                sx={{ width: 30, height: 28, bgcolor: 'action.hover', flexShrink: 0, '&:hover': { bgcolor: 'action.selected' } }}
               >
                 {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
               </IconButton>
@@ -205,10 +205,10 @@ export function Shell() {
                   >
                     <Avatar
                       sx={{
-                        width: 32,
-                        height: 30,
+                        width: 30,
+                        height: 28,
                         bgcolor: 'primary.main',
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: 700,
                         cursor: 'pointer',
                         border: 1,
@@ -246,16 +246,16 @@ export function Shell() {
 
                   <Divider />
 
-                  <MenuItem onClick={() => goTo('/dashboard')} sx={{ py: 0.9 }}>
+                  <MenuItem onClick={() => goTo('/dashboard')} sx={{ py: 0.75 }}>
                     <ListItemIcon><DashboardIcon fontSize="small" /></ListItemIcon>
                     Dashboard
                   </MenuItem>
 
-                  <MenuItem onClick={() => goTo('/profile')} sx={{ py: 0.9 }}>
+                  <MenuItem onClick={() => goTo('/profile')} sx={{ py: 0.75 }}>
                     <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon>
                     Profile
                   </MenuItem>
-                  <MenuItem onClick={() => goTo('/my-tickets')} sx={{ py: 0.9 }}>
+                  <MenuItem onClick={() => goTo('/my-tickets')} sx={{ py: 0.75 }}>
                     <ListItemIcon>
                       <ConfirmationNumberIcon fontSize="small" />
                     </ListItemIcon>
@@ -263,7 +263,7 @@ export function Shell() {
                   </MenuItem>
 
                   {auth.user?.roles?.includes('ROLE_ADMIN') && (
-                    <MenuItem onClick={() => goTo('/admin/support-tickets')} sx={{ py: 0.9 }}>
+                    <MenuItem onClick={() => goTo('/admin/support-tickets')} sx={{ py: 0.75 }}>
                       <ListItemIcon>
                         <SupportAgentIcon fontSize="small" />
                       </ListItemIcon>
@@ -272,7 +272,7 @@ export function Shell() {
                   )}
                   <Divider />
 
-                  <MenuItem onClick={signOut} sx={{ py: 0.9, color: 'error.main' }}>
+                  <MenuItem onClick={signOut} sx={{ py: 0.75, color: 'error.main' }}>
                     <ListItemIcon>
                       <LogoutIcon fontSize="small" sx={{ color: 'error.main' }} />
                     </ListItemIcon>
@@ -291,7 +291,7 @@ export function Shell() {
                   setAnchorEl(null);
                   setMobileNavOpen(true);
                 }}
-                sx={{ display: { xs: 'inline-flex', md: 'none' }, width: 32, height: 30, bgcolor: 'action.hover', flexShrink: 0 }}
+                sx={{ display: { xs: 'inline-flex', md: 'none' }, width: 30, height: 28, bgcolor: 'action.hover', flexShrink: 0 }}
                 aria-label="Open navigation menu"
               >
                 <MenuIcon />
@@ -308,7 +308,7 @@ export function Shell() {
           sx: {
             width: { xs: 'calc(100vw - 32px)', sm: 360 },
             maxWidth: '100vw',
-            p: 2
+            p: 1.5
           }
         }}
       >
@@ -330,7 +330,7 @@ export function Shell() {
                 component={Link}
                 to={item.to}
                 onClick={closeAllMenus}
-                sx={{ borderRadius: 2, py: 1.1, minHeight: 38 }}
+                sx={{ borderRadius: 2, py: 0.9, minHeight: 34 }}
               >
                 <ListItemText
                   primary={item.label}
@@ -343,7 +343,7 @@ export function Shell() {
                 component={Link}
                 to="/login"
                 onClick={closeAllMenus}
-                sx={{ borderRadius: 2, py: 1.1, minHeight: 38 }}
+                sx={{ borderRadius: 2, py: 0.9, minHeight: 34 }}
               >
                 <ListItemText primary="Login" primaryTypographyProps={{ fontWeight: 800 }} />
               </ListItemButton>

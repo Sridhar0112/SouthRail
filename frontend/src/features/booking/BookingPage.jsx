@@ -113,7 +113,7 @@ export default function BookingPage() {
 
   if (response) {
     return (
-      <Container maxWidth="lg" sx={{ py: { xs: 1.5, md: 2.25 } }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 1.25, md: 1.75 } }}>
         <Stepper activeStep={2} sx={{ mb: 1.5, '& .MuiStepLabel-label': { fontSize: '0.78rem' }, '& .MuiStepIcon-root': { fontSize: 20 } }}>
           {steps.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
         </Stepper>
@@ -123,8 +123,8 @@ export default function BookingPage() {
   }
 
   return (
-    <Container maxWidth={showReview && review ? "xl" : "lg"} sx={{ py: { xs: 1.5, md: 2.25 }, px: { xs: 2, sm: 3, lg: 4 } }}>
-      <Typography variant="h5" fontWeight={850} sx={{ mb: 1 }}>Book ticket</Typography>
+    <Container maxWidth={showReview && review ? "xl" : "lg"} sx={{ py: { xs: 1.25, md: 1.75 }, px: { xs: 1.5, sm: 2.25, lg: 3 } }}>
+      <Typography variant="h5" fontWeight={850} sx={{ mb: 0.75 }}>Book ticket</Typography>
       <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 1.5, overflowX: 'auto', pb: 0.5, '& .MuiStepLabel-label': { fontSize: '0.78rem' }, '& .MuiStepIcon-root': { fontSize: 20 } }}>
         {steps.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
       </Stepper>
@@ -160,7 +160,7 @@ export default function BookingPage() {
             onConfirmBooking={form.handleSubmit(submit)}
           />
         ) : (
-          <Paper elevation={1} sx={{ p: { xs: 1.35, md: 1.75 }, borderRadius: 2.5, width: '100%', maxWidth: '100%', minWidth: 0 }}>
+          <Paper elevation={1} sx={{ p: { xs: 1.15, md: 1.35 }, borderRadius: 2.5, width: '100%', maxWidth: '100%', minWidth: 0 }}>
             <Box component="form" onSubmit={form.handleSubmit(submit)}>
               <Stack spacing={1.35}>
                 <SectionHeader
@@ -208,7 +208,7 @@ export default function BookingPage() {
                 <Stack spacing={1.35}>
                   {fields.map((field, index) => (
                     <Card key={field.id} variant="outlined" sx={{ borderRadius: 2.5, overflow: 'visible' }}>
-                      <CardContent sx={{ p: { xs: 1.25, md: 1.5 }, '&:last-child': { pb: { xs: 1.25, md: 1.5 } } }}>
+                      <CardContent sx={{ p: { xs: 1.1, md: 1.25 }, '&:last-child': { pb: { xs: 1.1, md: 1.25 } } }}>
                         <Stack spacing={1.35}>
                           <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
                             <Typography variant="subtitle1" fontWeight={900}>Passenger {index + 1}</Typography>
@@ -322,19 +322,19 @@ function TrainSummary({ train, values }) {
         </Grid>
         <Grid item xs={12} sm={6} md={2}>
           <Typography color="text.secondary">From</Typography>
-          <Typography fontWeight={800}>{values.sourceStationCode || '-'}</Typography>
+          <Typography variant="body2" fontWeight={800}>{values.sourceStationCode || '-'}</Typography>
         </Grid>
         <Grid item xs={12} sm={6} md={2}>
           <Typography color="text.secondary">To</Typography>
-          <Typography fontWeight={800}>{values.destinationStationCode || '-'}</Typography>
+          <Typography variant="body2" fontWeight={800}>{values.destinationStationCode || '-'}</Typography>
         </Grid>
         <Grid item xs={6} md={1.5}>
           <Typography color="text.secondary">Date</Typography>
-          <Typography fontWeight={800}>{values.journeyDate || '-'}</Typography>
+          <Typography variant="body2" fontWeight={800}>{values.journeyDate || '-'}</Typography>
         </Grid>
         <Grid item xs={6} md={1.5}>
           <Typography color="text.secondary">Class</Typography>
-          <Typography fontWeight={800}>{values.travelClass || '-'}</Typography>
+          <Typography variant="body2" fontWeight={800}>{values.travelClass || '-'}</Typography>
         </Grid>
       </Grid>
     </Paper>
@@ -423,7 +423,7 @@ function BookingSuccess({ response, fallbackValues }) {
 
   return (
     <SuccessState title={title} message={message}>
-      <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, width: '100%', maxWidth: '100%', minWidth: 0 }}>
+      <Paper variant="outlined" sx={{ p: { xs: 1.15, sm: 1.35 }, width: '100%', maxWidth: '100%', minWidth: 0 }}>
         <Grid container spacing={1.35}>
           <Detail label="PNR" value={safeText(response?.pnr, 'Not returned')} />
           <Detail label="Train" value={`${safeText(response?.trainName, 'Train')} ${response?.trainNumber ? `- ${response.trainNumber}` : ''}`} />
@@ -468,7 +468,7 @@ function Detail({ label, value }) {
   return (
     <Grid item xs={12} sm={6} md={4}>
       <Typography color="text.secondary">{label}</Typography>
-      <Typography fontWeight={800}>{value}</Typography>
+      <Typography variant="body2" fontWeight={800}>{value}</Typography>
     </Grid>
   );
 }

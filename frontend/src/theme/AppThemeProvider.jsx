@@ -99,14 +99,14 @@ export function AppThemeProvider({ children }) {
       shape: { borderRadius: 6 },
       typography: {
         fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
-        h1: { fontWeight: 800, letterSpacing: -0.6, fontSize: 'clamp(2.1rem, 5vw, 3.4rem)', lineHeight: 1.05 },
-        h2: { fontWeight: 800, letterSpacing: -0.5, fontSize: 'clamp(1.85rem, 3.8vw, 2.75rem)', lineHeight: 1.08 },
-        h3: { fontWeight: 750, letterSpacing: -0.35, fontSize: 'clamp(1.55rem, 3vw, 2.15rem)', lineHeight: 1.12 },
-        h4: { fontWeight: 800, letterSpacing: -0.25, fontSize: 'clamp(1.32rem, 2.4vw, 1.75rem)', lineHeight: 1.18 },
-        h5: { fontWeight: 800, letterSpacing: -0.15, fontSize: 'clamp(1.12rem, 1.8vw, 1.35rem)', lineHeight: 1.22 },
+        h1: { fontWeight: 800, letterSpacing: -0.5, fontSize: 'clamp(1.9rem, 4.2vw, 2.9rem)', lineHeight: 1.06 },
+        h2: { fontWeight: 800, letterSpacing: -0.4, fontSize: 'clamp(1.62rem, 3.2vw, 2.25rem)', lineHeight: 1.1 },
+        h3: { fontWeight: 750, letterSpacing: -0.3, fontSize: 'clamp(1.36rem, 2.5vw, 1.85rem)', lineHeight: 1.14 },
+        h4: { fontWeight: 800, letterSpacing: -0.2, fontSize: 'clamp(1.18rem, 2vw, 1.48rem)', lineHeight: 1.2 },
+        h5: { fontWeight: 800, letterSpacing: -0.1, fontSize: 'clamp(1.04rem, 1.5vw, 1.22rem)', lineHeight: 1.24 },
         h6: { fontWeight: 800, letterSpacing: -0.05, fontSize: '1rem', lineHeight: 1.28 },
-        body1: { fontSize: '0.95rem', lineHeight: 1.55 },
-        body2: { fontSize: '0.84rem', lineHeight: 1.5 },
+        body1: { fontSize: '0.86rem', lineHeight: 1.5 },
+        body2: { fontSize: '0.8rem', lineHeight: 1.45 },
         button: { textTransform: 'none', fontWeight: 700 }
       },
       components: {
@@ -185,9 +185,9 @@ export function AppThemeProvider({ children }) {
         MuiCardContent: {
           styleOverrides: {
             root: {
-              padding: 16,
+              padding: 14,
               '&:last-child': {
-                paddingBottom: 16
+                paddingBottom: 14
               }
             }
           }
@@ -196,10 +196,10 @@ export function AppThemeProvider({ children }) {
           defaultProps: { size: 'medium' },
           styleOverrides: {
             root: {
-              minHeight: 34,
-              padding: '5px 14px',
+              minHeight: 30,
+              padding: '4px 12px',
               borderRadius: 6,
-              fontSize: '0.86rem',
+              fontSize: '0.82rem',
               whiteSpace: 'normal'
             },
             containedPrimary: {
@@ -225,7 +225,7 @@ export function AppThemeProvider({ children }) {
               backgroundColor: palette.surface.input,
               color: palette.text.primary,
               borderRadius: 6,
-              fontSize: '0.9rem',
+              fontSize: '0.86rem',
               transition: 'background-color 160ms ease, border-color 160ms ease',
               '& .MuiOutlinedInput-notchedOutline': {
                 borderColor: palette.custom.fieldBorder
@@ -251,7 +251,7 @@ export function AppThemeProvider({ children }) {
             },
             input: {
               color: palette.text.primary,
-              padding: '10px 12px'
+              padding: '8px 10px'
             }
           }
         },
@@ -334,8 +334,8 @@ export function AppThemeProvider({ children }) {
             root: {
               borderRadius: 999,
               fontWeight: 700,
-              fontSize: '0.72rem',
-              height: 21
+              fontSize: '0.68rem',
+              height: 20
             },
             outlined: {
               borderColor: palette.custom.fieldBorder
@@ -444,12 +444,12 @@ export function AppThemeProvider({ children }) {
           styleOverrides: {
             root: {
               overflowWrap: 'anywhere',
-              padding: '7px 10px',
-              fontSize: '0.82rem'
+              padding: '6px 9px',
+              fontSize: '0.78rem'
             },
             head: {
               fontWeight: 800,
-              fontSize: '0.76rem',
+              fontSize: '0.72rem',
               textTransform: 'uppercase',
               letterSpacing: 0.35
             }
