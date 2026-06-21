@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { Alert, Box, Button, Chip, Container, Grid, LinearProgress, MenuItem, Paper, Stack, Step, StepLabel, Stepper, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Chip, Container, Divider, Grid, LinearProgress, MenuItem, Paper, Stack, Step, StepLabel, Stepper, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import PrintIcon from '@mui/icons-material/Print';
@@ -17,6 +17,7 @@ import { getApiErrorMessage, isAuthError } from '../../utils/apiErrors.js';
 const steps = ['Passenger details', 'Review booking', 'Confirmation'];
 const travelClasses = ['1A', '2A', '3A', 'SL', 'CC', '2S'];
 const quotas = ['GENERAL', 'TATKAL', 'LADIES', 'SENIOR_CITIZEN', 'PREMIUM_TATKAL'];
+const genderOptions = ['Male', 'Female', 'Other'];
 const berthOptions = ['LOWER', 'MIDDLE', 'UPPER', 'SIDE_LOWER', 'SIDE_UPPER', 'NO_PREFERENCE'];
 
 export default function BookingPage() {
@@ -41,8 +42,8 @@ export default function BookingPage() {
       sourceStationCode: searchParams.get('sourceStationCode') || '',
       destinationStationCode: searchParams.get('destinationStationCode') || '',
       journeyDate: getSafeJourneyDate(searchParams.get('journeyDate'), today),
-      travelClass: searchParams.get('travelClass') || '3A',
-      quota: searchParams.get('quota') || 'GENERAL',
+      travelClass: getSafeOption(searchParams.get('travelClass'), travelClasses, '3A'),
+      quota: getSafeOption(searchParams.get('quota'), quotas, 'GENERAL'),
       passengers: [{ fullName: '', age: 30, gender: 'Male', berthPreference: 'LOWER' }]
     }
   });
@@ -158,107 +159,156 @@ export default function BookingPage() {
             onConfirmBooking={form.handleSubmit(submit)}
           />
         ) : (
-          <Paper sx={{ p: { xs: 2, md: 4 }, width: '100%', maxWidth: '100%', minWidth: 0 }}>
-          <Box component="form" onSubmit={form.handleSubmit(submit)}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={4}>
-                <TextField fullWidth label="From station code" disabled={submitting} error={!!form.formState.errors.sourceStationCode}
-                  helperText={form.formState.errors.sourceStationCode?.message}
-                  {...form.register('sourceStationCode', { required: 'Source station is required' })} />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField fullWidth label="To station code" disabled={submitting} error={!!form.formState.errors.destinationStationCode}
-                  helperText={form.formState.errors.destinationStationCode?.message}
-                  {...form.register('destinationStationCode', {
-                    required: 'Destination station is required',
-                    validate: (value) => value.trim().toUpperCase() !== String(form.getValues('sourceStationCode') || '').trim().toUpperCase() || 'Source and destination cannot be the same.'
-                  })} />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField fullWidth type="date" label="Date" disabled={submitting} InputLabelProps={{ shrink: true }}
-                  inputProps={{ min: today }}
-                  error={!!form.formState.errors.journeyDate} helperText={form.formState.errors.journeyDate?.message}
-                  {...form.register('journeyDate', {
-                    required: 'Journey date is required',
-                    validate: (value) => value >= today || 'Please select today or a future journey date.'
-                  })} />
-              </Grid>
-              <Grid item xs={12} sm={3}>
-                <TextField select fullWidth label="Class" disabled={submitting} {...form.register('travelClass', { required: 'Travel class is required' })}>
-                  {travelClasses.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
-                </TextField>
-              </Grid>
-              <Grid item xs={12} sm={3}>
-                <TextField select fullWidth label="Quota" disabled={submitting} {...form.register('quota', { required: 'Quota is required' })}>
-                  {quotas.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
-                </TextField>
-              </Grid>
-
-              <Grid item xs={12}>
-                <Typography variant="h6" fontWeight={800}>Passenger details</Typography>
-              </Grid>
-              {fields.map((field, index) => (
-                <Grid item xs={12} key={field.id}>
-                  <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, width: '100%', maxWidth: '100%', minWidth: 0 }}>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} md={4}>
-                        <TextField fullWidth label="Passenger name" disabled={submitting}
-                          error={!!form.formState.errors.passengers?.[index]?.fullName}
-                          helperText={form.formState.errors.passengers?.[index]?.fullName?.message}
-                          {...form.register(`passengers.${index}.fullName`, { required: 'Passenger name is required' })} />
-                      </Grid>
-                      <Grid item xs={12} sm={6} md={2}>
-                        <TextField fullWidth label="Age" type="number" disabled={submitting}
-                          error={!!form.formState.errors.passengers?.[index]?.age}
-                          helperText={form.formState.errors.passengers?.[index]?.age?.message}
-                          {...form.register(`passengers.${index}.age`, {
-                            valueAsNumber: true,
-                            required: 'Age is required',
-                            min: { value: 1, message: 'Age must be at least 1' },
-                            max: { value: 125, message: 'Age must be 125 or below' }
-                          })} />
-                      </Grid>
-                      <Grid item xs={12} sm={6} md={3}>
-                        <TextField select fullWidth label="Gender" disabled={submitting} {...form.register(`passengers.${index}.gender`, { required: 'Gender is required' })}>
-                          {['Male', 'Female', 'Other'].map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
-                        </TextField>
-                      </Grid>
-                      <Grid item xs={12} md={3}>
-                        <TextField select fullWidth label="Berth" disabled={submitting} {...form.register(`passengers.${index}.berthPreference`)}>
-                          {berthOptions.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
-                        </TextField>
-                      </Grid>
-                    </Grid>
-                  </Paper>
+          <Paper elevation={1} sx={{ p: { xs: 2, md: 3.5 }, borderRadius: 3, width: '100%', maxWidth: '100%', minWidth: 0 }}>
+            <Box component="form" onSubmit={form.handleSubmit(submit)}>
+              <Stack spacing={3}>
+                <SectionHeader
+                  overline="Journey details"
+                  title="Choose your route and fare options"
+                  description="Confirm the stations, journey date, class, and quota before preparing the final booking review."
+                />
+                <Grid container spacing={2.25}>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <TextField fullWidth label="From station code" disabled={submitting} error={!!form.formState.errors.sourceStationCode}
+                      helperText={form.formState.errors.sourceStationCode?.message}
+                      {...form.register('sourceStationCode', { required: 'Source station is required' })} />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <TextField fullWidth label="To station code" disabled={submitting} error={!!form.formState.errors.destinationStationCode}
+                      helperText={form.formState.errors.destinationStationCode?.message}
+                      {...form.register('destinationStationCode', {
+                        required: 'Destination station is required',
+                        validate: (value) => value.trim().toUpperCase() !== String(form.getValues('sourceStationCode') || '').trim().toUpperCase() || 'Source and destination cannot be the same.'
+                      })} />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <TextField fullWidth type="date" label="Date" disabled={submitting} InputLabelProps={{ shrink: true }}
+                      inputProps={{ min: today }}
+                      error={!!form.formState.errors.journeyDate} helperText={form.formState.errors.journeyDate?.message}
+                      {...form.register('journeyDate', {
+                        required: 'Journey date is required',
+                        validate: (value) => value >= today || 'Please select today or a future journey date.'
+                      })} />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <ControlledSelect control={form.control} name="travelClass" label="Class" disabled={submitting} options={travelClasses} rules={{ required: 'Travel class is required' }} error={form.formState.errors.travelClass} />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <ControlledSelect control={form.control} name="quota" label="Quota" disabled={submitting} options={quotas} rules={{ required: 'Quota is required' }} error={form.formState.errors.quota} formatOption={formatLabel} />
+                  </Grid>
                 </Grid>
-              ))}
 
-              <Grid item xs={12}>
+                <Divider />
+                <SectionHeader
+                  overline="Passenger details"
+                  title="Add passenger information"
+                  description="Passenger details are used for ticket generation, berth planning, and final booking validation."
+                />
+                <Stack spacing={2}>
+                  {fields.map((field, index) => (
+                    <Card key={field.id} variant="outlined" sx={{ borderRadius: 3, overflow: 'visible' }}>
+                      <CardContent sx={{ p: { xs: 2, md: 2.5 }, '&:last-child': { pb: { xs: 2, md: 2.5 } } }}>
+                        <Stack spacing={2}>
+                          <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
+                            <Typography variant="h6" fontWeight={900}>Passenger {index + 1}</Typography>
+                            <Chip size="small" color={index === 0 ? 'primary' : 'default'} variant={index === 0 ? 'filled' : 'outlined'} label={index === 0 ? 'Primary traveller' : 'Co-passenger'} />
+                          </Stack>
+                          <Grid container spacing={2}>
+                            <Grid item xs={12} md={4}>
+                              <TextField fullWidth label="Passenger name" disabled={submitting}
+                                error={!!form.formState.errors.passengers?.[index]?.fullName}
+                                helperText={form.formState.errors.passengers?.[index]?.fullName?.message}
+                                {...form.register(`passengers.${index}.fullName`, { required: 'Passenger name is required' })} />
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={2}>
+                              <TextField fullWidth label="Age" type="number" disabled={submitting}
+                                error={!!form.formState.errors.passengers?.[index]?.age}
+                                helperText={form.formState.errors.passengers?.[index]?.age?.message}
+                                {...form.register(`passengers.${index}.age`, {
+                                  valueAsNumber: true,
+                                  required: 'Age is required',
+                                  min: { value: 1, message: 'Age must be at least 1' },
+                                  max: { value: 125, message: 'Age must be 125 or below' }
+                                })} />
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={3}>
+                              <ControlledSelect control={form.control} name={`passengers.${index}.gender`} label="Gender" disabled={submitting} options={genderOptions} rules={{ required: 'Gender is required' }} error={form.formState.errors.passengers?.[index]?.gender} />
+                            </Grid>
+                            <Grid item xs={12} md={3}>
+                              <ControlledSelect control={form.control} name={`passengers.${index}.berthPreference`} label="Berth preference" disabled={submitting} options={berthOptions} error={form.formState.errors.passengers?.[index]?.berthPreference} formatOption={formatLabel} />
+                            </Grid>
+                          </Grid>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </Stack>
+
                 <ReviewPanel review={review} isCurrent={reviewIsCurrent} passengerCount={passengerCount} />
-              </Grid>
 
-              <Grid item xs={12}>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }}>
                   <Button type="button" startIcon={<AddIcon />} disabled={submitting}
                     onClick={() => append({ fullName: '', age: 30, gender: 'Male', berthPreference: 'NO_PREFERENCE' })}>
                     Add passenger
                   </Button>
-                  <Button type="button" startIcon={<RateReviewIcon />} onClick={form.handleSubmit(prepareReview)} disabled={loadingReview || submitting}>
-                    {loadingReview ? 'Preparing review...' : 'Review booking'}
-                  </Button>
-                  <Button type="submit" variant="contained" startIcon={<ConfirmationNumberIcon />}
-                    disabled={!reviewIsCurrent || review.availableSeats === 0 || submitting}>
-                    {submitting ? 'Processing...' : 'Confirm booking'}
-                  </Button>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
+                    <Button type="button" variant="outlined" startIcon={<RateReviewIcon />} onClick={form.handleSubmit(prepareReview)} disabled={loadingReview || submitting}>
+                      {loadingReview ? 'Preparing review...' : 'Review booking'}
+                    </Button>
+                    <Button type="submit" variant="contained" startIcon={<ConfirmationNumberIcon />}
+                      disabled={!reviewIsCurrent || review.availableSeats === 0 || submitting}>
+                      {submitting ? 'Processing...' : 'Confirm booking'}
+                    </Button>
+                  </Stack>
                 </Stack>
-              </Grid>
-            </Grid>
-          </Box>
-        </Paper>
+              </Stack>
+            </Box>
+          </Paper>
         )}
       </Stack>
     </Container>
   );
+}
+
+function ControlledSelect({ control, name, label, options, disabled, rules, error, formatOption = (value) => value }) {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      rules={rules}
+      render={({ field }) => (
+        <TextField
+          select
+          fullWidth
+          label={label}
+          disabled={disabled}
+          value={field.value}
+          onChange={field.onChange}
+          onBlur={field.onBlur}
+          name={field.name}
+          inputRef={field.ref}
+          error={!!error}
+          helperText={error?.message}
+        >
+          {options.map((item) => <MenuItem key={item} value={item}>{formatOption(item)}</MenuItem>)}
+        </TextField>
+      )}
+    />
+  );
+}
+
+function SectionHeader({ overline, title, description }) {
+  return (
+    <Stack spacing={0.5}>
+      <Typography variant="overline" color="secondary" fontWeight={900} letterSpacing={1}>{overline}</Typography>
+      <Typography variant="h5" fontWeight={900}>{title}</Typography>
+      <Typography color="text.secondary">{description}</Typography>
+    </Stack>
+  );
+}
+
+function formatLabel(value) {
+  return String(value).replaceAll('_', ' ').toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function TrainSummary({ train, values }) {
@@ -421,4 +471,8 @@ function Detail({ label, value }) {
 
 function getSafeJourneyDate(value, today) {
   return value && value >= today ? value : today;
+}
+
+function getSafeOption(value, options, fallback) {
+  return options.includes(value) ? value : fallback;
 }
