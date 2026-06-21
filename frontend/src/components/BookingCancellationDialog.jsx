@@ -54,7 +54,6 @@ export default function BookingCancellationDialog({ pnr, open, onClose, onCancel
       })
       .catch((apiError) => {
         if (active) {
-          console.error('Cancellation review failed', apiError);
           setError(getCancellationErrorMessage(apiError));
         }
       })
@@ -83,7 +82,6 @@ export default function BookingCancellationDialog({ pnr, open, onClose, onCancel
       setSuccess(data);
       onCancelled?.(data);
     } catch (apiError) {
-      console.error('Cancellation failed', apiError);
       setError(getCancellationErrorMessage(apiError));
     } finally {
       setCancelling(false);

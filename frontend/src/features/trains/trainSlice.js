@@ -7,7 +7,6 @@ export const searchTrains = createAsyncThunk('trains/search', async (payload, { 
     const { data } = await api.post('/trains/search', payload);
     return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error('Train search failed', error);
     return rejectWithValue(getApiErrorMessage(error, 'Unable to search trains right now. Please try again.'));
   }
 });

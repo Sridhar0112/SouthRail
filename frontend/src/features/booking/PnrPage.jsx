@@ -79,7 +79,6 @@ export default function PnrPage() {
         setSearchParams({ pnr: trimmedPnr });
       }
     } catch (apiError) {
-      console.error("PNR lookup failed", apiError);
       setResult(null);
       setError(
         apiError.response?.status === 404

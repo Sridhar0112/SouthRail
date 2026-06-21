@@ -81,3 +81,38 @@ video {
     transition-duration: 0.001ms !important;
   }
 }
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.MuiTypography-root,
+.MuiTableCell-root,
+.MuiChip-label,
+.MuiButton-root {
+  overflow-wrap: anywhere;
+}
+
+.MuiButton-root:focus-visible,
+.MuiIconButton-root:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid rgba(214, 158, 46, 0.72);
+  outline-offset: 2px;
+}
+
+.MuiTableContainer-root {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+@media (max-width: 599.95px) {
+  .MuiDialog-paper {
+    margin: 12px;
+    width: calc(100% - 24px);
+    max-height: calc(100% - 24px);
+  }
+}

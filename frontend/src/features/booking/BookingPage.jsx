@@ -60,7 +60,6 @@ export default function BookingPage() {
     api.get(`/trains/${trainId}`)
       .then(({ data }) => setTrain(data))
       .catch((apiError) => {
-        console.error('Train detail load failed', apiError);
         setTrainError(getApiErrorMessage(apiError, 'Train details could not be loaded.'));
       })
       .finally(() => setLoadingTrain(false));
@@ -77,7 +76,6 @@ export default function BookingPage() {
       setReviewedSignature(JSON.stringify(values));
       setShowReview(true);
     } catch (apiError) {
-      console.error('Booking review failed', apiError);
       setReview(null);
       setReviewedSignature('');
       setShowReview(false);
@@ -102,7 +100,6 @@ export default function BookingPage() {
       setResponse(data);
       setShowReview(false);
     } catch (apiError) {
-      console.error('Booking confirmation failed', apiError);
       setSubmitError(isAuthError(apiError)
         ? 'Please login again to continue booking.'
         : getApiErrorMessage(apiError, 'Booking could not be completed. Please retry.'));
@@ -283,7 +280,7 @@ function ControlledSelect({ control, name, label, options, disabled, rules, erro
           fullWidth
           label={label}
           disabled={disabled}
-          value={field.value}
+          value={options.includes(field.value) ? field.value : ''}
           onChange={field.onChange}
           onBlur={field.onBlur}
           name={field.name}
@@ -291,6 +288,7 @@ function ControlledSelect({ control, name, label, options, disabled, rules, erro
           error={!!error}
           helperText={error?.message}
         >
+          {!options.includes(field.value) && <MenuItem value="" disabled>Select {label.toLowerCase()}</MenuItem>}
           {options.map((item) => <MenuItem key={item} value={item}>{formatOption(item)}</MenuItem>)}
         </TextField>
       )}
@@ -414,7 +412,6 @@ function BookingSuccess({ response, fallbackValues }) {
     try {
       await downloadTicketPdf(response.pnr);
     } catch (error) {
-      console.error('Ticket download failed', error);
       setDownloadError(getApiErrorMessage(error, 'Unable to download ticket right now. Please try again.'));
     } finally {
       setDownloading(false);

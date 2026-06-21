@@ -68,7 +68,6 @@ export default function VerifyEmailPage() {
         }, 3000);
       })
       .catch((apiError) => {
-        console.error('Email verification failed', apiError);
         setError(
           getApiErrorMessage(
             apiError,

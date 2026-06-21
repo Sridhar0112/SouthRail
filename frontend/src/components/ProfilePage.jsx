@@ -684,7 +684,6 @@ setDeleteError(
     api.get('/users/me')
       .then(({ data }) => setProfile(data))
       .catch((err) => {
-        console.error('Profile load failed', err);
         setError(getErrorMessage(err, 'Unable to load profile right now.'));
       })
       .finally(() => setLoading(false));

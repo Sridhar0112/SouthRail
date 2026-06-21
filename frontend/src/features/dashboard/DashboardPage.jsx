@@ -139,7 +139,6 @@ export default function DashboardPage() {
       .get("/bookings?page=0&size=20")
       .then(({ data }) => setHistory(normalizePage(data)))
       .catch((apiError) => {
-        console.error("Booking history load failed", apiError);
         setHistory({ content: [] });
         setErrors((c) => ({
           ...c,
@@ -155,7 +154,6 @@ export default function DashboardPage() {
       .get("/notifications?page=0&size=10")
       .then(({ data }) => setNotifications(normalizeRows(data)))
       .catch((apiError) => {
-        console.error("Notifications load failed", apiError);
         setNotifications([]);
         setErrors((c) => ({
           ...c,
@@ -866,7 +864,6 @@ function TicketCard({ booking, onCancelBooking, featured }) {
     try {
       await downloadTicketPdf(booking.pnr);
     } catch (error) {
-      console.error("Ticket download failed", error);
       setDownloadError(
         "Unable to download this ticket right now. Please try again.",
       );
@@ -1629,7 +1626,6 @@ function BookingHistoryRow({ booking, onCancelBooking, tokens: t }) {
     try {
       await downloadTicketPdf(booking.pnr);
     } catch (error) {
-      console.error("Ticket download failed", error);
       setDownloadError("Unable to download this ticket right now.");
     } finally {
       setDownloading(false);
