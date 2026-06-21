@@ -96,15 +96,17 @@ export function AppThemeProvider({ children }) {
         surface: palette.surface,
         custom: palette.custom
       },
-      shape: { borderRadius: 7 },
+      shape: { borderRadius: 6 },
       typography: {
         fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
-        h1: { fontWeight: 800, letterSpacing: 0 },
-        h2: { fontWeight: 800, letterSpacing: 0 },
-        h3: { fontWeight: 750, letterSpacing: 0 },
-        h4: { fontWeight: 800, letterSpacing: 0 },
-        h5: { fontWeight: 800, letterSpacing: 0 },
-        h6: { fontWeight: 800, letterSpacing: 0 },
+        h1: { fontWeight: 800, letterSpacing: -0.6, fontSize: 'clamp(2.1rem, 5vw, 3.4rem)', lineHeight: 1.05 },
+        h2: { fontWeight: 800, letterSpacing: -0.5, fontSize: 'clamp(1.85rem, 3.8vw, 2.75rem)', lineHeight: 1.08 },
+        h3: { fontWeight: 750, letterSpacing: -0.35, fontSize: 'clamp(1.55rem, 3vw, 2.15rem)', lineHeight: 1.12 },
+        h4: { fontWeight: 800, letterSpacing: -0.25, fontSize: 'clamp(1.32rem, 2.4vw, 1.75rem)', lineHeight: 1.18 },
+        h5: { fontWeight: 800, letterSpacing: -0.15, fontSize: 'clamp(1.12rem, 1.8vw, 1.35rem)', lineHeight: 1.22 },
+        h6: { fontWeight: 800, letterSpacing: -0.05, fontSize: '1rem', lineHeight: 1.28 },
+        body1: { fontSize: '0.95rem', lineHeight: 1.55 },
+        body2: { fontSize: '0.84rem', lineHeight: 1.5 },
         button: { textTransform: 'none', fontWeight: 700 }
       },
       components: {
@@ -133,7 +135,7 @@ export function AppThemeProvider({ children }) {
               backgroundImage: 'none',
               borderBottom: `1px solid ${palette.divider}`,
               backdropFilter: 'blur(16px)',
-              boxShadow: isLight ? '0 8px 28px rgba(19,35,30,0.06)' : '0 10px 30px rgba(0,0,0,0.28)'
+              boxShadow: isLight ? '0 6px 18px rgba(19,35,30,0.05)' : '0 8px 22px rgba(0,0,0,0.24)'
             }
           }
         },
@@ -183,23 +185,27 @@ export function AppThemeProvider({ children }) {
         MuiCardContent: {
           styleOverrides: {
             root: {
+              padding: 16,
               '&:last-child': {
-                paddingBottom: 18
+                paddingBottom: 16
               }
             }
           }
         },
         MuiButton: {
+          defaultProps: { size: 'medium' },
           styleOverrides: {
             root: {
-              minHeight: 38,
-              borderRadius: 7,
+              minHeight: 34,
+              padding: '5px 14px',
+              borderRadius: 6,
+              fontSize: '0.86rem',
               whiteSpace: 'normal'
             },
             containedPrimary: {
-              boxShadow: isLight ? '0 10px 22px rgba(6,78,59,0.20)' : '0 10px 24px rgba(22,160,111,0.24)',
+              boxShadow: isLight ? '0 7px 16px rgba(6,78,59,0.16)' : '0 8px 18px rgba(22,160,111,0.18)',
               '&:hover': {
-                boxShadow: isLight ? '0 12px 28px rgba(6,78,59,0.24)' : '0 12px 30px rgba(22,160,111,0.28)'
+                boxShadow: isLight ? '0 9px 20px rgba(6,78,59,0.20)' : '0 10px 22px rgba(22,160,111,0.22)'
               }
             },
             outlined: {
@@ -218,7 +224,8 @@ export function AppThemeProvider({ children }) {
             root: {
               backgroundColor: palette.surface.input,
               color: palette.text.primary,
-              borderRadius: 7,
+              borderRadius: 6,
+              fontSize: '0.92rem',
               transition: 'background-color 160ms ease, border-color 160ms ease',
               '& .MuiOutlinedInput-notchedOutline': {
                 borderColor: palette.custom.fieldBorder
@@ -326,8 +333,8 @@ export function AppThemeProvider({ children }) {
             root: {
               borderRadius: 999,
               fontWeight: 700,
-              fontSize: '0.8125rem',
-              height: 26
+              fontSize: '0.74rem',
+              height: 22
             },
             outlined: {
               borderColor: palette.custom.fieldBorder
@@ -435,7 +442,15 @@ export function AppThemeProvider({ children }) {
         MuiTableCell: {
           styleOverrides: {
             root: {
-              overflowWrap: 'anywhere'
+              overflowWrap: 'anywhere',
+              padding: '9px 12px',
+              fontSize: '0.84rem'
+            },
+            head: {
+              fontWeight: 800,
+              fontSize: '0.76rem',
+              textTransform: 'uppercase',
+              letterSpacing: 0.35
             }
           }
         },
@@ -446,25 +461,25 @@ export function AppThemeProvider({ children }) {
             },
             h2: {
               '@media (max-width: 599.95px)': {
-                fontSize: 'clamp(2rem, 12vw, 2.6rem)',
+                fontSize: 'clamp(1.65rem, 9vw, 2.15rem)',
                 lineHeight: 1.08
               }
             },
             h3: {
               '@media (max-width: 599.95px)': {
-                fontSize: 'clamp(1.8rem, 10vw, 2.4rem)',
+                fontSize: 'clamp(1.45rem, 8vw, 1.95rem)',
                 lineHeight: 1.1
               }
             },
             h4: {
               '@media (max-width: 599.95px)': {
-                fontSize: 'clamp(1.45rem, 7vw, 2rem)',
+                fontSize: 'clamp(1.25rem, 6vw, 1.6rem)',
                 lineHeight: 1.15
               }
             },
             h5: {
               '@media (max-width: 599.95px)': {
-                fontSize: 'clamp(1.2rem, 6vw, 1.5rem)',
+                fontSize: 'clamp(1.08rem, 5vw, 1.3rem)',
                 lineHeight: 1.2
               }
             }

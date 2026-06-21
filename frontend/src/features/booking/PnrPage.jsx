@@ -117,9 +117,9 @@ export default function PnrPage() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 3, md: 6 } }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2.25, md: 3.5 } }}>
       <Stack spacing={3}>
-        <Paper sx={{ p: { xs: 2, md: 3 } }}>
+        <Paper sx={{ p: { xs: 1.5, md: 2 } }}>
           <Stack
             direction={{ xs: "column", md: "row" }}
             spacing={2}
@@ -273,7 +273,7 @@ function PnrResult({
                 variant="h3"
                 fontWeight={900}
                 sx={{
-                  fontSize: { xs: "2rem", sm: "3rem" },
+                  fontSize: { xs: "1.55rem", sm: "2rem" },
                   overflowWrap: "anywhere",
                 }}
               >
@@ -441,7 +441,7 @@ function StationBlock({ label, code, name, align = "left" }) {
     <Box
       sx={{
         flex: 1,
-        p: 2,
+        p: 1.5,
         border: 1,
         borderColor: "divider",
         borderRadius: 2,
@@ -550,7 +550,7 @@ function LifecycleSection({ lifecycle }) {
             <Grid item xs={12} sm={4} key={item.label}>
               <Box
                 sx={{
-                  p: 2,
+                  p: 1.5,
                   border: 1,
                   borderColor: "divider",
                   borderRadius: 2,

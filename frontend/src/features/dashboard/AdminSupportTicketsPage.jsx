@@ -134,8 +134,8 @@ function StatCard({ title, value, icon, color, isLoading }) {
     <Paper
       elevation={0}
       sx={{
-        p: 2.5,
-        borderRadius: 3,
+        p: 2,
+        borderRadius: 2.25,
         border: `1px solid ${theme.palette.divider}`,
         bgcolor: 'background.paper',
         height: '100%',
@@ -540,8 +540,8 @@ function TicketDrawer({
           <Paper
             variant="outlined"
             sx={{
-              p: 2.5,
-              borderRadius: 3,
+              p: 2,
+              borderRadius: 2.25,
               borderColor: theme.palette.divider,
               bgcolor: 'background.paper',
             }}
@@ -609,7 +609,7 @@ function TicketDrawer({
               variant="outlined"
               sx={{
                 p: 2,
-                borderRadius: 3,
+                borderRadius: 2.25,
                 bgcolor: isLight ? alpha(theme.palette.primary.main, 0.03) : alpha(theme.palette.primary.main, 0.07),
                 borderColor: theme.palette.divider,
               }}
@@ -646,7 +646,7 @@ function TicketDrawer({
             <Paper
               variant="outlined"
               sx={{
-                borderRadius: 3,
+                borderRadius: 2.25,
                 borderColor: theme.palette.divider,
                 bgcolor: 'background.default',
                 overflow: 'hidden',
@@ -697,7 +697,7 @@ function TicketDrawer({
           variant="outlined"
           sx={{
             p: 1.75,
-            borderRadius: 3,
+            borderRadius: 2.25,
             borderColor: theme.palette.divider,
             bgcolor: 'background.default',
           }}
@@ -779,7 +779,7 @@ function StatusDialog({ open, ticket, onClose, onSubmit, loading }) {
       onClose={loading ? undefined : onClose}
       fullWidth
       maxWidth="xs"
-      PaperProps={{ sx: { borderRadius: 3 } }}
+      PaperProps={{ sx: { borderRadius: 2.25 } }}
     >
       <DialogTitle sx={{ pb: 1 }}>
         <Typography variant="h6" fontWeight={900}>
@@ -1008,7 +1008,7 @@ export default function AdminSupportTicketsPage() {
             elevation={0}
             sx={{
               p: { xs: 3, md: 4 },
-              borderRadius: 3,
+              borderRadius: 2.25,
               border: `1px solid ${theme.palette.divider}`,
               background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
               color: theme.palette.primary.contrastText,
@@ -1091,7 +1091,7 @@ export default function AdminSupportTicketsPage() {
           <Paper
             elevation={0}
             sx={{
-              borderRadius: 3,
+              borderRadius: 2.25,
               border: `1px solid ${theme.palette.divider}`,
               overflow: 'hidden',
             }}
@@ -1161,7 +1161,7 @@ export default function AdminSupportTicketsPage() {
 
             {/* Error */}
             <Collapse in={!!error}>
-              <Box sx={{ p: 3 }}>
+              <Box sx={{ p: 2 }}>
                 <Alert
                   severity="error"
                   action={

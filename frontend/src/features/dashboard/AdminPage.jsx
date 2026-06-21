@@ -285,7 +285,7 @@ export default function AdminPage() {
 
 function AdminHeader({ lastUpdated, onRefresh }) {
   return (
-    <Paper sx={{ p: { xs: 2, md: 3 } }}>
+    <Paper sx={{ p: { xs: 1.5, md: 2 } }}>
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
         <Box>
           <Typography variant="h4" fontWeight={800}>Admin Management</Typography>

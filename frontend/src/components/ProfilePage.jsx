@@ -76,7 +76,7 @@ function FieldRow({ icon, label, children }) {
 function SectionCard({ title, subtitle, icon, action, children }) {
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, width: '100%', maxWidth: '100%', minWidth: 0 }}>
-      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+      <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'stretch', sm: 'flex-start' }} justifyContent="space-between" spacing={1.5} mb={2.5}>
           <Stack direction="row" spacing={1.5} alignItems="center">
             <Box
@@ -121,7 +121,7 @@ function ProfileHero({ profile, loading }) {
       {/* Accent stripe */}
       <Box
         sx={{
-          height: 80,
+          height: 64,
           bgcolor: 'primary.main',
           opacity: 0.12,
           position: 'absolute',
@@ -132,7 +132,7 @@ function ProfileHero({ profile, loading }) {
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5} alignItems={{ sm: 'flex-end' }}>
           <Avatar
             sx={{
-              width: 80, height: 80, fontSize: 28, fontWeight: 800,
+              width: 80, height: 64, fontSize: 28, fontWeight: 800,
               bgcolor: 'primary.main', color: 'primary.contrastText',
               border: 4, borderColor: 'background.paper',
               boxShadow: 3, flexShrink: 0, mt: { xs: 1, sm: 0 }
@@ -693,7 +693,7 @@ setDeleteError(
   useEffect(() => { fetchProfile(); }, [auth.user]);
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 3, md: 5 } }}>
+    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2.25, md: 3.5 } }}>
       <Container maxWidth="md">
         <Stack spacing={3}>
           {/* Page title */}
@@ -718,14 +718,14 @@ setDeleteError(
                 px: 2,
                 borderBottom: 1,
                 borderColor: 'divider',
-                '& .MuiTab-root': { fontWeight: 700, textTransform: 'none', minHeight: 52 }
+                '& .MuiTab-root': { fontWeight: 700, textTransform: 'none', minHeight: 44 }
               }}
             >
               <Tab icon={<BadgeIcon fontSize="small" />} iconPosition="start" label="Personal info" />
               <Tab icon={<LockIcon fontSize="small" />} iconPosition="start" label="Security" />
               <Tab icon={<NotificationsIcon fontSize="small" />} iconPosition="start" label="Notifications" />
             </Tabs>
-            <Box sx={{ p: { xs: 2, sm: 3 } }}>
+            <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
               <TabPanel value={tab} index={0}>
                 <PersonalInfoTab
                   profile={profile}

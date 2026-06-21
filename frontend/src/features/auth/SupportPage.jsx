@@ -193,7 +193,7 @@ const sxPolicyPaper = {
   border: '1px solid',
   borderColor: 'divider',
   borderRadius: 2,
-  p: 2.5,
+  p: 2,
   display: 'flex',
   alignItems: 'flex-start',
   gap: 1.5,
@@ -291,7 +291,7 @@ const ContactCard = memo(function ContactCard({ channel }) {
         border: '1px solid',
         borderColor: 'divider',
         borderRadius: 3,
-        p: { xs: 3, sm: 3.5 },
+        p: { xs: 2, sm: 2.5 },
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -509,7 +509,7 @@ useEffect(() => {
           bgcolor: 'background.paper',
           borderBottom: '1px solid',
           borderColor: 'divider',
-          py: { xs: 4, sm: 8 },
+          py: { xs: 3, sm: 5 },
         }}
       >
         <Container maxWidth="md">
@@ -521,7 +521,7 @@ useEffect(() => {
           </Stack>
 
           <Stack alignItems="center" spacing={1.5} sx={{ mb: 4, textAlign: 'center' }}>
-            <Typography variant="h3" fontWeight={800} letterSpacing={-0.5} sx={{ fontSize: { xs: '2rem', sm: '3rem' }, overflowWrap: 'anywhere' }}>
+            <Typography variant="h3" fontWeight={800} letterSpacing={-0.5} sx={{ fontSize: { xs: '1.55rem', sm: '2.15rem' }, overflowWrap: 'anywhere' }}>
               How can we help?
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 480 }}>
@@ -584,7 +584,7 @@ useEffect(() => {
                     border: '1px solid',
                     borderColor: 'divider',
                     borderRadius: 2,
-                    p: 4,
+                    p: 2.5,
                     textAlign: 'center',
                   }}
                 >
@@ -741,7 +741,7 @@ useEffect(() => {
               border: '1px solid',
               borderColor: 'divider',
               borderRadius: 3,
-              p: { xs: 2, sm: 4 },
+              p: { xs: 1.75, sm: 2.5 },
               width: '100%',
               maxWidth: '100%',
               minWidth: 0,
