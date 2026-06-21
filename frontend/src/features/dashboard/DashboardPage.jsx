@@ -205,7 +205,7 @@ export default function DashboardPage() {
       sx={{
         bgcolor: theme.palette.background.default,
         minHeight: "100vh",
-        pb: 6,
+        pb: 4,
       }}
     >
       {/* Hero */}
@@ -220,9 +220,9 @@ export default function DashboardPage() {
 
       <Container
         maxWidth="xl"
-        sx={{ mt: { xs: -3, md: -4 }, position: "relative", zIndex: 1 }}
+        sx={{ mt: { xs: -2, md: -2.5 }, position: "relative", zIndex: 1 }}
       >
-        <Stack spacing={4}>
+        <Stack spacing={{ xs: 2.25, md: 2.75 }}>
           {/* KPI strip */}
           {loading.history ? (
             <KpiSkeleton />
@@ -238,7 +238,7 @@ export default function DashboardPage() {
           )}
 
           {/* Next Journey + Insights */}
-          <Grid container spacing={3}>
+          <Grid container spacing={2.25}>
             <Grid item xs={12} lg={8}>
               <NextJourneySection
                 loading={loading.history}
@@ -335,8 +335,8 @@ function HeroSection({
     <Box
       sx={{
         background: `linear-gradient(135deg, ${greens.dark} 0%, ${greens.main} 60%, ${greens.mid} 100%)`,
-        pt: { xs: 3, md: 4 },
-        pb: { xs: 3, md: 4 },
+        pt: { xs: 2.25, md: 2.75 },
+        pb: { xs: 2.5, md: 3 },
         px: { xs: 2, md: 0 },
         position: "relative",
         overflow: "hidden",
@@ -349,9 +349,9 @@ function HeroSection({
           bottom: 0,
           left: 0,
           right: 0,
-          height: 28,
+          height: 20,
           backgroundImage: `repeating-linear-gradient(90deg, ${alpha("#fff", 0.07)} 0px, ${alpha("#fff", 0.07)} 40px, transparent 40px, transparent 80px)`,
-          borderTop: `3px solid ${alpha("#fff", 0.12)}`,
+          borderTop: `1px solid ${alpha("#fff", 0.12)}`,
         }}
       />
       {/* Subtle circle glow */}
@@ -371,25 +371,25 @@ function HeroSection({
       <Container maxWidth="xl">
         <Stack
           direction={{ xs: "column", md: "row" }}
-          spacing={3}
+          spacing={2}
           justifyContent="space-between"
           alignItems={{ xs: "flex-start", md: "center" }}
         >
           {/* Left: Identity */}
           <Stack
             direction={{ xs: "column", sm: "row" }}
-            spacing={2.5}
+            spacing={1.5}
             alignItems={{ xs: "flex-start", sm: "center" }}
           >
             <Avatar
               sx={{
-                width: 56,
-                height: 56,
+                width: 44,
+                height: 44,
                 bgcolor: alpha("#ffffff", 0.92),
                 color: greens.dark,
-                fontSize: 28,
+                fontSize: 22,
                 fontWeight: 900,
-                border: `3px solid ${alpha("#fff", 0.3)}`,
+                border: `1px solid ${alpha("#fff", 0.3)}`,
                 flexShrink: 0,
               }}
             >
@@ -465,7 +465,7 @@ function HeroSection({
           >
             <Stack
               direction={{ xs: "column", sm: "row" }}
-              spacing={{ xs: 1.5, sm: 3 }}
+              spacing={{ xs: 1, sm: 2 }}
               flexWrap="wrap"
               justifyContent={{ xs: "flex-start", md: "flex-end" }}
             >
@@ -514,8 +514,8 @@ function HeroSection({
                   color: greens.dark,
                   fontWeight: 800,
                   "&:hover": { bgcolor: alpha("#ffffff", 0.9) },
-                  px: 3,
-                  borderRadius: 2,
+                  px: 2,
+                  borderRadius: 1.5,
                 }}
               >
                 Search Trains
@@ -531,8 +531,8 @@ function HeroSection({
                     borderColor: "#fff",
                     bgcolor: alpha("#fff", 0.08),
                   },
-                  px: 3,
-                  borderRadius: 2,
+                  px: 2,
+                  borderRadius: 1.5,
                 }}
                 variant="outlined"
               >
@@ -570,7 +570,7 @@ function HeroStat({ label, value, highlightColor }) {
         sx={{
           color: highlightColor || "#fff",
           fontWeight: 900,
-          fontSize: { xs: 22, md: 28 },
+          fontSize: { xs: 18, md: 22 },
           lineHeight: 1,
         }}
       >
@@ -644,9 +644,9 @@ function KpiStrip({ metrics }) {
       <Paper
         elevation={0}
         sx={{
-          p: 3,
-          borderRadius: 3,
-          border: `1.5px dashed ${t.cardBorder}`,
+          p: 2.25,
+          borderRadius: 2.5,
+          border: `1px dashed ${t.cardBorder}`,
           textAlign: "center",
         }}
       >
@@ -667,10 +667,10 @@ function KpiStrip({ metrics }) {
           <Paper
             elevation={0}
             sx={{
-              p: { xs: 2, md: 1.5 },
-              borderRadius: 3,
+              p: { xs: 1.5, md: 1.25 },
+              borderRadius: 2,
               bgcolor: t.raisedBg,
-              border: `1.5px solid ${t.cardBorder}`,
+              border: `1px solid ${t.cardBorder}`,
               transition: "box-shadow 0.2s, transform 0.2s",
               height: "100%",
               "&:hover": {
@@ -682,8 +682,8 @@ function KpiStrip({ metrics }) {
             <Stack spacing={1.5}>
               <Box
                 sx={{
-                  width: 36,
-                  height: 36,
+                  width: 32,
+                  height: 32,
                   borderRadius: 2,
                   bgcolor: alpha(card.color, 0.1),
                   color: card.color,
@@ -709,7 +709,7 @@ function KpiStrip({ metrics }) {
                 <Typography
                   sx={{
                     fontWeight: 900,
-                    fontSize: { xs: 20, md: 22 },
+                    fontSize: { xs: 18, md: 20 },
                     color: t.textMain,
                     lineHeight: 1.1,
                     mt: 0.5,
@@ -737,9 +737,9 @@ function KpiSkeleton() {
           <Paper
             elevation={0}
             sx={{
-              p: { xs: 2, md: 1.5 },
-              borderRadius: 3,
-              border: `1.5px solid ${t.cardBorder}`,
+              p: { xs: 1.5, md: 1.25 },
+              borderRadius: 2,
+              border: `1px solid ${t.cardBorder}`,
               height: "100%",
             }}
           >
@@ -768,12 +768,12 @@ function NextJourneySection({
 }) {
   const theme = useTheme();
   const t = getDashboardTokens(theme);
-  const visibleBookings = bookings?.slice(0, 3) || [];
+  const visibleBookings = bookings?.slice(0, 4) || [];
 
   return (
     <SectionCard
       title="Upcoming Journeys"
-      subtitle={`Showing next ${Math.min(bookings?.length || 0, 3)} upcoming trips`}
+      subtitle={`Showing next ${Math.min(bookings?.length || 0, 4)} upcoming trips`}
       icon={<TrainIcon sx={{ color: t.primary }} />}
       action={
         bookings?.length > 3 ? (
@@ -807,7 +807,7 @@ function NextJourneySection({
           <Typography fontWeight={700} color={t.textMain} gutterBottom>
             No upcoming trips
           </Typography>
-          <Typography color={t.textSub} variant="body2" sx={{ mb: 2 }}>
+          <Typography color={t.textSub} variant="body2" sx={{ mb: 1.25 }}>
             Search trains and book your next adventure.
           </Typography>
           <Button
@@ -828,7 +828,7 @@ function NextJourneySection({
       )}
 
       {!loading && !error && visibleBookings.length > 0 && (
-        <Stack spacing={2}>
+        <Stack spacing={1.25}>
           {visibleBookings.map((booking, index) => (
             <TicketCard
               key={booking.id || booking.pnr}
@@ -878,11 +878,9 @@ function TicketCard({ booking, onCancelBooking, featured }) {
   return (
     <Box
       sx={{
-        borderRadius: 3,
-        border: featured
-          ? `2px solid ${t.primary}`
-          : `1.5px solid ${t.cardBorder}`,
-        boxShadow: featured ? `0 10px 30px ${alpha(t.primary, 0.18)}` : "none",
+        borderRadius: 2.25,
+        border: `1px solid ${featured ? alpha(t.primary, 0.55) : t.cardBorder}`,
+        boxShadow: featured ? `0 8px 22px ${alpha(t.primary, 0.12)}` : "none",
         bgcolor: featured ? alpha(t.primary, 0.04) : t.raisedBg,
         overflow: "hidden",
         position: "relative",
@@ -897,7 +895,7 @@ function TicketCard({ booking, onCancelBooking, featured }) {
           }}
         />
       )}
-      <Box sx={{ p: { xs: 2, md: 2.5 } }}>
+      <Box sx={{ p: { xs: 1.5, md: 1.75 } }}>
         {/* Train name + status */}
         <Stack
           direction={{ xs: "column", sm: "row" }}
@@ -949,7 +947,7 @@ function TicketCard({ booking, onCancelBooking, featured }) {
           sx={{ mb: 1.5 }}
         >
           <Box sx={{ textAlign: "center" }}>
-            <Typography fontWeight={900} fontSize={18} color={t.textMain}>
+            <Typography fontWeight={900} fontSize={16} color={t.textMain}>
               {src}
             </Typography>
             <Typography
@@ -988,7 +986,7 @@ function TicketCard({ booking, onCancelBooking, featured }) {
             <FiberManualRecordIcon sx={{ fontSize: 8, color: t.primary }} />
           </Box>
           <Box sx={{ textAlign: "center" }}>
-            <Typography fontWeight={900} fontSize={18} color={t.textMain}>
+            <Typography fontWeight={900} fontSize={16} color={t.textMain}>
               {dest}
             </Typography>
             <Typography
@@ -1114,8 +1112,8 @@ function JourneySkeleton() {
   return (
     <Box
       sx={{
-        borderRadius: 3,
-        border: `1.5px solid ${t.cardBorder}`,
+        borderRadius: 2.25,
+        border: `1px solid ${t.cardBorder}`,
         overflow: "hidden",
       }}
     >
@@ -1160,7 +1158,7 @@ function TravelInsightsCard({ loading, error, metrics }) {
           {[1, 2, 3, 4].map((i) => (
             <Skeleton
               key={i}
-              height={54}
+              height={44}
               sx={{ borderRadius: 2 }}
               variant="rectangular"
             />
@@ -1302,14 +1300,14 @@ function RecentActivitySection({ bookings, loading }) {
     >
       <Stack spacing={0}>
         {activities.map((item, idx) => (
-          <Box key={idx} sx={{ display: "flex", gap: 2, position: "relative" }}>
+          <Box key={idx} sx={{ display: "flex", gap: 1.25, position: "relative" }}>
             {/* Timeline spine */}
             {idx < activities.length - 1 && (
               <Box
                 sx={{
                   position: "absolute",
-                  left: 17,
-                  top: 36,
+                  left: 14,
+                  top: 32,
                   bottom: 0,
                   width: 2,
                   bgcolor: t.divider,
@@ -1335,7 +1333,7 @@ function RecentActivitySection({ bookings, loading }) {
             >
               {item.icon}
             </Box>
-            <Box sx={{ pb: 2.5, flex: 1 }}>
+            <Box sx={{ pb: 1.5, flex: 1 }}>
               <Typography fontWeight={800} fontSize={14} color={t.textMain}>
                 {item.title}
               </Typography>
@@ -1472,7 +1470,7 @@ function BookingHistoryCard({
         />
       )}
       {historyLoaded && (
-        <Stack spacing={2.5}>
+        <Stack spacing={1.75}>
           {/* Filters */}
           <Stack
             direction={{ xs: "column", sm: "row" }}
@@ -1562,14 +1560,14 @@ function BookingHistoryTable({ rows, onCancelBooking }) {
       variant="outlined"
       sx={{
         borderRadius: 2.5,
-        border: `1.5px solid ${t.cardBorder}`,
+        border: `1px solid ${t.cardBorder}`,
         overflowX: "auto",
       }}
     >
       <Table
         size="small"
         aria-label="Booking history table"
-        sx={{ minWidth: { xs: 840, md: 900 } }}
+        sx={{ minWidth: { xs: 760, md: 820 } }}
       >
         <TableHead>
           <TableRow sx={{ bgcolor: alpha(t.primary, 0.04) }}>
@@ -1590,7 +1588,7 @@ function BookingHistoryTable({ rows, onCancelBooking }) {
                   fontSize: 12,
                   textTransform: "uppercase",
                   letterSpacing: 0.5,
-                  borderBottom: `2px solid ${t.divider}`,
+                  borderBottom: `1px solid ${t.divider}`,
                 }}
               >
                 {h}
@@ -1700,7 +1698,7 @@ function BookingHistoryRow({ booking, onCancelBooking, tokens: t }) {
       >
         {formatFare(booking.totalFare)}
       </TableCell>
-      <TableCell sx={{ minWidth: 260 }}>
+      <TableCell sx={{ minWidth: 210 }}>
         <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
           <Button
             size="small"
@@ -1811,7 +1809,7 @@ function NotificationsCard({
                 p: 1.75,
                 borderRadius: 2.5,
                 bgcolor: item.read ? "transparent" : alpha(t.primary, 0.05),
-                border: `1.5px solid ${item.read ? t.divider : alpha(t.primary, 0.2)}`,
+                border: `1px solid ${item.read ? t.divider : alpha(t.primary, 0.2)}`,
                 transition: "background 0.15s",
               }}
             >
@@ -1901,18 +1899,18 @@ function SectionCard({ id, title, subtitle, icon, action, children }) {
       elevation={0}
       sx={{
         bgcolor: t.cardBg,
-        borderRadius: 3,
-        border: `1.5px solid ${t.cardBorder}`,
+        borderRadius: 2.25,
+        border: `1px solid ${t.cardBorder}`,
         overflow: "hidden",
       }}
     >
-      <Box sx={{ px: { xs: 2, md: 3 }, pt: { xs: 2, md: 2.5 }, pb: 1.5 }}>
+      <Box sx={{ px: { xs: 1.5, md: 2 }, pt: { xs: 1.5, md: 1.75 }, pb: 1.25 }}>
         <Stack
           direction={{ xs: "column", sm: "row" }}
           justifyContent="space-between"
           alignItems={{ sm: "center" }}
           spacing={1}
-          sx={{ mb: 2 }}
+          sx={{ mb: 1.25 }}
         >
           <Stack direction="row" spacing={1.25} alignItems="center">
             {icon}
@@ -1934,7 +1932,7 @@ function SectionCard({ id, title, subtitle, icon, action, children }) {
           </Stack>
           {action}
         </Stack>
-        <Divider sx={{ mb: 2, borderColor: t.divider }} />
+        <Divider sx={{ mb: 1.5, borderColor: t.divider }} />
         {children}
       </Box>
     </Paper>

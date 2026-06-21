@@ -44,7 +44,7 @@ function getPalette(mode) {
         : 'linear-gradient(180deg, #071713 0%, #081C18 100%)',
       appBar: isLight ? alpha('#FFFFFF', 0.92) : alpha('#10251F', 0.92),
       cardBorder: isLight ? '#DDE5E1' : 'rgba(255,255,255,0.13)',
-      cardShadow: isLight ? '0 14px 36px rgba(19,35,30,0.08)' : '0 18px 42px rgba(0,0,0,0.34)',
+      cardShadow: isLight ? '0 10px 26px rgba(19,35,30,0.07)' : '0 12px 30px rgba(0,0,0,0.28)',
       fieldBorder: isLight ? '#C9D6D0' : 'rgba(255,255,255,0.18)',
       heroOverlay: isLight
         ? 'linear-gradient(90deg, rgba(5,40,32,0.90), rgba(5,40,32,0.62))'
@@ -54,7 +54,7 @@ function getPalette(mode) {
         : 'linear-gradient(180deg, rgba(214,168,79,0.12), rgba(22,160,111,0.08))',
       glassBg: isLight ? alpha('#FFFFFF', 0.9) : alpha('#10251F', 0.9),
       glassBorder: isLight ? alpha('#FFFFFF', 0.6) : alpha('#FFFFFF', 0.16),
-      glassShadow: isLight ? '0 22px 50px rgba(19,35,30,0.18)' : '0 24px 56px rgba(0,0,0,0.42)'
+      glassShadow: isLight ? '0 16px 36px rgba(19,35,30,0.14)' : '0 18px 42px rgba(0,0,0,0.34)'
     }
   };
 }
@@ -96,7 +96,7 @@ export function AppThemeProvider({ children }) {
         surface: palette.surface,
         custom: palette.custom
       },
-      shape: { borderRadius: 8 },
+      shape: { borderRadius: 7 },
       typography: {
         fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
         h1: { fontWeight: 800, letterSpacing: 0 },
@@ -170,8 +170,8 @@ export function AppThemeProvider({ children }) {
             root: {
               minWidth: 0,
               '@media (max-width: 599.95px)': {
-                paddingLeft: 16,
-                paddingRight: 16
+                paddingLeft: 14,
+                paddingRight: 14
               },
               '@media (max-width: 359.95px)': {
                 paddingLeft: 12,
@@ -184,7 +184,7 @@ export function AppThemeProvider({ children }) {
           styleOverrides: {
             root: {
               '&:last-child': {
-                paddingBottom: 24
+                paddingBottom: 18
               }
             }
           }
@@ -192,8 +192,8 @@ export function AppThemeProvider({ children }) {
         MuiButton: {
           styleOverrides: {
             root: {
-              minHeight: 44,
-              borderRadius: 8,
+              minHeight: 38,
+              borderRadius: 7,
               whiteSpace: 'normal'
             },
             containedPrimary: {
@@ -218,7 +218,7 @@ export function AppThemeProvider({ children }) {
             root: {
               backgroundColor: palette.surface.input,
               color: palette.text.primary,
-              borderRadius: 8,
+              borderRadius: 7,
               transition: 'background-color 160ms ease, border-color 160ms ease',
               '& .MuiOutlinedInput-notchedOutline': {
                 borderColor: palette.custom.fieldBorder
@@ -325,7 +325,9 @@ export function AppThemeProvider({ children }) {
           styleOverrides: {
             root: {
               borderRadius: 999,
-              fontWeight: 700
+              fontWeight: 700,
+              fontSize: '0.8125rem',
+              height: 26
             },
             outlined: {
               borderColor: palette.custom.fieldBorder
@@ -471,7 +473,7 @@ export function AppThemeProvider({ children }) {
         MuiAvatar: {
           styleOverrides: {
             root: {
-              boxShadow: isLight ? '0 10px 22px rgba(6,78,59,0.18)' : '0 10px 24px rgba(0,0,0,0.30)'
+              boxShadow: isLight ? '0 6px 16px rgba(6,78,59,0.16)' : '0 6px 18px rgba(0,0,0,0.26)'
             }
           }
         },

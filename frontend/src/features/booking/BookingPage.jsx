@@ -113,8 +113,8 @@ export default function BookingPage() {
 
   if (response) {
     return (
-      <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>
-        <Stepper activeStep={2} sx={{ mb: 3 }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 2.25, md: 3.5 } }}>
+        <Stepper activeStep={2} sx={{ mb: 2 }}>
           {steps.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
         </Stepper>
         <BookingSuccess response={response} fallbackValues={currentValues} />
@@ -123,9 +123,9 @@ export default function BookingPage() {
   }
 
   return (
-    <Container maxWidth={showReview && review ? "xl" : "lg"} sx={{ py: { xs: 3, md: 5 }, px: { xs: 2, sm: 3, lg: 4 } }}>
-      <Typography variant="h4" fontWeight={800} gutterBottom>Book ticket</Typography>
-      <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 3, overflowX: 'auto', pb: 1 }}>
+    <Container maxWidth={showReview && review ? "xl" : "lg"} sx={{ py: { xs: 2.25, md: 3.5 }, px: { xs: 2, sm: 3, lg: 4 } }}>
+      <Typography variant="h5" fontWeight={850} gutterBottom>Book ticket</Typography>
+      <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 2, overflowX: 'auto', pb: 1 }}>
         {steps.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
       </Stepper>
 
@@ -137,7 +137,7 @@ export default function BookingPage() {
         {submitError && <BookingFailure message={submitError} retry={form.handleSubmit(submit)} />}
         {loadingReview && <LoadingState message="Preparing booking review..." />}
         {submitting && (
-          <Paper sx={{ p: 2 }}>
+          <Paper sx={{ p: 1.5 }}>
             <Stack spacing={1}>
               <LinearProgress />
               <Typography fontWeight={800}>Processing your booking...</Typography>
@@ -160,15 +160,15 @@ export default function BookingPage() {
             onConfirmBooking={form.handleSubmit(submit)}
           />
         ) : (
-          <Paper elevation={1} sx={{ p: { xs: 2, md: 3.5 }, borderRadius: 3, width: '100%', maxWidth: '100%', minWidth: 0 }}>
+          <Paper elevation={1} sx={{ p: { xs: 1.5, md: 2.25 }, borderRadius: 2.5, width: '100%', maxWidth: '100%', minWidth: 0 }}>
             <Box component="form" onSubmit={form.handleSubmit(submit)}>
-              <Stack spacing={3}>
+              <Stack spacing={1.75}>
                 <SectionHeader
                   overline="Journey details"
                   title="Choose your route and fare options"
                   description="Confirm the stations, journey date, class, and quota before preparing the final booking review."
                 />
-                <Grid container spacing={2.25}>
+                <Grid container spacing={1.75}>
                   <Grid item xs={12} sm={6} md={4}>
                     <TextField fullWidth label="From station code" disabled={submitting} error={!!form.formState.errors.sourceStationCode}
                       helperText={form.formState.errors.sourceStationCode?.message}
@@ -207,11 +207,11 @@ export default function BookingPage() {
                 />
                 <Stack spacing={2}>
                   {fields.map((field, index) => (
-                    <Card key={field.id} variant="outlined" sx={{ borderRadius: 3, overflow: 'visible' }}>
-                      <CardContent sx={{ p: { xs: 2, md: 2.5 }, '&:last-child': { pb: { xs: 2, md: 2.5 } } }}>
+                    <Card key={field.id} variant="outlined" sx={{ borderRadius: 2.5, overflow: 'visible' }}>
+                      <CardContent sx={{ p: { xs: 1.5, md: 1.75 }, '&:last-child': { pb: { xs: 1.5, md: 1.75 } } }}>
                         <Stack spacing={2}>
                           <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
-                            <Typography variant="h6" fontWeight={900}>Passenger {index + 1}</Typography>
+                            <Typography variant="subtitle1" fontWeight={900}>Passenger {index + 1}</Typography>
                             <Chip size="small" color={index === 0 ? 'primary' : 'default'} variant={index === 0 ? 'filled' : 'outlined'} label={index === 0 ? 'Primary traveller' : 'Co-passenger'} />
                           </Stack>
                           <Grid container spacing={2}>
@@ -314,7 +314,7 @@ function formatLabel(value) {
 
 function TrainSummary({ train, values }) {
   return (
-    <Paper sx={{ p: 2 }}>
+    <Paper sx={{ p: 1.5 }}>
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={12} md={5}>
           <Typography variant="h6" fontWeight={800} sx={{ overflowWrap: 'anywhere' }}>{train.name} - {train.number}</Typography>
