@@ -331,35 +331,38 @@ function HorizontalBarChart({ rows, valueKey, valueFormatter, color }) {
   );
 }
 
-function MiniBarChart({ rows, valueKey, valueFormatter, color }) {
+function MiniBarChart({ rows, valueKey, valueFormatter, color, getTooltip }) {
   const theme = useTheme();
   const max = Math.max(...rows.map((row) => Number(row[valueKey]) || 0), 1);
-  const width = 560;
-  const height = 160;
-  const pad = { top: 10, right: 8, bottom: 28, left: 8 };
-  const barGap = 10;
+  const width = 640;
+  const height = 190;
+  const pad = { top: 22, right: 10, bottom: 42, left: 10 };
+  const barGap = rows.length > 14 ? 6 : 10;
   const barWidth = rows.length ? (width - pad.left - pad.right - barGap * (rows.length - 1)) / rows.length : 0;
 
   if (!rows.length) return <ChartEmpty message="No journey dates available yet." />;
 
   return (
-    <Box sx={{ width: '100%', overflow: 'hidden' }}>
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Journey date mini chart" style={{ width: '100%', height: 'auto', display: 'block' }}>
+    <Box sx={{ width: '100%', overflowX: rows.length > 14 ? 'auto' : 'hidden', pb: 0.5 }}>
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Journey demand by date chart" style={{ minWidth: rows.length > 14 ? 680 : '100%', width: '100%', height: 'auto', display: 'block' }}>
         {rows.map((row, index) => {
           const value = Number(row[valueKey]) || 0;
           const barHeight = (value / max) * (height - pad.top - pad.bottom);
           const x = pad.left + index * (barWidth + barGap);
           const y = height - pad.bottom - barHeight;
+          const label = rows.length > 18 ? String(row.label).replace(' ', '\n') : row.label;
           return (
             <g key={row.periodKey || row.label}>
-              <rect x={x} y={y} width={Math.max(barWidth, 2)} height={Math.max(barHeight, 1)} rx="4" fill={resolveColor(theme, color)}>
-                <title>{`${row.label} \u2022 ${valueFormatter(value)}`}</title>
-              </rect>
-              {rows.length <= 10 && (
-                <text x={x + barWidth / 2} y={height - 10} textAnchor="middle" fontSize="9.5" fill={theme.palette.text.secondary}>
-                  {row.label}
-                </text>
-              )}
+              <title>{getTooltip ? getTooltip(row) : `${row.label} · ${valueFormatter(value)}`}</title>
+              <text x={x + barWidth / 2} y={Math.max(y - 6, 12)} textAnchor="middle" fontSize="10.5" fontWeight="800" fill={theme.palette.text.primary}>
+                {valueFormatter(value)}
+              </text>
+              <rect x={x} y={y} width={Math.max(barWidth, 3)} height={Math.max(barHeight, 1)} rx="5" fill={resolveColor(theme, color)} />
+              <text x={x + barWidth / 2} y={height - 24} textAnchor="middle" fontSize="9.5" fill={theme.palette.text.secondary}>
+                {String(label).split('\n').map((part, partIndex) => (
+                  <tspan key={part} x={x + barWidth / 2} dy={partIndex ? 10 : 0}>{part}</tspan>
+                ))}
+              </text>
             </g>
           );
         })}
@@ -451,6 +454,75 @@ function StatBar({ label, value, total, color }) {
   );
 }
 
+
+function journeyStatusSummary(row) {
+  return `${formatNumber(row.confirmed)} confirmed · ${formatNumber(row.rac)} RAC · ${formatNumber(row.waitlisted)} waitlisted · ${formatNumber(row.cancelled)} cancelled · ${formatNumber(row.failed)} failed`;
+}
+
+function journeyTooltip(row) {
+  return `${row.label} · ${formatNumber(row.totalBookings || row.bookings)} bookings · Active ${formatCurrency(row.activeRevenue)} · Excluded ${formatCurrency(row.excludedFare)} · Confirmed ${formatNumber(row.confirmed)} · RAC ${formatNumber(row.rac)} · Waitlisted ${formatNumber(row.waitlisted)} · Cancelled ${formatNumber(row.cancelled)} · Failed ${formatNumber(row.failed)}`;
+}
+
+function riskChipColor(row) {
+  if (row.riskRate > 0.5) return 'error';
+  if (row.riskRate > 0.25) return 'warning';
+  return 'success';
+}
+
+function JourneyRevenueRow({ row }) {
+  return (
+    <Paper
+      variant="outlined"
+      sx={(theme) => ({
+        p: 1.25,
+        borderRadius: 2,
+        bgcolor: alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.42 : 0.72),
+        borderColor: alpha(theme.palette.text.primary, theme.palette.mode === 'dark' ? 0.12 : 0.08)
+      })}
+    >
+      <Stack spacing={1}>
+        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1.25}>
+          <Box>
+            <Typography variant="body2" fontWeight={900}>{row.label}</Typography>
+            <Typography variant="caption" color="text.secondary">{formatNumber(row.totalBookings || row.bookings)} bookings</Typography>
+          </Box>
+          <Stack spacing={0.35} alignItems="flex-end">
+            <Typography variant="caption" color="text.secondary" fontWeight={800}>Risk level</Typography>
+            <Chip
+              size="small"
+              color={riskChipColor(row)}
+              label={`${row.riskLabel} · ${formatNumber(row.riskPercent)}% excluded`}
+              sx={{ fontWeight: 850 }}
+            />
+          </Stack>
+        </Stack>
+
+        <Grid container spacing={1}>
+          <Grid item xs={6}>
+            <Box sx={(theme) => ({ p: 1, borderRadius: 1.5, bgcolor: alpha(theme.palette.success.main, theme.palette.mode === 'dark' ? 0.16 : 0.1) })}>
+              <Typography variant="caption" color="text.secondary">Active fare</Typography>
+              <Typography variant="body2" fontWeight={900} color="success.main">{formatCurrency(row.activeRevenue)}</Typography>
+            </Box>
+          </Grid>
+          <Grid item xs={6}>
+            <Box sx={(theme) => ({ p: 1, borderRadius: 1.5, bgcolor: alpha(theme.palette.warning.main, theme.palette.mode === 'dark' ? 0.18 : 0.12) })}>
+              <Typography variant="caption" color="text.secondary">Excluded fare</Typography>
+              <Typography variant="body2" fontWeight={900} color="warning.main">{formatCurrency(row.excludedFare)}</Typography>
+            </Box>
+          </Grid>
+        </Grid>
+
+        <Box>
+          <Typography variant="caption" color="text.secondary" fontWeight={800}>Status summary</Typography>
+          <Typography variant="caption" color="text.secondary" component="div">
+            {journeyStatusSummary(row)}
+          </Typography>
+        </Box>
+      </Stack>
+    </Paper>
+  );
+}
+
 /* ----------------------------- Journey Trend section ------------------------ */
 
 export function JourneyDateSection({ journeyDateAnalyticsByPeriod }) {
@@ -521,26 +593,34 @@ export function JourneyDateSection({ journeyDateAnalyticsByPeriod }) {
         <Grid container spacing={2} alignItems="stretch">
           <Grid item xs={12} lg={7}>
             <AdminChartCard
-              title="Bookings by journey date"
-              subtitle={`${PERIOD_OPTIONS.find((option) => option.value === period)?.label} journey demand`}
+              title="Journey demand by date"
+              subtitle="Booking count grouped by journeyDate"
               icon={<TimelineIcon fontSize="small" />}
               accent="primary"
             >
-              <MiniBarChart rows={analytics.periods} valueKey="bookings" valueFormatter={formatNumber} color="primary.main" />
+              <MiniBarChart
+                rows={analytics.periods}
+                valueKey="bookings"
+                valueFormatter={formatNumber}
+                color="primary.main"
+                getTooltip={journeyTooltip}
+              />
             </AdminChartCard>
           </Grid>
           <Grid item xs={12} lg={5}>
-            <AdminChartCard title="Revenue by journey date" subtitle="Active revenue per period" icon={<CurrencyRupeeIcon fontSize="small" />} accent="success">
+            <AdminChartCard
+              title="Journey revenue breakdown"
+              subtitle="Active fare counted separately from excluded fare"
+              icon={<CurrencyRupeeIcon fontSize="small" />}
+              accent="success"
+            >
               {!analytics.periods.length ? <ChartEmpty message="No journey dates available yet." /> : (
-                <Stack spacing={1.1} sx={{ maxHeight: 220, overflowY: 'auto', pr: 0.5 }}>
-                  {[...analytics.periods].sort((a, b) => b.activeRevenue - a.activeRevenue).slice(0, 8).map((row) => (
-                    <Stack key={row.periodKey} direction="row" justifyContent="space-between" alignItems="center">
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography variant="body2" fontWeight={750} noWrap>{row.label}</Typography>
-                        <Typography variant="caption" color="text.secondary">{formatNumber(row.bookings)} bookings</Typography>
-                      </Box>
-                      <Typography variant="body2" fontWeight={900} color="success.main">{formatCurrency(row.activeRevenue)}</Typography>
-                    </Stack>
+                <Stack spacing={1.1} sx={{ maxHeight: 360, overflowY: 'auto', pr: 0.5 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Excluded fare = CANCELLED or FAILED bookings not counted in active revenue
+                  </Typography>
+                  {[...analytics.periods].sort((a, b) => b.activeRevenue - a.activeRevenue).slice(0, 10).map((row) => (
+                    <JourneyRevenueRow key={row.periodKey} row={row} />
                   ))}
                 </Stack>
               )}
