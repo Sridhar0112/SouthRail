@@ -53,7 +53,7 @@ export default function ReviewBookingPage({ train, values, review, reviewIsCurre
           <Grid item xs={12} lg={8} sx={{ minWidth: 0, pl: '0 !important', pt: '0 !important' }}>
             <Stack spacing={{ xs: 2, md: 3 }} sx={{ minWidth: 0 }}>
               <ReviewCard icon={<RouteIcon color="primary" />} title="Journey Summary">
-                <Stack spacing={2.5}>
+                <Stack spacing={1.5}>
                   <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 1.75, md: 2 }, borderRadius: 2.5, bgcolor: alpha(theme.palette.primary.main, 0.055), borderColor: alpha(theme.palette.primary.main, 0.18), minWidth: 0 }}>
                     <Stack direction="row" spacing={{ xs: 1, sm: 2 }} alignItems="center" justifyContent="space-between" sx={{ minWidth: 0 }}>
                       <StationBlock label="FROM" value={source} />
@@ -140,9 +140,9 @@ export default function ReviewBookingPage({ train, values, review, reviewIsCurre
                   ))}
                 </Stack>
                 <Divider />
-                <Paper variant="outlined" sx={{ p: 2.25, borderRadius: 2.5, bgcolor: alpha(theme.palette.primary.main, 0.07), borderColor: alpha(theme.palette.primary.main, 0.18) }}>
+                <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2.5, bgcolor: alpha(theme.palette.primary.main, 0.07), borderColor: alpha(theme.palette.primary.main, 0.18) }}>
                   <Typography color="text.secondary" fontWeight={800}>Total payable amount</Typography>
-                  <Typography variant="h3" fontWeight={950} color="primary" sx={{ mt: 0.25, fontSize: { xs: '1.75rem', md: '2rem' } }}>₹ {review?.totalFare ?? '-'}</Typography>
+                  <Typography variant="h4" fontWeight={950} color="primary" sx={{ mt: 0.25, fontSize: { xs: '1.75rem', md: '2rem' } }}>₹ {review?.totalFare ?? '-'}</Typography>
                 </Paper>
                 <Stack spacing={0.9}>
                   <SummaryLine label="Passenger count" value={passengerCount} />

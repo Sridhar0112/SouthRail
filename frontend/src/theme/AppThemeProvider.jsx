@@ -225,7 +225,7 @@ export function AppThemeProvider({ children }) {
               backgroundColor: palette.surface.input,
               color: palette.text.primary,
               borderRadius: 6,
-              fontSize: '0.92rem',
+              fontSize: '0.9rem',
               transition: 'background-color 160ms ease, border-color 160ms ease',
               '& .MuiOutlinedInput-notchedOutline': {
                 borderColor: palette.custom.fieldBorder
@@ -250,7 +250,8 @@ export function AppThemeProvider({ children }) {
               }
             },
             input: {
-              color: palette.text.primary
+              color: palette.text.primary,
+              padding: '10px 12px'
             }
           }
         },
@@ -333,8 +334,8 @@ export function AppThemeProvider({ children }) {
             root: {
               borderRadius: 999,
               fontWeight: 700,
-              fontSize: '0.74rem',
-              height: 22
+              fontSize: '0.72rem',
+              height: 21
             },
             outlined: {
               borderColor: palette.custom.fieldBorder
@@ -443,8 +444,8 @@ export function AppThemeProvider({ children }) {
           styleOverrides: {
             root: {
               overflowWrap: 'anywhere',
-              padding: '9px 12px',
-              fontSize: '0.84rem'
+              padding: '7px 10px',
+              fontSize: '0.82rem'
             },
             head: {
               fontWeight: 800,

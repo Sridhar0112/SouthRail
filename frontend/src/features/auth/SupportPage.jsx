@@ -291,7 +291,7 @@ const ContactCard = memo(function ContactCard({ channel }) {
         border: '1px solid',
         borderColor: 'divider',
         borderRadius: 3,
-        p: { xs: 2, sm: 2.5 },
+        p: { xs: 1.4, sm: 1.75 },
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -509,19 +509,19 @@ useEffect(() => {
           bgcolor: 'background.paper',
           borderBottom: '1px solid',
           borderColor: 'divider',
-          py: { xs: 3, sm: 5 },
+          py: { xs: 1.75, sm: 2.5 },
         }}
       >
         <Container maxWidth="md">
-          <Stack alignItems="center" spacing={1} sx={{ mb: 5 }}>
+          <Stack alignItems="center" spacing={1} sx={{ mb: 2.5 }}>
             <TrainIcon color="primary" />
             <Typography variant="h6" fontWeight={700} letterSpacing={-0.3}>
               SouthRail
             </Typography>
           </Stack>
 
-          <Stack alignItems="center" spacing={1.5} sx={{ mb: 4, textAlign: 'center' }}>
-            <Typography variant="h3" fontWeight={800} letterSpacing={-0.5} sx={{ fontSize: { xs: '1.55rem', sm: '2.15rem' }, overflowWrap: 'anywhere' }}>
+          <Stack alignItems="center" spacing={1.5} sx={{ mb: 2, textAlign: 'center' }}>
+            <Typography variant="h4" fontWeight={800} letterSpacing={-0.5} sx={{ fontSize: { xs: '1.35rem', sm: '1.7rem' }, overflowWrap: 'anywhere' }}>
               How can we help?
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 480 }}>
@@ -552,12 +552,12 @@ useEffect(() => {
         </Container>
       </Box>
 
-      <Container maxWidth="md" sx={{ py: { xs: 5, sm: 7 } }}>
-        <Stack spacing={7}>
+      <Container maxWidth="md" sx={{ py: { xs: 2, sm: 3 } }}>
+        <Stack spacing={2}>
 
           {/* ── FAQ ── */}
           <Box>
-            <Stack direction="row" spacing={1} sx={{ mb: 3, flexWrap: 'wrap', gap: 1 }}>
+            <Stack direction="row" spacing={1} sx={{ mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
               {CATEGORIES.map((cat) => (
                 <Chip
                   key={cat.id}
@@ -584,11 +584,11 @@ useEffect(() => {
                     border: '1px solid',
                     borderColor: 'divider',
                     borderRadius: 2,
-                    p: 2.5,
+                    p: 1.5,
                     textAlign: 'center',
                   }}
                 >
-                  <SearchIcon sx={{ fontSize: 36, color: 'text.disabled', mb: 1 }} />
+                  <SearchIcon sx={{ fontSize: 26, color: 'text.disabled', mb: 1 }} />
                   <Typography variant="body1" fontWeight={600} gutterBottom>
                     No results for "{search}"
                   </Typography>
@@ -604,7 +604,7 @@ useEffect(() => {
 
           {/* ── Contact channels ── */}
           <Box>
-            <Stack spacing={0.5} sx={{ mb: 3 }}>
+            <Stack spacing={0.5} sx={{ mb: 1.5 }}>
               <Typography variant="overline" color="text.disabled" fontWeight={600} letterSpacing={1}>
                 Still need help?
               </Typography>
@@ -629,7 +629,7 @@ useEffect(() => {
 
           {/* ── System status ── */}
           <Box>
-            <Stack spacing={0.5} sx={{ mb: 3 }}>
+            <Stack spacing={0.5} sx={{ mb: 1.5 }}>
               <Typography variant="overline" color="text.disabled" fontWeight={600} letterSpacing={1}>
                 System status
               </Typography>
@@ -695,7 +695,7 @@ useEffect(() => {
 
           {/* ── Policies quick links ── */}
           <Box>
-            <Stack spacing={0.5} sx={{ mb: 3 }}>
+            <Stack spacing={0.5} sx={{ mb: 1.5 }}>
               <Typography variant="overline" color="text.disabled" fontWeight={600} letterSpacing={1}>
                 Policies
               </Typography>
@@ -747,7 +747,7 @@ useEffect(() => {
               minWidth: 0,
             }}
           >
-            <Stack spacing={3}>
+            <Stack spacing={2}>
               <Stack spacing={0.5}>
                 <Typography variant="overline" color="text.disabled" fontWeight={600} letterSpacing={1}>
                   Can't find what you're looking for?

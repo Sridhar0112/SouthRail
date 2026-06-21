@@ -129,7 +129,7 @@ function ProfileHero({ profile, loading }) {
         }}
       />
       <Box sx={{ position: 'relative', px: { xs: 2, sm: 3 }, pt: 3, pb: 2.5 }}>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5} alignItems={{ sm: 'flex-end' }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'flex-end' }}>
           <Avatar
             sx={{
               width: 80, height: 64, fontSize: 28, fontWeight: 800,
@@ -222,7 +222,7 @@ onProfileUpdated?.(data);
   };
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={2}>
       <SectionCard
         title="Personal details"
         subtitle="Your name and contact information"
@@ -248,7 +248,7 @@ onProfileUpdated?.(data);
         )}
         {!loading && !error && profile && (
           <Box component="form" onSubmit={handleSave}>
-            <Stack spacing={2.5}>
+            <Stack spacing={1.5}>
               <FieldRow icon={<BadgeIcon fontSize="small" />} label="Full name">
                 <TextField
                   fullWidth size="small"
@@ -380,14 +380,14 @@ const navigate = useNavigate();
   );
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={2}>
       <SectionCard
         title="Change password"
         subtitle="Use a strong password you don't use elsewhere"
         icon={<LockIcon fontSize="small" />}
       >
         <Box component="form" onSubmit={handleSubmit}>
-          <Stack spacing={2.5}>
+          <Stack spacing={1.5}>
             {pwField('current', 'Current password')}
             <Divider />
             {pwField('next', 'New password')}
@@ -570,7 +570,7 @@ function NotificationsTab() {
       subtitle="Choose how SouthRail keeps you in the loop"
       icon={<NotificationsIcon fontSize="small" />}
     >
-      <Stack spacing={3}>
+      <Stack spacing={2}>
         {groups.map((group) => (
           <Box key={group.label}>
             <Typography variant="overline" color="text.disabled" fontWeight={700} letterSpacing={1}>
@@ -695,7 +695,7 @@ setDeleteError(
   return (
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2.25, md: 3.5 } }}>
       <Container maxWidth="md">
-        <Stack spacing={3}>
+        <Stack spacing={2}>
           {/* Page title */}
           <Box>
             <Typography variant="h5" fontWeight={800}>Account</Typography>

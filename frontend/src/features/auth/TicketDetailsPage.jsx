@@ -275,7 +275,7 @@ export default function TicketDetailsPage() {
   }, [fetchMessages]);
 
   return (
-    <Box sx={{ py: { xs: 2.5, sm: 5 }, minHeight: '80vh' }}>
+    <Box sx={{ py: { xs: 1.5, sm: 2.25 }, minHeight: '80vh' }}>
       <Container maxWidth="md">
         <Fade in timeout={400}>
           <Box>
@@ -290,7 +290,7 @@ export default function TicketDetailsPage() {
 
             {/* ── Ticket header ── */}
             {ticketLoading ? (
-              <Card variant="outlined" sx={{ borderRadius: 3, mb: 3, p: 2.5 }}>
+              <Card variant="outlined" sx={{ borderRadius: 3, mb: 1.5, p: 1.5 }}>
                 <Skeleton width={160} height={28} sx={{ mb: 1 }} />
                 <Skeleton width="60%" height={20} />
               </Card>
@@ -300,14 +300,14 @@ export default function TicketDetailsPage() {
                 sx={{
                   borderRadius: 4,
                   textAlign: 'center',
-                  py: 6,
+                  py: 3,
                   px: 3,
                   borderStyle: 'dashed',
                   borderColor: 'error.main',
-                  mb: 3,
+                  mb: 1.5,
                 }}
               >
-                <ErrorOutlineIcon sx={{ fontSize: 38, color: 'error.main', mb: 1.5 }} />
+                <ErrorOutlineIcon sx={{ fontSize: 28, color: 'error.main', mb: 1.5 }} />
                 <Typography variant="h6" fontWeight={800} gutterBottom>
                   Couldn't load this ticket
                 </Typography>
@@ -329,14 +329,14 @@ export default function TicketDetailsPage() {
                 variant="outlined"
                 sx={(theme) => ({
                   borderRadius: 3,
-                  mb: 3,
+                  mb: 1.5,
                   overflow: 'hidden',
                   borderColor: theme.palette.custom.cardBorder,
                   backgroundImage: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
                   color: theme.palette.primary.contrastText,
                 })}
               >
-                <CardContent sx={{ p: { xs: 2.5, sm: 3.25 } }}>
+                <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
                   <Stack
                     direction={{ xs: 'column', sm: 'row' }}
                     justifyContent="space-between"
@@ -370,7 +370,7 @@ export default function TicketDetailsPage() {
                     {ticket?.description}
                   </Typography>
 
-                  <Stack direction="row" spacing={2.5} flexWrap="wrap" useFlexGap rowGap={1}>
+                  <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap rowGap={1}>
                     <Stack direction="row" alignItems="center" spacing={0.6} sx={{ opacity: 0.9 }}>
                       <SellOutlinedIcon sx={{ fontSize: 15 }} />
                       <Typography variant="caption" fontWeight={600}>
@@ -439,7 +439,7 @@ export default function TicketDetailsPage() {
                     aria-live="polite"
                     aria-label="Ticket conversation history"
                     sx={(theme) => ({
-                      height: { xs: 360, sm: 420 },
+                      height: { xs: 300, sm: 340 },
                       overflowY: 'auto',
                       pr: 0.5,
                       pb: 0.5,

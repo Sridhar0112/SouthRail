@@ -131,7 +131,7 @@ function PageHero({ ticketCount, loading }) {
         position: 'relative',
         borderRadius: 4,
         overflow: 'hidden',
-        mb: 3.5,
+        mb: 2,
         px: { xs: 2.5, sm: 4 },
         py: { xs: 2, sm: 2.75 },
         color: theme.palette.primary.contrastText,
@@ -433,7 +433,7 @@ function TicketCard({ ticket, onViewDetails, isLast }) {
           },
         })}
       >
-        <CardContent sx={{ p: { xs: 2, sm: 2.75 }, pl: { xs: 2.75, sm: 3.5 } }}>
+        <CardContent sx={{ p: { xs: 1.4, sm: 1.75 }, pl: { xs: 2.75, sm: 3.5 } }}>
           {/* Header: ticket number, created date, status chip */}
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
@@ -570,7 +570,7 @@ function LabelValue({ label, value, mono = false, icon }) {
 function SkeletonCard() {
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, overflow: 'hidden', mb: 2 }}>
-      <CardContent sx={{ p: { xs: 2, sm: 2.75 } }}>
+      <CardContent sx={{ p: { xs: 1.4, sm: 1.75 } }}>
         <Stack direction="row" justifyContent="space-between" mb={1.5}>
           <Stack direction="row" alignItems="center" spacing={1}>
             <Skeleton variant="circular" width={26} height={26} />
@@ -608,7 +608,7 @@ function EmptyState({ onCreate, onFaq }) {
       <Avatar
         sx={{
           width: 76,
-          height: 58,
+          height: 42,
           bgcolor: 'rgba(25,118,210,0.08)',
           color: 'primary.main',
           mx: 'auto',
@@ -668,7 +668,7 @@ function ErrorState({ message, onRetry }) {
       <Avatar
         sx={{
           width: 76,
-          height: 58,
+          height: 42,
           bgcolor: 'rgba(211,47,47,0.1)',
           color: 'error.main',
           mx: 'auto',
@@ -780,7 +780,7 @@ export default function MyTicketsPage() {
   }, []);
 
   return (
-    <Box sx={{ py: { xs: 2.5, sm: 5 }, minHeight: '80vh' }}>
+    <Box sx={{ py: { xs: 1.5, sm: 2.25 }, minHeight: '80vh' }}>
       <Container maxWidth="md">
         <Fade in timeout={450}>
           <Box>
@@ -797,7 +797,7 @@ export default function MyTicketsPage() {
                 sx={(theme) => ({
                   borderRadius: 3,
                   p: { xs: 1.5, sm: 2.25 },
-                  mb: 3,
+                  mb: 1.5,
                   borderColor: theme.palette.custom.cardBorder,
                 })}
               >
@@ -915,9 +915,9 @@ export default function MyTicketsPage() {
               ) : (
                 <Card
                   variant="outlined"
-                  sx={{ borderRadius: 4, textAlign: 'center', py: 6, px: 3, borderStyle: 'dashed' }}
+                  sx={{ borderRadius: 4, textAlign: 'center', py: 3, px: 3, borderStyle: 'dashed' }}
                 >
-                  <SearchIcon sx={{ fontSize: 44, color: 'text.disabled', mb: 1.5 }} />
+                  <SearchIcon sx={{ fontSize: 30, color: 'text.disabled', mb: 1.5 }} />
                   <Typography variant="h6" fontWeight={700} gutterBottom>
                     No matching tickets
                   </Typography>

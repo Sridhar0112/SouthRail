@@ -164,7 +164,7 @@ function StatCard({ title, value, icon, color, isLoading }) {
         <Box
           sx={{
             width: 48,
-            height: 48,
+            height: 40,
             borderRadius: 2.5,
             display: 'grid',
             placeItems: 'center',
@@ -215,11 +215,11 @@ function LoadingRows() {
 function EmptyState({ hasFilters }) {
   return (
     <Fade in>
-      <Box sx={{ py: 10, textAlign: 'center', px: 2 }}>
+      <Box sx={{ py: 4, textAlign: 'center', px: 2 }}>
         <Box
           sx={{
             width: 80,
-            height: 80,
+            height: 40,
             borderRadius: '50%',
             bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
             display: 'grid',
@@ -229,9 +229,9 @@ function EmptyState({ hasFilters }) {
           }}
         >
           {hasFilters ? (
-            <FilterListIcon sx={{ fontSize: 36, color: 'primary.main' }} />
+            <FilterListIcon sx={{ fontSize: 26, color: 'primary.main' }} />
           ) : (
-            <FolderOffIcon sx={{ fontSize: 36, color: 'primary.main' }} />
+            <FolderOffIcon sx={{ fontSize: 26, color: 'primary.main' }} />
           )}
         </Box>
         <Typography variant="h6" fontWeight={800} gutterBottom>
@@ -321,7 +321,7 @@ function ConversationSkeleton() {
 /* ─── Conversation Empty State ──────────────────────────────────────────── */
 function ConversationEmpty() {
   return (
-    <Box sx={{ py: 6, textAlign: 'center', px: 2 }}>
+    <Box sx={{ py: 3, textAlign: 'center', px: 2 }}>
       <ChatBubbleOutlineIcon sx={{ fontSize: 30, color: 'text.disabled', mb: 1 }} />
       <Typography variant="body2" fontWeight={700} color="text.secondary">
         No messages yet
@@ -535,7 +535,7 @@ function TicketDrawer({
 
       {/* ── Scrollable Body ── */}
       <Box sx={{ overflowY: 'auto', flex: 1, px: { xs: 2.5, sm: 3.5 }, py: 3 }}>
-        <Stack spacing={3}>
+        <Stack spacing={2}>
           {/* Summary Card */}
           <Paper
             variant="outlined"
@@ -657,7 +657,7 @@ function TicketDrawer({
                 role="log"
                 aria-label="Conversation messages"
                 sx={{
-                  height: 360,
+                  height: 300,
                   overflowY: 'auto',
                   p: 2,
                   scrollBehavior: 'smooth',
@@ -1002,12 +1002,12 @@ export default function AdminSupportTicketsPage() {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4 }}>
       <Container maxWidth="xl">
-        <Stack spacing={3}>
+        <Stack spacing={2}>
           {/* ── Page Header ── */}
           <Paper
             elevation={0}
             sx={{
-              p: { xs: 3, md: 4 },
+              p: { xs: 1.5, md: 2 },
               borderRadius: 2.25,
               border: `1px solid ${theme.palette.divider}`,
               background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
@@ -1031,7 +1031,7 @@ export default function AdminSupportTicketsPage() {
               <Box>
                 <Stack direction="row" alignItems="center" spacing={1.5} mb={0.5}>
                   <SupportAgentIcon sx={{ fontSize: 28, opacity: 0.9 }} />
-                  <Typography variant="h4" fontWeight={900} sx={{ lineHeight: 1.1, fontSize: { xs: '1.75rem', sm: '2.125rem' }, overflowWrap: 'anywhere' }}>
+                  <Typography variant="h4" fontWeight={900} sx={{ lineHeight: 1.1, fontSize: { xs: '1.45rem', sm: '1.75rem' }, overflowWrap: 'anywhere' }}>
                     Support Tickets
                   </Typography>
                 </Stack>
