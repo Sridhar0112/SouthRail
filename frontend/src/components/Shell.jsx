@@ -51,12 +51,13 @@ export function Shell() {
     event.stopPropagation();
     setMobileNavOpen(false);
 
-    if (anchorEl) {
-      setAnchorEl(null);
+    if (isPageSettling) {
+      closeAllMenus();
       return;
     }
 
-    if (isPageSettling) {
+    if (anchorEl) {
+      setAnchorEl(null);
       return;
     }
 
@@ -193,10 +194,14 @@ export function Shell() {
                   <IconButton
                     ref={avatarButtonRef}
                     onClick={handleMenuOpen}
-                    disabled={isPageSettling}
+                    aria-disabled={isPageSettling ? 'true' : undefined}
                     aria-haspopup="menu"
                     aria-expanded={anchorEl ? 'true' : undefined}
-                    sx={{ p: 0, flexShrink: 0 }}
+                    sx={{
+                      p: 0,
+                      flexShrink: 0,
+                      cursor: isPageSettling ? 'default' : 'pointer'
+                    }}
                   >
                     <Avatar
                       sx={{
