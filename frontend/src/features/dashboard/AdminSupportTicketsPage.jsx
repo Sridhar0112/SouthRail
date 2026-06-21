@@ -758,12 +758,16 @@ function TicketDrawer({
 }
 
 /* ─── Status Dialog ─────────────────────────────────────────────────────── */
+function normalizeTicketStatus(value) {
+  return ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'].includes(value) ? value : 'OPEN';
+}
+
 function StatusDialog({ open, ticket, onClose, onSubmit, loading }) {
-  const [status, setStatus] = useState(ticket?.status || 'OPEN');
+  const [status, setStatus] = useState(normalizeTicketStatus(ticket?.status));
   const theme = useTheme();
 
   useEffect(() => {
-    setStatus(ticket?.status || 'OPEN');
+    setStatus(normalizeTicketStatus(ticket?.status));
   }, [ticket]);
 
   const statusMeta = {
@@ -879,7 +883,6 @@ export default function AdminSupportTicketsPage() {
       const { data } = await api.get('/support/admin/tickets');
       setTickets(Array.isArray(data) ? data : []);
     } catch (apiError) {
-      console.error('Admin support tickets load failed', apiError);
       setError('Unable to load support tickets right now.');
     } finally {
       setLoading(false);
@@ -967,7 +970,6 @@ export default function AdminSupportTicketsPage() {
         setSelectedTicket((prev) => ({ ...prev, status }));
       }
     } catch (apiError) {
-      console.error('Status update failed', apiError);
       alert('Failed to update ticket status');
     } finally {
       setStatusLoading(false);

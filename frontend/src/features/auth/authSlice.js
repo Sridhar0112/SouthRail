@@ -2,27 +2,21 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import api from '../../services/api.js';
 import { getApiErrorMessage } from '../../utils/apiErrors.js';
 
-const savedUser = JSON.parse(localStorage.getItem('southrail_user') || 'null');
+const savedUser = readSavedUser();
 
 export const login = createAsyncThunk('auth/login', async (payload, { rejectWithValue }) => {
   try {
     const { data } = await api.post('/auth/login', payload);
-    localStorage.setItem('southrail_access_token', data.accessToken);
-    localStorage.setItem('southrail_refresh_token', data.refreshToken);
-    localStorage.setItem('southrail_user', JSON.stringify(data.user));
-    return data.user;
+    localStorage.setItem('southrail_access_token', data.accessToken || '');
+    localStorage.setItem('southrail_refresh_token', data.refreshToken || '');
+    localStorage.setItem('southrail_user', JSON.stringify(data.user || null));
+    return data.user || null;
   } catch (error) {
-     console.error('Login failed', error);
-
-  return rejectWithValue(
-    error?.response?.data || {
-      message: getApiErrorMessage(
-        error,
-        'Login failed. Check your email and password.'
-      )
-    }
-  );
-
+    return rejectWithValue(
+      error?.response?.data || {
+        message: getApiErrorMessage(error, 'Login failed. Check your email and password.')
+      }
+    );
   }
 });
 
@@ -31,7 +25,6 @@ export const register = createAsyncThunk('auth/register', async (payload, { reje
     const { data } = await api.post('/auth/register', payload);
     return data;
   } catch (error) {
-    console.error('Registration failed', error);
     return rejectWithValue(getApiErrorMessage(error, 'Registration failed. Please check your details.'));
   }
 });
@@ -48,24 +41,18 @@ const authSlice = createSlice({
     logout(state) {
       state.user = null;
       state.registrationResult = null;
-      localStorage.removeItem('southrail_access_token');
-      localStorage.removeItem('southrail_refresh_token');
-      localStorage.removeItem('southrail_user');
+      clearAuthStorage();
     },
     clearRegistrationResult(state) {
       state.registrationResult = null;
     },
     updateUser(state, action) {
-  state.user = {
-    ...state.user,
-    ...action.payload
-  };
-
-  localStorage.setItem(
-    'southrail_user',
-    JSON.stringify(state.user)
-  );
-}
+      state.user = {
+        ...state.user,
+        ...action.payload
+      };
+      localStorage.setItem('southrail_user', JSON.stringify(state.user));
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -81,7 +68,6 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload || action.error.message || 'Login failed.';
       })
-
       .addCase(register.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -91,10 +77,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.registrationResult = action.payload;
         state.user = null;
-
-        localStorage.removeItem('southrail_access_token');
-        localStorage.removeItem('southrail_refresh_token');
-        localStorage.removeItem('southrail_user');
+        clearAuthStorage();
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
@@ -103,5 +86,20 @@ const authSlice = createSlice({
   }
 });
 
-export const { logout, clearRegistrationResult,updateUser } = authSlice.actions;
+function readSavedUser() {
+  try {
+    return JSON.parse(localStorage.getItem('southrail_user') || 'null');
+  } catch {
+    clearAuthStorage();
+    return null;
+  }
+}
+
+function clearAuthStorage() {
+  localStorage.removeItem('southrail_access_token');
+  localStorage.removeItem('southrail_refresh_token');
+  localStorage.removeItem('southrail_user');
+}
+
+export const { logout, clearRegistrationResult, updateUser } = authSlice.actions;
 export default authSlice.reducer;

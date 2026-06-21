@@ -97,7 +97,6 @@ export default function AdminPage() {
       if (result.status === 'fulfilled') {
         nextData[key] = key === 'summary' ? result.value.data : result.value.rows;
       } else {
-        console.error(`Admin ${key} load failed`, result.reason);
         nextErrors[key] = getAdminErrorMessage(result.reason, `Unable to load admin ${key}.`);
       }
     });

@@ -19,7 +19,6 @@ export default function ForgotPasswordPage() {
       await api.post('/auth/forgot-password', values);
       setMessage('If an account exists for this email address, a password reset email has been sent.');
     } catch (apiError) {
-      console.error('Forgot password request failed', apiError);
       setError(getApiErrorMessage(apiError, 'Password reset request could not be submitted.'));
     } finally {
       setLoading(false);

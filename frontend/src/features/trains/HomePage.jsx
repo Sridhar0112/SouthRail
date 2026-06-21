@@ -73,7 +73,6 @@ export default function HomePage() {
       const { data } = await api.get(`/trains/stations?q=${encodeURIComponent(searchQuery)}&page=0&size=8`);
       setOptions(Array.isArray(data) ? data : data?.content || []);
     } catch (apiError) {
-      console.error('Station suggestions failed', apiError);
       setOptions([]);
       setFieldError(getApiErrorMessage(apiError, 'Unable to load station suggestions.'));
     } finally {

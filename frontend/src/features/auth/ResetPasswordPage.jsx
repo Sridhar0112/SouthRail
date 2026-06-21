@@ -130,7 +130,6 @@ export default function ResetPasswordPage() {
       setSuccess(true);
       setTimeout(() => { navigate('/login'); }, 5000);
     } catch (apiError) {
-      console.error('Reset password failed', apiError);
       setError(getApiErrorMessage(apiError, 'Reset link is invalid, expired, or already used.'));
     } finally {
       setLoading(false);
