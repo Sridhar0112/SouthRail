@@ -90,17 +90,16 @@ export default function LoginPage() {
     try {
       await dispatch(login(values)).unwrap();
       navigate(location.state?.from?.pathname || "/dashboard");
-    } catch (message) {
-      const errorMessage =
-        message?.message || "Login failed. Check your email and password.";
-      setApiError(message);
-      if (errorMessage?.toLowerCase().includes("verify your email")) {
+    } catch (payload) {
+      const response = normalizeLoginPayload(payload);
+      const errorMessage = response.message;
+      setApiError(errorMessage);
+      if (errorMessage.toLowerCase().includes("verify your email")) {
         setShowResend(true);
         setEmailForVerification(values.email);
       }
-      const response = message;
 
-      if (response?.status === 423 && response?.lockedUntil) {
+      if (response.status === 423 && response.lockedUntil) {
         setShowUnlock(true);
         setUnlockEmail(values.email);
         setLockedUntil(response.lockedUntil);
@@ -178,15 +177,11 @@ export default function LoginPage() {
         )}
         {apiError &&
           !(
-            (apiError?.message || "")
-              .toLowerCase()
-              .includes("account locked") ||
-            (apiError?.message || "")
-              .toLowerCase()
-              .includes("temporarily locked")
+            apiError.toLowerCase().includes("account locked") ||
+            apiError.toLowerCase().includes("temporarily locked")
           ) && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              {apiError?.message || apiError}
+              {apiError}
             </Alert>
           )}
         {unlockMessage && (
@@ -610,4 +605,23 @@ export default function LoginPage() {
       </Dialog>
     </Container>
   );
+}
+function normalizeLoginPayload(payload) {
+  if (typeof payload === "string") {
+    return { message: payload };
+  }
+
+  if (payload && typeof payload === "object") {
+    const message =
+      typeof payload.message === "string" && payload.message.trim()
+        ? payload.message
+        : "Login failed. Check your email and password.";
+    return {
+      message,
+      status: payload.status,
+      lockedUntil: payload.lockedUntil,
+    };
+  }
+
+  return { message: "Login failed. Check your email and password." };
 }

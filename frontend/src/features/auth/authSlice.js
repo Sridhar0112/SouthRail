@@ -12,11 +12,7 @@ export const login = createAsyncThunk('auth/login', async (payload, { rejectWith
     localStorage.setItem('southrail_user', JSON.stringify(data.user || null));
     return data.user || null;
   } catch (error) {
-    return rejectWithValue(
-      error?.response?.data || {
-        message: getApiErrorMessage(error, 'Login failed. Check your email and password.')
-      }
-    );
+    return rejectWithValue(normalizeLoginError(error));
   }
 });
 
@@ -66,7 +62,7 @@ const authSlice = createSlice({
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || action.error.message || 'Login failed.';
+        state.error = action.payload?.message || action.error.message || 'Login failed.';
       })
       .addCase(register.pending, (state) => {
         state.loading = true;
@@ -85,6 +81,15 @@ const authSlice = createSlice({
       });
   }
 });
+
+function normalizeLoginError(error) {
+  const data = error?.response?.data;
+  return {
+    message: getApiErrorMessage(error, 'Login failed. Check your email and password.'),
+    status: error?.response?.status,
+    lockedUntil: data && typeof data === 'object' ? data.lockedUntil : undefined
+  };
+}
 
 function readSavedUser() {
   try {
