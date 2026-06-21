@@ -107,7 +107,7 @@ export function parseFare(value) {
 // counts toward active revenue.
 export function isRevenueBooking(status) {
   const value = normalizeStatus(status);
-  return value !== 'CANCELLED' && value !== 'FAILED';
+  return !['CANCELLED', 'FAILED', 'REFUNDED'].includes(value);
 }
 
 export function hasRole(roles, role) {
@@ -138,7 +138,7 @@ export function journeyPeriodKey(journeyDate, period) {
     const diffToMonday = (day + 6) % 7;
     const monday = new Date(date);
     monday.setDate(date.getDate() - diffToMonday);
-    return normalizeDateKey(monday.toISOString());
+    return toLocalDateKey(monday);
   }
 
   if (period === 'month') {
@@ -150,6 +150,12 @@ export function journeyPeriodKey(journeyDate, period) {
   }
 
   return dateKey;
+}
+function toLocalDateKey(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export function formatPeriodLabel(periodKey, period) {

@@ -57,7 +57,17 @@ export function formatDate(value) {
   if (!value) {
     return '-';
   }
-  return String(value);
+
+  const key = normalizeDateKey(value);
+  if (!key) {
+    return String(value);
+  }
+
+  return new Intl.DateTimeFormat('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  }).format(new Date(`${key}T00:00:00`));
 }
 
 // value -> 'YYYY-MM-DD' (or '' if it can't be parsed). Used for grouping by journeyDate.

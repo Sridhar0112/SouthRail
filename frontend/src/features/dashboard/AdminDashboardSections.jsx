@@ -17,12 +17,14 @@ import {
   MenuItem,
   Paper,
   Stack,
+  Tab,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  Tabs,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
@@ -69,6 +71,15 @@ const PERIOD_OPTIONS = [
   { value: 'week', label: 'Weekly' },
   { value: 'month', label: 'Monthly' },
   { value: 'year', label: 'Yearly' }
+];
+
+const OVERVIEW_SECTION_TABS = [
+  { value: 'journey', label: 'Journey Trend' },
+  { value: 'trains', label: 'Train Performance' },
+  { value: 'routes', label: 'Route Performance' },
+  { value: 'risk', label: 'Risk & Status' },
+  { value: 'users', label: 'User Health' },
+  { value: 'recent', label: 'Recent Records' }
 ];
 
 /* ---------------------------------- header --------------------------------- */
@@ -446,6 +457,20 @@ export function JourneyDateSection({ journeyDateAnalyticsByPeriod }) {
   const [period, setPeriod] = useState('day');
   const analytics = journeyDateAnalyticsByPeriod[period];
 
+  const periodName = {
+    day: 'journey date',
+    week: 'journey week',
+    month: 'journey month',
+    year: 'journey year'
+  }[period];
+
+  const uniquePeriodLabel = {
+    day: 'Unique journey dates',
+    week: 'Unique journey weeks',
+    month: 'Unique journey months',
+    year: 'Unique journey years'
+  }[period];
+
   return (
     <Box>
       <SectionLabel icon={<TrendingUpIcon fontSize="small" />} title="Journey Date Analytics" caption="Grouped by journeyDate, not booking-created time" />
@@ -467,16 +492,29 @@ export function JourneyDateSection({ journeyDateAnalyticsByPeriod }) {
 
         <Grid container spacing={1.5} sx={{ mb: 2 }}>
           <Grid item xs={6} sm={3}>
-            <InsightChip label="Best journey date by revenue" value={analytics.bestByRevenue ? `${analytics.bestByRevenue.label} · ${formatCurrency(analytics.bestByRevenue.activeRevenue)}` : '-'} color="success.main" />
-          </Grid>
-          <Grid item xs={6} sm={3}>
-            <InsightChip label="Best journey date by bookings" value={analytics.bestByBookings ? `${analytics.bestByBookings.label} · ${formatNumber(analytics.bestByBookings.bookings)}` : '-'} color="primary.main" />
-          </Grid>
+  <InsightChip
+    label={`Best ${periodName} by revenue`}
+    value={analytics.bestByRevenue ? `${analytics.bestByRevenue.label} · ${formatCurrency(analytics.bestByRevenue.activeRevenue)}` : '-'}
+    color="success.main"
+  />
+</Grid>
+
+<Grid item xs={6} sm={3}>
+  <InsightChip
+    label={`Best ${periodName} by bookings`}
+    value={analytics.bestByBookings ? `${analytics.bestByBookings.label} · ${formatNumber(analytics.bestByBookings.bookings)}` : '-'}
+    color="primary.main"
+  />
+</Grid>
           <Grid item xs={6} sm={3}>
             <InsightChip label="Average active fare" value={formatCurrency(analytics.averageActiveFare)} color="info.main" />
           </Grid>
           <Grid item xs={6} sm={3}>
-            <InsightChip label="Unique journey dates" value={formatNumber(analytics.totalUniqueJourneyDates)} color="secondary.main" />
+            <InsightChip
+              label={uniquePeriodLabel}
+              value={formatNumber(analytics.periods.length)}
+              color="secondary.main"
+            />
           </Grid>
         </Grid>
 
@@ -730,7 +768,7 @@ export function UserHealthSection({ userAnalytics }) {
           </AdminChartCard>
         </Grid>
         <Grid item xs={12} md={4}>
-          <AdminChartCard title="Role mix" subtitle="Admin vs normal users" icon={<PeopleAltIcon fontSize="small" />} accent="secondary">
+          <AdminChartCard title="Role mix" subtitle="Admin vs non-admin users" icon={<PeopleAltIcon fontSize="small" />} accent="secondary">
             <DonutChart
               rows={[
                 { label: 'Admin users', value: userAnalytics.admin, color: 'secondary.main' },
@@ -797,6 +835,7 @@ export function RecentRecordsSection({ rows }) {
 
 export function OverviewTab({ metrics, errors, onRefresh }) {
   const kpis = metrics.kpis;
+  const [activeSection, setActiveSection] = useState('journey');
 
   return (
     <Stack spacing={3}>
@@ -812,12 +851,62 @@ export function OverviewTab({ metrics, errors, onRefresh }) {
         <EmptyState title="No KPI data available" message="Admin summary data is not available right now." />
       )}
 
-      <JourneyDateSection journeyDateAnalyticsByPeriod={metrics.journeyDateAnalyticsByPeriod} />
-      <TrainPerformanceSection trainPerformance={metrics.trainPerformance} />
-      <RoutePerformanceSection routePerformance={metrics.routePerformance} />
-      <StatusRiskSection statusRisk={metrics.statusRisk} />
-      <UserHealthSection userAnalytics={metrics.userAnalytics} />
-      <RecentRecordsSection rows={metrics.recentBookings} />
+      <Paper
+        elevation={0}
+        sx={(theme) => ({
+          p: { xs: 0.75, md: 1 },
+          borderRadius: 3,
+          border: `1px solid ${theme.palette.custom?.cardBorder || theme.palette.divider}`,
+          bgcolor: theme.palette.surface?.raised || theme.palette.background.paper,
+          boxShadow: theme.palette.custom?.cardShadow || theme.shadows[1]
+        })}
+      >
+        <Tabs
+          value={activeSection}
+          onChange={(_, value) => setActiveSection(value)}
+          variant="scrollable"
+          scrollButtons="auto"
+          TabIndicatorProps={{ sx: { height: 3, borderRadius: 99 } }}
+          sx={{
+            minHeight: 42,
+            '& .MuiTab-root': {
+              minHeight: 42,
+              fontWeight: 800,
+              borderRadius: 2,
+              mx: 0.25,
+              textTransform: 'none'
+            }
+          }}
+        >
+          {OVERVIEW_SECTION_TABS.map((tab) => (
+            <Tab key={tab.value} value={tab.value} label={tab.label} />
+          ))}
+        </Tabs>
+      </Paper>
+
+      {activeSection === 'journey' && (
+        <JourneyDateSection journeyDateAnalyticsByPeriod={metrics.journeyDateAnalyticsByPeriod} />
+      )}
+
+      {activeSection === 'trains' && (
+        <TrainPerformanceSection trainPerformance={metrics.trainPerformance} />
+      )}
+
+      {activeSection === 'routes' && (
+        <RoutePerformanceSection routePerformance={metrics.routePerformance} />
+      )}
+
+      {activeSection === 'risk' && (
+        <StatusRiskSection statusRisk={metrics.statusRisk} />
+      )}
+
+      {activeSection === 'users' && (
+        <UserHealthSection userAnalytics={metrics.userAnalytics} />
+      )}
+
+      {activeSection === 'recent' && (
+        <RecentRecordsSection rows={metrics.recentBookings} />
+      )}
 
       {Object.keys(errors).length > 0 && (
         <ErrorState
