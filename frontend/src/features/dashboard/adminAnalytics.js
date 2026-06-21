@@ -190,7 +190,7 @@ export function buildJourneyDateAnalytics(bookings, period) {
         bookings: 0,
         activeRevenue: 0,
         grossRevenue: 0,
-        cancelledFailedAmount: 0,
+        excludedFare: 0,
         confirmed: 0,
         rac: 0,
         waitlisted: 0,
@@ -206,7 +206,7 @@ export function buildJourneyDateAnalytics(bookings, period) {
     if (isRevenueBooking(status)) {
       bucket.activeRevenue += row.parsedFare;
     } else {
-      bucket.cancelledFailedAmount += row.parsedFare;
+      bucket.excludedFare += row.parsedFare;
     }
 
     if (status === 'CONFIRMED' || status === 'BOOKED') bucket.confirmed += 1;
@@ -218,7 +218,20 @@ export function buildJourneyDateAnalytics(bookings, period) {
     return acc;
   }, {});
 
-  const periods = Object.values(grouped).sort((a, b) => compareText(a.periodKey, b.periodKey));
+  const periods = Object.values(grouped)
+    .map((row) => {
+      const excludedCount = row.cancelled + row.failed;
+      const riskRate = row.bookings ? excludedCount / row.bookings : 0;
+      return {
+        ...row,
+        totalBookings: row.bookings,
+        excludedCount,
+        riskRate,
+        riskPercent: Math.round(riskRate * 100),
+        riskLabel: riskRate > 0.5 ? 'High risk' : riskRate > 0.25 ? 'Medium risk' : 'Low risk'
+      };
+    })
+    .sort((a, b) => compareText(a.periodKey, b.periodKey));
 
   const bestByRevenue = periods.length
     ? periods.reduce((best, row) => (row.activeRevenue > best.activeRevenue ? row : best))
