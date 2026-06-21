@@ -13,6 +13,7 @@ import api from '../../services/api.js';
 import { EmptyState, ErrorState, LoadingState, SuccessState } from '../../components/StateFeedback.jsx';
 import ReviewBookingPage from './ReviewBookingPage.jsx';
 import { getApiErrorMessage, isAuthError } from '../../utils/apiErrors.js';
+import { formatAmount, getBookingStatusLabel, getBookingStatusMessage, getBookingStatusTitle, getQueueText, normalizeBookingStatus, safeText } from '../../utils/bookingStatus.js';
 
 const steps = ['Passenger details', 'Review booking', 'Confirmation'];
 const travelClasses = ['1A', '2A', '3A', 'SL', 'CC', '2S'];
@@ -391,59 +392,62 @@ function ReviewPanel({ review, isCurrent, passengerCount }) {
 
 function BookingSuccess({ response, fallbackValues }) {
   const [downloading, setDownloading] = useState(false);
-const [downloadError, setDownloadError] = useState('');
-const handleDownloadTicket = async () => {
-  if (!response?.pnr) {
-    setDownloadError('PNR is not available for this booking.');
-    return;
-  }
-
-  setDownloading(true);
-  setDownloadError('');
-
-  try {
-    await downloadTicketPdf(response.pnr);
-  } catch (error) {
-    console.error('Ticket download failed', error);
-    setDownloadError('Unable to download ticket right now. Please try again.');
-  } finally {
-    setDownloading(false);
-  }
-};
+  const [downloadError, setDownloadError] = useState('');
+  const status = normalizeBookingStatus(response?.status);
+  const title = getBookingStatusTitle(status);
+  const message = response?.pnr
+    ? `${getBookingStatusMessage(status)} PNR ${response.pnr}`
+    : `${getBookingStatusMessage(status)} Booking completed, but PNR was not returned by the booking API.`;
+  const reservationLabel = getBookingStatusLabel(status, response?.reservationLabel);
+  const queueText = getQueueText(response?.queuePosition);
   const hasPnr = Boolean(response?.pnr);
+
+  const handleDownloadTicket = async () => {
+    if (!response?.pnr) {
+      setDownloadError('PNR is not available for this booking.');
+      return;
+    }
+
+    setDownloading(true);
+    setDownloadError('');
+
+    try {
+      await downloadTicketPdf(response.pnr);
+    } catch (error) {
+      console.error('Ticket download failed', error);
+      setDownloadError(getApiErrorMessage(error, 'Unable to download ticket right now. Please try again.'));
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
-    <SuccessState title="Booking confirmed" message={hasPnr ? `Your ticket has been booked. PNR ${response.pnr}` : 'Booking completed, but PNR was not returned by the booking API.'}>
+    <SuccessState title={title} message={message}>
       <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, width: '100%', maxWidth: '100%', minWidth: 0 }}>
         <Grid container spacing={2}>
-          <Detail label="PNR" value={response?.pnr || 'Not returned'} />
-          <Detail label="Train" value={`${response?.trainName || 'Train'} ${response?.trainNumber ? `- ${response.trainNumber}` : ''}`} />
-          <Detail label="From" value={`${response?.sourceName || response?.sourceCode || fallbackValues.sourceStationCode || '-'}`} />
-          <Detail label="To" value={`${response?.destinationName || response?.destinationCode || fallbackValues.destinationStationCode || '-'}`} />
-          <Detail label="Journey date" value={response?.journeyDate || fallbackValues.journeyDate || '-'} />
-          <Detail label="Class" value={response?.travelClass || fallbackValues.travelClass || '-'} />
-          <Detail label="Passenger count" value={response?.passengerCount || fallbackValues.passengers?.length || 0} />
-          <Detail label="Total fare" value={`Rs ${response?.totalFare || '-'}`} />
-          <Detail label="Payment status" value={response?.paymentStatus || 'Not returned by API'} />
+          <Detail label="PNR" value={safeText(response?.pnr, 'Not returned')} />
+          <Detail label="Train" value={`${safeText(response?.trainName, 'Train')} ${response?.trainNumber ? `- ${response.trainNumber}` : ''}`} />
+          <Detail label="From" value={safeText(response?.sourceName || response?.sourceCode || fallbackValues.sourceStationCode)} />
+          <Detail label="To" value={safeText(response?.destinationName || response?.destinationCode || fallbackValues.destinationStationCode)} />
+          <Detail label="Journey date" value={safeText(response?.journeyDate || fallbackValues.journeyDate)} />
+          <Detail label="Class / quota" value={`${safeText(response?.travelClass || fallbackValues.travelClass)} / ${safeText(fallbackValues.quota)}`} />
+          <Detail label="Passenger count" value={safeText(response?.passengerCount || fallbackValues.passengers?.length || 0)} />
+          <Detail label="Booking status" value={<Chip color={status === 'CONFIRMED' ? 'success' : status === 'CANCELLED' ? 'error' : status === 'RAC' ? 'info' : 'warning'} label={safeText(response?.status, 'UNKNOWN')} />} />
+          <Detail label="Reservation" value={reservationLabel} />
+          {status !== 'CONFIRMED' && <Detail label="Queue position" value={queueText} />}
+          <Detail label="Total fare" value={formatAmount(response?.totalFare)} />
+          <Detail label="Payment status" value={safeText(response?.paymentStatus, 'Not returned by API')} />
         </Grid>
       </Paper>
+      {downloadError && <Alert severity="error" sx={{ width: '100%' }}>{downloadError}</Alert>}
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
         <Button component={Link} to={hasPnr ? `/pnr?pnr=${response.pnr}` : '/pnr'} variant="contained">View PNR</Button>
         <Button component={Link} to="/dashboard">View My Bookings</Button>
         <Button startIcon={<PrintIcon />} onClick={() => window.print()}>Print Ticket</Button>
         <Button component={Link} to="/" startIcon={<SearchIcon />}>Back to Search</Button>
-        {downloadError && (
-  <Alert severity="error" sx={{ width: '100%' }}>
-    {downloadError}
-  </Alert>
-)}
-<Button
-  variant="contained"
-  startIcon={<PictureAsPdfIcon />}
-  onClick={handleDownloadTicket}
-  disabled={!hasPnr || downloading}
->
-  {downloading ? 'Downloading...' : 'Download Ticket'}
-</Button>
+        <Button variant="contained" startIcon={<PictureAsPdfIcon />} onClick={handleDownloadTicket} disabled={!hasPnr || downloading}>
+          {downloading ? 'Downloading...' : 'Download Ticket'}
+        </Button>
       </Stack>
     </SuccessState>
   );

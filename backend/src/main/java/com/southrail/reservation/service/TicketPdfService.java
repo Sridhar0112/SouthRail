@@ -13,6 +13,7 @@ import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import com.southrail.reservation.entity.Booking;
+import com.southrail.reservation.entity.BookingStatus;
 import com.southrail.reservation.entity.Passenger;
 import com.southrail.reservation.entity.RoleName;
 import com.southrail.reservation.entity.Station;
@@ -776,7 +777,9 @@ public class TicketPdfService {
     private String passengerAllotment(Booking booking, Passenger passenger) {
         String allotment = formatAllotment(booking);
 
-        if (passenger != null
+        if (booking != null
+                && booking.getStatus() == BookingStatus.CONFIRMED
+                && passenger != null
                 && passenger.getBerthPreference() != null
                 && !passenger.getBerthPreference().isBlank()) {
             return allotment + " / " + passenger.getBerthPreference();

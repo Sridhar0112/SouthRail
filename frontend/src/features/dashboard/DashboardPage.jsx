@@ -61,6 +61,7 @@ import {
   formatStatus,
 } from "../../components/RailwayStatusChip.jsx";
 import { getApiErrorMessage, isAuthError } from "../../utils/apiErrors.js";
+import { getBookingStatusLabel } from "../../utils/bookingStatus.js";
 
 // ─── Theme helpers ───────────────────────────────────────────────────────────
 // SouthRail branding is expressed through the theme's primary/secondary palette
@@ -932,7 +933,12 @@ function TicketCard({ booking, onCancelBooking, featured }) {
               {booking.trainNumber || ""}
             </Typography>
           </Box>
-          <RailwayStatusChip status={booking.status} />
+          <Stack spacing={0.5} alignItems={{ xs: "flex-start", sm: "flex-end" }}>
+            <RailwayStatusChip status={booking.status} />
+            <Typography variant="caption" color={t.textSub}>
+              {getBookingStatusLabel(booking.status, booking.reservationLabel)}
+            </Typography>
+          </Stack>
         </Stack>
 
         {/* Route visual */}
@@ -1008,6 +1014,7 @@ function TicketCard({ booking, onCancelBooking, featured }) {
             <MetaItem label="Date" value={formatDate(booking.journeyDate)} />
             <MetaItem label="PNR" value={booking.pnr || "—"} />
             <MetaItem label="Fare" value={formatFare(booking.totalFare)} bold />
+            <MetaItem label="Reservation" value={getBookingStatusLabel(booking.status, booking.reservationLabel)} />
           </Stack>
           <Stack
             direction={{ xs: "column", sm: "row" }}
@@ -1376,12 +1383,18 @@ function buildActivity(bookings, t) {
     const status = normalizeStatus(b.status);
     const isCancelled = status === "CANCELLED";
     const isConfirmed = status === "CONFIRMED";
+    const isRac = status === "RAC";
+    const isWaitlisted = status === "WAITLISTED";
     return {
       title: isCancelled
         ? "Booking cancelled"
         : isConfirmed
           ? "Booking confirmed"
-          : "Booking created",
+          : isRac
+            ? "Booking placed in RAC"
+            : isWaitlisted
+              ? "Booking waitlisted"
+              : "Booking created",
       detail: `${b.trainName || "Train"} · ${formatRoute(b)}`,
       pnr: b.pnr,
       time: b.createdAt
