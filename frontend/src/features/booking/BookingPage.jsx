@@ -11,6 +11,7 @@ import RateReviewIcon from '@mui/icons-material/RateReview';
 import SearchIcon from '@mui/icons-material/Search';
 import api from '../../services/api.js';
 import { EmptyState, ErrorState, LoadingState, SuccessState } from '../../components/StateFeedback.jsx';
+import ReviewBookingPage from './ReviewBookingPage.jsx';
 import { getApiErrorMessage, isAuthError } from '../../utils/apiErrors.js';
 
 const steps = ['Passenger details', 'Review booking', 'Confirmation'];
@@ -32,6 +33,7 @@ export default function BookingPage() {
   const [loadingTrain, setLoadingTrain] = useState(true);
   const [loadingReview, setLoadingReview] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showReview, setShowReview] = useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -71,10 +73,12 @@ export default function BookingPage() {
       const { data } = await api.post('/bookings/review', values);
       setReview(data);
       setReviewedSignature(JSON.stringify(values));
+      setShowReview(true);
     } catch (apiError) {
       console.error('Booking review failed', apiError);
       setReview(null);
       setReviewedSignature('');
+      setShowReview(false);
       setError(isAuthError(apiError)
         ? 'Please login again to continue booking.'
         : getApiErrorMessage(apiError, 'Review could not be prepared. Check train, route, date, and passenger details.'));
@@ -94,6 +98,7 @@ export default function BookingPage() {
     try {
       const { data } = await api.post('/bookings', values);
       setResponse(data);
+      setShowReview(false);
     } catch (apiError) {
       console.error('Booking confirmation failed', apiError);
       setSubmitError(isAuthError(apiError)
@@ -139,7 +144,21 @@ export default function BookingPage() {
           </Paper>
         )}
 
-        <Paper sx={{ p: { xs: 2, md: 4 }, width: '100%', maxWidth: '100%', minWidth: 0 }}>
+        {showReview && review ? (
+          <ReviewBookingPage
+            train={train}
+            values={currentValues}
+            review={review}
+            reviewIsCurrent={reviewIsCurrent}
+            passengerCount={passengerCount}
+            submitting={submitting}
+            loadingReview={loadingReview}
+            submitError={submitError}
+            onBackToEdit={() => setShowReview(false)}
+            onConfirmBooking={form.handleSubmit(submit)}
+          />
+        ) : (
+          <Paper sx={{ p: { xs: 2, md: 4 }, width: '100%', maxWidth: '100%', minWidth: 0 }}>
           <Box component="form" onSubmit={form.handleSubmit(submit)}>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={4}>
@@ -236,6 +255,7 @@ export default function BookingPage() {
             </Grid>
           </Box>
         </Paper>
+        )}
       </Stack>
     </Container>
   );
