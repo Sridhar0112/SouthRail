@@ -32,7 +32,9 @@ export function Shell() {
   const location = useLocation();
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [isPageSettling, setIsPageSettling] = useState(true);
   const avatarButtonRef = useRef(null);
+  const pageSettleTimerRef = useRef(null);
 
   useEffect(() => {
     const clearAuth = () => dispatch(logout());
@@ -48,7 +50,18 @@ export function Shell() {
   const handleMenuOpen = (event) => {
     event.stopPropagation();
     setMobileNavOpen(false);
-    setAnchorEl((current) => (current ? null : event.currentTarget));
+
+    if (isPageSettling) {
+      closeAllMenus();
+      return;
+    }
+
+    if (anchorEl) {
+      setAnchorEl(null);
+      return;
+    }
+
+    setAnchorEl(event.currentTarget);
   };
 
   const goTo = (path) => {
@@ -80,6 +93,23 @@ export function Shell() {
 
   useEffect(() => {
     closeAllMenus();
+    setIsPageSettling(true);
+
+    if (pageSettleTimerRef.current) {
+      window.clearTimeout(pageSettleTimerRef.current);
+    }
+
+    pageSettleTimerRef.current = window.setTimeout(() => {
+      setIsPageSettling(false);
+      pageSettleTimerRef.current = null;
+    }, 450);
+
+    return () => {
+      if (pageSettleTimerRef.current) {
+        window.clearTimeout(pageSettleTimerRef.current);
+        pageSettleTimerRef.current = null;
+      }
+    };
   }, [location.pathname, location.search, location.hash]);
 
   const signOut = () => {
@@ -161,7 +191,18 @@ export function Shell() {
             {auth.user ? (
               <>
                 <Tooltip title="Account">
-                  <IconButton ref={avatarButtonRef} onClick={handleMenuOpen} sx={{ p: 0, flexShrink: 0 }}>
+                  <IconButton
+                    ref={avatarButtonRef}
+                    onClick={handleMenuOpen}
+                    aria-disabled={isPageSettling ? 'true' : undefined}
+                    aria-haspopup="menu"
+                    aria-expanded={anchorEl ? 'true' : undefined}
+                    sx={{
+                      p: 0,
+                      flexShrink: 0,
+                      cursor: isPageSettling ? 'default' : 'pointer'
+                    }}
+                  >
                     <Avatar
                       sx={{
                         width: 36,
