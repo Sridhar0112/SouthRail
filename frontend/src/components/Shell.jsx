@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -32,6 +32,7 @@ export function Shell() {
   const location = useLocation();
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const avatarButtonRef = useRef(null);
 
   useEffect(() => {
     const clearAuth = () => dispatch(logout());
@@ -39,18 +40,50 @@ export function Shell() {
     return () => window.removeEventListener('southrail-auth-cleared', clearAuth);
   }, [dispatch]);
 
-  const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
-  const handleMenuClose = () => setAnchorEl(null);
-  const closeMobileNav = () => setMobileNavOpen(false);
+  const closeAllMenus = () => {
+    setAnchorEl(null);
+    setMobileNavOpen(false);
+  };
+
+  const handleMenuOpen = (event) => {
+    event.stopPropagation();
+    setMobileNavOpen(false);
+    setAnchorEl((current) => (current ? null : event.currentTarget));
+  };
+
+  const goTo = (path) => {
+    closeAllMenus();
+
+    if (location.pathname !== path) {
+      navigate(path);
+    }
+  };
 
   useEffect(() => {
-    handleMenuClose();
-    closeMobileNav();
-  }, [location.pathname]);
+    const handleDocumentClick = (event) => {
+      if (!anchorEl) return;
+
+      const clickedAvatar = avatarButtonRef.current?.contains(event.target);
+      const clickedMenu = document.querySelector('[role="menu"]')?.contains(event.target);
+
+      if (!clickedAvatar && !clickedMenu) {
+        closeAllMenus();
+      }
+    };
+
+    document.addEventListener('mousedown', handleDocumentClick, true);
+
+    return () => {
+      document.removeEventListener('mousedown', handleDocumentClick, true);
+    };
+  }, [anchorEl]);
+
+  useEffect(() => {
+    closeAllMenus();
+  }, [location.pathname, location.search, location.hash]);
 
   const signOut = () => {
-    handleMenuClose();
-    closeMobileNav();
+    closeAllMenus();
     dispatch(logout());
     navigate('/');
   };
@@ -81,6 +114,7 @@ export function Shell() {
             <Stack
               component={Link}
               to="/"
+              onClick={closeAllMenus}
               direction="row"
               alignItems="center"
               spacing={1}
@@ -103,7 +137,7 @@ export function Shell() {
             {/* Nav links */}
             <Stack direction="row" spacing={0.5} sx={{ display: { xs: 'none', md: 'flex' } }}>
               {navItems.map((item) => (
-                <Button key={item.to} component={Link} to={item.to} sx={navButtonSx}>
+                <Button key={item.to} component={Link} to={item.to} onClick={closeAllMenus} sx={navButtonSx}>
                   {item.label}
                 </Button>
               ))}
@@ -112,7 +146,10 @@ export function Shell() {
             {/* Dark/light toggle */}
             <Tooltip title={mode === 'light' ? 'Dark mode' : 'Light mode'}>
               <IconButton
-                onClick={toggleColorMode}
+                onClick={() => {
+                  closeAllMenus();
+                  toggleColorMode();
+                }}
                 color="primary"
                 sx={{ bgcolor: 'action.hover', flexShrink: 0, '&:hover': { bgcolor: 'action.selected' } }}
               >
@@ -124,7 +161,7 @@ export function Shell() {
             {auth.user ? (
               <>
                 <Tooltip title="Account">
-                  <IconButton onClick={handleMenuOpen} sx={{ p: 0, flexShrink: 0 }}>
+                  <IconButton ref={avatarButtonRef} onClick={handleMenuOpen} sx={{ p: 0, flexShrink: 0 }}>
                     <Avatar
                       sx={{
                         width: 36,
@@ -146,7 +183,7 @@ export function Shell() {
                 <Menu
                   anchorEl={anchorEl}
                   open={Boolean(anchorEl)}
-                  onClose={handleMenuClose}
+                  onClose={closeAllMenus}
                   transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                   anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                   slotProps={{
@@ -168,31 +205,16 @@ export function Shell() {
 
                   <Divider />
 
-                  <MenuItem
-                    component={Link}
-                    to="/dashboard"
-                    onClick={handleMenuClose}
-                    sx={{ py: 1.25 }}
-                  >
+                  <MenuItem onClick={() => goTo('/dashboard')} sx={{ py: 1.25 }}>
                     <ListItemIcon><DashboardIcon fontSize="small" /></ListItemIcon>
                     Dashboard
                   </MenuItem>
 
-                  <MenuItem
-                    component={Link}
-                    to="/profile"
-                    onClick={handleMenuClose}
-                    sx={{ py: 1.25 }}
-                  >
+                  <MenuItem onClick={() => goTo('/profile')} sx={{ py: 1.25 }}>
                     <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon>
                     Profile
                   </MenuItem>
-                  <MenuItem
-                    component={Link}
-                    to="/my-tickets"
-                    onClick={handleMenuClose}
-                    sx={{ py: 1.25 }}
-                  >
+                  <MenuItem onClick={() => goTo('/my-tickets')} sx={{ py: 1.25 }}>
                     <ListItemIcon>
                       <ConfirmationNumberIcon fontSize="small" />
                     </ListItemIcon>
@@ -200,12 +222,7 @@ export function Shell() {
                   </MenuItem>
 
                   {auth.user?.roles?.includes('ROLE_ADMIN') && (
-                    <MenuItem
-                      component={Link}
-                      to="/admin/support-tickets"
-                      onClick={handleMenuClose}
-                      sx={{ py: 1.25 }}
-                    >
+                    <MenuItem onClick={() => goTo('/admin/support-tickets')} sx={{ py: 1.25 }}>
                       <ListItemIcon>
                         <SupportAgentIcon fontSize="small" />
                       </ListItemIcon>
@@ -224,12 +241,15 @@ export function Shell() {
                 </Menu>
               </>
             ) : (
-              <Button variant="contained" component={Link} to="/login" sx={{ display: { xs: 'none', sm: 'inline-flex' } }}>Login</Button>
+              <Button variant="contained" component={Link} to="/login" onClick={closeAllMenus} sx={{ display: { xs: 'none', sm: 'inline-flex' } }}>Login</Button>
             )}
             <Tooltip title="Open navigation">
               <IconButton
                 color="primary"
-                onClick={() => setMobileNavOpen(true)}
+                onClick={() => {
+                  setAnchorEl(null);
+                  setMobileNavOpen(true);
+                }}
                 sx={{ display: { xs: 'inline-flex', md: 'none' }, bgcolor: 'action.hover', flexShrink: 0 }}
                 aria-label="Open navigation menu"
               >
@@ -242,7 +262,7 @@ export function Shell() {
       <Drawer
         anchor="right"
         open={mobileNavOpen}
-        onClose={closeMobileNav}
+        onClose={closeAllMenus}
         PaperProps={{
           sx: {
             width: { xs: 'calc(100vw - 32px)', sm: 360 },
@@ -257,7 +277,7 @@ export function Shell() {
               <TrainIcon color="primary" />
               <Typography variant="h6" fontWeight={800} noWrap sx={{ minWidth: 0 }}>SouthRail</Typography>
             </Stack>
-            <IconButton onClick={closeMobileNav} aria-label="Close navigation menu">
+            <IconButton onClick={closeAllMenus} aria-label="Close navigation menu">
               <MenuIcon />
             </IconButton>
           </Stack>
@@ -268,7 +288,7 @@ export function Shell() {
                 key={item.to}
                 component={Link}
                 to={item.to}
-                onClick={closeMobileNav}
+                onClick={closeAllMenus}
                 sx={{ borderRadius: 2, py: 1.5, minHeight: 48 }}
               >
                 <ListItemText
@@ -281,7 +301,7 @@ export function Shell() {
               <ListItemButton
                 component={Link}
                 to="/login"
-                onClick={closeMobileNav}
+                onClick={closeAllMenus}
                 sx={{ borderRadius: 2, py: 1.5, minHeight: 48 }}
               >
                 <ListItemText primary="Login" primaryTypographyProps={{ fontWeight: 800 }} />
