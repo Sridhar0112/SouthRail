@@ -120,9 +120,9 @@ export function Shell() {
 
   const navButtonSx = {
     color: 'text.secondary',
-    px: { xs: 0.75, sm: 1.5 },
+    px: { xs: 0.75, sm: 1.2 },
     minWidth: 'auto',
-    fontSize: { xs: '0.78rem', sm: '0.875rem' },
+    fontSize: { xs: '0.76rem', sm: '0.82rem' },
     '&:hover': { bgcolor: 'action.hover', color: 'text.primary' }
   };
 
@@ -139,7 +139,7 @@ export function Shell() {
     <Box sx={{ minHeight: '100vh' }}>
       <AppBar position="sticky" elevation={0} color="inherit">
         <Container maxWidth="xl">
-          <Toolbar disableGutters sx={{ gap: { xs: 1, md: 2 }, minHeight: { xs: 64, sm: 68 }, py: { xs: 0.75, md: 0 } }}>
+          <Toolbar disableGutters sx={{ gap: { xs: 1, md: 2 }, minHeight: { xs: 54, sm: 58 }, py: { xs: 0.25, md: 0 } }}>
             {/* Logo */}
             <Stack
               component={Link}
@@ -152,16 +152,16 @@ export function Shell() {
                 mr: 'auto',
                 minWidth: 0,
                 maxWidth: { xs: 'min(44vw, 180px)', sm: 'none' },
-                py: 0.75,
-                pr: 1.25,
+                py: 0.4,
+                pr: 1,
                 borderRadius: 2,
                 color: 'text.primary',
                 textDecoration: 'none',
                 '&:hover': { bgcolor: 'action.hover' }
               }}
             >
-              <TrainIcon color="primary" sx={{ flexShrink: 0 }} />
-              <Typography variant="h6" fontWeight={800} noWrap sx={{ fontSize: { xs: '1.05rem', sm: '1.25rem' }, minWidth: 0 }}>SouthRail</Typography>
+              <TrainIcon color="primary" sx={{ flexShrink: 0, fontSize: 24 }} />
+              <Typography variant="h6" fontWeight={800} noWrap sx={{ fontSize: { xs: '1rem', sm: '1.12rem' }, minWidth: 0 }}>SouthRail</Typography>
             </Stack>
 
             {/* Nav links */}
@@ -181,7 +181,7 @@ export function Shell() {
                   toggleColorMode();
                 }}
                 color="primary"
-                sx={{ bgcolor: 'action.hover', flexShrink: 0, '&:hover': { bgcolor: 'action.selected' } }}
+                sx={{ width: 36, height: 36, bgcolor: 'action.hover', flexShrink: 0, '&:hover': { bgcolor: 'action.selected' } }}
               >
                 {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
               </IconButton>
@@ -205,13 +205,13 @@ export function Shell() {
                   >
                     <Avatar
                       sx={{
-                        width: 36,
-                        height: 36,
+                        width: 32,
+                        height: 32,
                         bgcolor: 'primary.main',
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: 700,
                         cursor: 'pointer',
-                        border: 2,
+                        border: 1,
                         borderColor: anchorEl ? 'primary.main' : 'transparent',
                         transition: 'border-color 0.15s'
                       }}
@@ -291,7 +291,7 @@ export function Shell() {
                   setAnchorEl(null);
                   setMobileNavOpen(true);
                 }}
-                sx={{ display: { xs: 'inline-flex', md: 'none' }, bgcolor: 'action.hover', flexShrink: 0 }}
+                sx={{ display: { xs: 'inline-flex', md: 'none' }, width: 36, height: 36, bgcolor: 'action.hover', flexShrink: 0 }}
                 aria-label="Open navigation menu"
               >
                 <MenuIcon />
@@ -330,7 +330,7 @@ export function Shell() {
                 component={Link}
                 to={item.to}
                 onClick={closeAllMenus}
-                sx={{ borderRadius: 2, py: 1.5, minHeight: 48 }}
+                sx={{ borderRadius: 2, py: 1.1, minHeight: 42 }}
               >
                 <ListItemText
                   primary={item.label}
@@ -343,7 +343,7 @@ export function Shell() {
                 component={Link}
                 to="/login"
                 onClick={closeAllMenus}
-                sx={{ borderRadius: 2, py: 1.5, minHeight: 48 }}
+                sx={{ borderRadius: 2, py: 1.1, minHeight: 42 }}
               >
                 <ListItemText primary="Login" primaryTypographyProps={{ fontWeight: 800 }} />
               </ListItemButton>
