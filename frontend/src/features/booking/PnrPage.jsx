@@ -41,6 +41,7 @@ import {
   formatStatus,
 } from "../../components/RailwayStatusChip.jsx";
 import { getApiErrorMessage } from "../../utils/apiErrors.js";
+import { getBookingStatusLabel, getBookingStatusMessage, getQueueText } from "../../utils/bookingStatus.js";
 
 export default function PnrPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -292,6 +293,9 @@ function PnrResult({
               alignItems={{ xs: "flex-start", md: "flex-end" }}
             >
               <RailwayStatusChip status={result.status} size="medium" />
+              <Typography color="text.secondary" sx={{ maxWidth: 360 }}>{getBookingStatusMessage(result.status)}</Typography>
+              <Typography fontWeight={800}>Reservation: {getBookingStatusLabel(result.status, result.reservationLabel)}</Typography>
+              {result.queuePosition && <Typography color="text.secondary">Queue position: {getQueueText(result.queuePosition)}</Typography>}
               {showCancel && (
                 <Button
                   color="error"
@@ -526,6 +530,8 @@ function FareSection({ result }) {
             label="Booking status"
             value={<RailwayStatusChip status={result.status} />}
           />
+          <SummaryLine label="Reservation" value={getBookingStatusLabel(result.status, result.reservationLabel)} />
+          {result.queuePosition && <SummaryLine label="Queue position" value={getQueueText(result.queuePosition)} />}
         </Stack>
       </CardContent>
     </Card>
@@ -636,6 +642,7 @@ function buildLifecycle(result) {
   const items = [
     { label: "PNR found", value: result.pnr || "-" },
     { label: "Current status", value: formatStatus(result.status) },
+    { label: "Reservation", value: getBookingStatusLabel(result.status, result.reservationLabel) },
   ];
   if (result.journeyDate) {
     items.push({

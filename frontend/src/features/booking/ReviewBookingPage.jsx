@@ -19,10 +19,15 @@ const notes = [
 export default function ReviewBookingPage({ train, values, review, reviewIsCurrent, passengerCount, submitting, loadingReview, submitError, onBackToEdit, onConfirmBooking }) {
   const theme = useTheme();
   const availableSeats = Number(review?.availableSeats ?? 0);
-  const canConfirm = Boolean(review) && reviewIsCurrent && !submitting && !loadingReview && availableSeats !== 0;
+  const canConfirm = Boolean(review) && reviewIsCurrent && !submitting && !loadingReview;
   const fareLines = normalizeFareLines(review);
   const source = values.sourceStationCode || '-';
   const destination = values.destinationStationCode || '-';
+  const likelyConfirmed = availableSeats >= passengerCount;
+  const outcomeLabel = likelyConfirmed ? 'Likely confirmed' : 'RAC/Waitlist may be assigned';
+  const outcomeMessage = likelyConfirmed
+    ? 'Confirmed seats appear available for all passengers. Final status is assigned by the booking service at confirmation.'
+    : 'Confirmed seats are limited for this passenger count. RAC or waitlist may be assigned during final confirmation.';
 
   return (
     <Box sx={{ width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
@@ -36,13 +41,14 @@ export default function ReviewBookingPage({ train, values, review, reviewIsCurre
             </Stack>
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
               <Chip variant="outlined" label={`${passengerCount} passenger${passengerCount === 1 ? '' : 's'}`} />
-              <Chip color={availableSeats >= passengerCount ? 'success' : 'warning'} label={review?.availabilityStatus || 'Availability pending'} />
+              <Chip color={likelyConfirmed ? 'success' : 'warning'} label={outcomeLabel} sx={{ maxWidth: '100%' }} />
             </Stack>
           </Stack>
         </Paper>
 
         {!reviewIsCurrent && <Alert severity="warning">Booking details changed. Please review again before confirming.</Alert>}
         {submitError && <Alert severity="error">{submitError}</Alert>}
+        <Alert severity={likelyConfirmed ? 'success' : 'warning'} sx={{ '& .MuiAlert-message': { overflowWrap: 'anywhere' } }}>{outcomeMessage}</Alert>
 
         <Grid container spacing={3} alignItems="flex-start">
           <Grid item xs={12} md={8}>
@@ -120,7 +126,7 @@ export default function ReviewBookingPage({ train, values, review, reviewIsCurre
               <Stack spacing={2}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
                   <Stack direction="row" spacing={1} alignItems="center"><PaymentsIcon color="primary" /><Typography variant="h6" fontWeight={900}>Fare Summary</Typography></Stack>
-                  <Chip color={availableSeats >= passengerCount ? 'success' : 'warning'} label={review?.availabilityStatus || 'Pending'} />
+                  <Chip color={likelyConfirmed ? 'success' : 'warning'} label={outcomeLabel} sx={{ maxWidth: '100%' }} />
                 </Stack>
                 <Divider />
                 {fareLines.map((line) => (
@@ -139,11 +145,12 @@ export default function ReviewBookingPage({ train, values, review, reviewIsCurre
                 <Stack spacing={0.75}>
                   <Typography color="text.secondary">Passenger count: <strong>{passengerCount}</strong></Typography>
                   <Typography color="text.secondary">Available seats: <strong>{review?.availableSeats ?? '-'}</strong></Typography>
+                  <Typography color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>Availability: <strong>{review?.availabilityStatus || 'Pending'}</strong></Typography>
                 </Stack>
                 <Stack direction={{ xs: 'column', sm: 'row', md: 'column' }} spacing={1.5} sx={{ '& .MuiButton-root': { width: '100%' } }}>
                   <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={onBackToEdit} disabled={submitting}>Back/Edit</Button>
                   <Button variant="contained" size="large" startIcon={<ConfirmationNumberIcon />} onClick={onConfirmBooking} disabled={!canConfirm}>
-                    {submitting ? 'Processing...' : 'Confirm Booking'}
+                    {submitting ? 'Processing...' : 'Confirm Final Booking'}
                   </Button>
                 </Stack>
               </Stack>
