@@ -18,54 +18,53 @@ const notes = [
 
 export default function ReviewBookingPage({ train, values, review, reviewIsCurrent, passengerCount, submitting, loadingReview, submitError, onBackToEdit, onConfirmBooking }) {
   const theme = useTheme();
-  const availableSeats = Number(review?.availableSeats ?? 0);
   const canConfirm = Boolean(review) && reviewIsCurrent && !submitting && !loadingReview;
   const fareLines = normalizeFareLines(review);
   const source = values.sourceStationCode || '-';
   const destination = values.destinationStationCode || '-';
-  const likelyConfirmed = availableSeats >= passengerCount;
-  const outcomeLabel = likelyConfirmed ? 'Likely confirmed' : 'RAC/Waitlist may be assigned';
-  const outcomeMessage = likelyConfirmed
-    ? 'Confirmed seats appear available for all passengers. Final status is assigned by the booking service at confirmation.'
-    : 'Confirmed seats are limited for this passenger count. RAC or waitlist may be assigned during final confirmation.';
+  const availability = getAvailabilityCopy(review, passengerCount);
 
   return (
-    <Box sx={{ width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
-      <Stack spacing={2.5}>
-        <Paper elevation={1} sx={{ p: { xs: 2, md: 3 }, borderRadius: 3, background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.12)}, ${alpha(theme.palette.secondary.main, 0.10)})`, border: `1px solid ${alpha(theme.palette.primary.main, 0.16)}` }}>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
-            <Stack spacing={0.75} sx={{ minWidth: 0 }}>
-              <Chip icon={<ConfirmationNumberIcon />} color="primary" label="Final confirmation" sx={{ width: 'fit-content' }} />
-              <Typography variant="h4" fontWeight={900}>Review booking</Typography>
-              <Typography color="text.secondary">Confirm journey, passengers, fare, and availability before SouthRail issues this ticket.</Typography>
+    <Box sx={{ width: '100%', maxWidth: '100%', minWidth: 0 }}>
+      <Stack spacing={{ xs: 2, md: 3 }} sx={{ width: '100%', minWidth: 0 }}>
+        <Paper elevation={0} sx={{ p: { xs: 2.25, sm: 3, md: 4 }, borderRadius: 4, overflow: 'hidden', background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.14)}, ${alpha(theme.palette.secondary.main, 0.08)})`, border: `1px solid ${alpha(theme.palette.primary.main, 0.16)}` }}>
+          <Stack spacing={2.25} sx={{ minWidth: 0 }}>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'flex-start' }}>
+              <Stack spacing={1} sx={{ minWidth: 0, maxWidth: 820 }}>
+                <Chip icon={<ConfirmationNumberIcon />} color="primary" label="Final confirmation" sx={{ width: 'fit-content', fontWeight: 800 }} />
+                <Typography variant="h3" fontWeight={950} sx={{ fontSize: { xs: '2rem', md: '2.75rem' }, letterSpacing: -0.8 }}>Review booking</Typography>
+                <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '1rem', md: '1.12rem' }, lineHeight: 1.55 }}>Confirm journey, passengers, fare, and availability before SouthRail issues this ticket.</Typography>
+              </Stack>
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ justifyContent: { xs: 'flex-start', md: 'flex-end' }, maxWidth: '100%' }}>
+                <Chip variant="outlined" label={`${passengerCount} passenger${passengerCount === 1 ? '' : 's'}`} sx={{ fontWeight: 800 }} />
+                <Chip color={availability.color} label={availability.shortLabel} sx={{ fontWeight: 800 }} />
+              </Stack>
             </Stack>
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-              <Chip variant="outlined" label={`${passengerCount} passenger${passengerCount === 1 ? '' : 's'}`} />
-              <Chip color={likelyConfirmed ? 'success' : 'warning'} label={outcomeLabel} sx={{ maxWidth: '100%' }} />
-            </Stack>
+            {availability.message && (
+              <Typography color="text.secondary" sx={{ maxWidth: 900, overflowWrap: 'anywhere', lineHeight: 1.65 }}>{availability.message}</Typography>
+            )}
           </Stack>
         </Paper>
 
         {!reviewIsCurrent && <Alert severity="warning">Booking details changed. Please review again before confirming.</Alert>}
         {submitError && <Alert severity="error">{submitError}</Alert>}
-        <Alert severity={likelyConfirmed ? 'success' : 'warning'} sx={{ '& .MuiAlert-message': { overflowWrap: 'anywhere' } }}>{outcomeMessage}</Alert>
 
-        <Grid container spacing={3} alignItems="flex-start">
-          <Grid item xs={12} md={8}>
-            <Stack spacing={2.5}>
+        <Grid container spacing={{ xs: 2, md: 3 }} alignItems="flex-start" sx={{ width: '100%', m: 0 }}>
+          <Grid item xs={12} lg={8} sx={{ minWidth: 0, pl: '0 !important', pt: '0 !important' }}>
+            <Stack spacing={{ xs: 2, md: 3 }} sx={{ minWidth: 0 }}>
               <ReviewCard icon={<RouteIcon color="primary" />} title="Journey Summary">
-                <Stack spacing={2.25}>
-                  <Paper variant="outlined" sx={{ p: { xs: 2, md: 2.5 }, borderRadius: 3, bgcolor: alpha(theme.palette.primary.main, 0.06) }}>
-                    <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between" sx={{ minWidth: 0 }}>
+                <Stack spacing={2.5}>
+                  <Paper variant="outlined" sx={{ p: { xs: 2, sm: 2.5, md: 3 }, borderRadius: 4, bgcolor: alpha(theme.palette.primary.main, 0.055), borderColor: alpha(theme.palette.primary.main, 0.18), minWidth: 0 }}>
+                    <Stack direction="row" spacing={{ xs: 1, sm: 2 }} alignItems="center" justifyContent="space-between" sx={{ minWidth: 0 }}>
                       <StationBlock label="FROM" value={source} />
-                      <Box sx={{ flex: 1, minWidth: 44, borderTop: `2px dashed ${alpha(theme.palette.primary.main, 0.45)}` }} />
-                      <TrainIcon color="primary" />
-                      <Box sx={{ flex: 1, minWidth: 44, borderTop: `2px dashed ${alpha(theme.palette.primary.main, 0.45)}` }} />
+                      <RouteLine />
+                      <TrainIcon color="primary" sx={{ flexShrink: 0 }} />
+                      <RouteLine />
                       <StationBlock label="TO" value={destination} align="right" />
                     </Stack>
                   </Paper>
                   <Grid container spacing={2}>
-                    <Detail label="Train" value={`${train?.name || 'Train'} ${train?.number ? `(${train.number})` : ''}`} />
+                    <Detail label="Train" value={`${train?.name || 'Train'} ${train?.number ? `(${train.number})` : ''}`} wide />
                     <Detail label="Category" value={train?.category || 'Not specified'} />
                     <Detail label="Journey date" value={values.journeyDate || '-'} />
                     <Detail label="Travel class" value={values.travelClass || '-'} chip />
@@ -75,33 +74,35 @@ export default function ReviewBookingPage({ train, values, review, reviewIsCurre
               </ReviewCard>
 
               <ReviewCard icon={<EventSeatIcon color="primary" />} title="Passenger Details">
-                <Stack spacing={1.5}>
+                <Grid container spacing={1.75}>
                   {values.passengers?.map((passenger, index) => (
-                    <Paper key={`${passenger.fullName}-${index}`} variant="outlined" sx={{ p: 1.75, borderRadius: 3, minWidth: 0 }}>
-                      <Grid container spacing={1.5} alignItems="center">
-                        <Grid item xs={12} sm={5}>
-                          <Chip size="small" variant="outlined" label={`Passenger ${index + 1}`} sx={{ mb: 0.75 }} />
-                          <Typography fontWeight={900} sx={{ overflowWrap: 'anywhere' }}>{passenger.fullName || '-'}</Typography>
-                        </Grid>
-                        <Detail compact label="Age" value={passenger.age || '-'} />
-                        <Detail compact label="Gender" value={passenger.gender || '-'} />
-                        <Detail compact label="Berth preference" value={formatLabel(passenger.berthPreference || 'NO_PREFERENCE')} chip />
-                      </Grid>
-                    </Paper>
+                    <Grid item xs={12} sm={6} key={`${passenger.fullName}-${index}`} sx={{ minWidth: 0 }}>
+                      <Paper variant="outlined" sx={{ p: { xs: 1.75, md: 2.25 }, borderRadius: 3, minWidth: 0, height: '100%', bgcolor: alpha(theme.palette.background.paper, 0.74) }}>
+                        <Stack spacing={1.5} sx={{ minWidth: 0 }}>
+                          <Chip size="small" variant="outlined" label={`Passenger ${index + 1}`} sx={{ width: 'fit-content', fontWeight: 800 }} />
+                          <Typography variant="h6" fontWeight={900} sx={{ overflowWrap: 'anywhere', lineHeight: 1.25 }}>{passenger.fullName || '-'}</Typography>
+                          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                            <Chip label={`Age ${passenger.age || '-'}`} />
+                            <Chip label={passenger.gender || '-'} />
+                            <Chip color="secondary" variant="outlined" label={formatLabel(passenger.berthPreference || 'NO_PREFERENCE')} />
+                          </Stack>
+                        </Stack>
+                      </Paper>
+                    </Grid>
                   ))}
-                </Stack>
+                </Grid>
               </ReviewCard>
 
               <ReviewCard icon={<EventSeatIcon color="primary" />} title="Berth Suggestions">
                 {review?.berthSuggestions?.length ? (
                   <Stack spacing={1.25}>
                     {review.berthSuggestions.map((item, index) => (
-                      <Paper key={`${item.passengerName}-${index}`} variant="outlined" sx={{ p: 1.5, borderRadius: 3 }}>
-                        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1}>
+                      <Paper key={`${item.passengerName}-${index}`} variant="outlined" sx={{ p: 1.75, borderRadius: 3, minWidth: 0 }}>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1.25} alignItems={{ xs: 'flex-start', sm: 'center' }}>
                           <Typography fontWeight={900} sx={{ overflowWrap: 'anywhere' }}>{item.passengerName || `Passenger ${index + 1}`}</Typography>
                           <Chip color="secondary" variant="outlined" label={formatLabel(item.suggestion || item.suggestedBerth || 'No specific berth')} />
                         </Stack>
-                        {item.reason && <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>{item.reason}</Typography>}
+                        {item.reason && <Typography color="text.secondary" sx={{ mt: 0.75 }}>{item.reason}</Typography>}
                       </Paper>
                     ))}
                   </Stack>
@@ -112,8 +113,8 @@ export default function ReviewBookingPage({ train, values, review, reviewIsCurre
                 <Stack spacing={1.25}>
                   {notes.map((note) => (
                     <Stack key={note} direction="row" spacing={1.25} alignItems="flex-start">
-                      <InfoOutlinedIcon color="secondary" fontSize="small" sx={{ mt: 0.25 }} />
-                      <Typography color="text.secondary">{note}</Typography>
+                      <InfoOutlinedIcon color="secondary" fontSize="small" sx={{ mt: 0.25, flexShrink: 0 }} />
+                      <Typography color="text.secondary" sx={{ lineHeight: 1.6 }}>{note}</Typography>
                     </Stack>
                   ))}
                 </Stack>
@@ -121,36 +122,37 @@ export default function ReviewBookingPage({ train, values, review, reviewIsCurre
             </Stack>
           </Grid>
 
-          <Grid item xs={12} md={4}>
-            <Paper elevation={4} sx={{ p: { xs: 2, md: 2.5 }, borderRadius: 3, position: { md: 'sticky' }, top: { md: 24 }, width: '100%', maxWidth: '100%' }}>
-              <Stack spacing={2}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
-                  <Stack direction="row" spacing={1} alignItems="center"><PaymentsIcon color="primary" /><Typography variant="h6" fontWeight={900}>Fare Summary</Typography></Stack>
-                  <Chip color={likelyConfirmed ? 'success' : 'warning'} label={outcomeLabel} sx={{ maxWidth: '100%' }} />
+          <Grid item xs={12} lg={4} sx={{ minWidth: 0, pt: '0 !important' }}>
+            <Paper elevation={2} sx={{ p: { xs: 2.25, md: 3 }, borderRadius: 4, position: { xs: 'static', lg: 'sticky' }, top: { lg: 24 }, alignSelf: 'flex-start', width: '100%', maxWidth: '100%', minWidth: 0, border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`, boxShadow: `0 18px 48px ${alpha(theme.palette.common.black, 0.10)}` }}>
+              <Stack spacing={2.25} sx={{ minWidth: 0 }}>
+                <Stack spacing={1.25} alignItems="flex-start" sx={{ minWidth: 0 }}>
+                  <Stack direction="row" spacing={1} alignItems="center"><PaymentsIcon color="primary" /><Typography variant="h5" fontWeight={950}>Fare Summary</Typography></Stack>
+                  <Chip color={availability.color} label={availability.shortLabel} sx={{ fontWeight: 800 }} />
+                  {availability.message && <Typography color="text.secondary" sx={{ overflowWrap: 'anywhere', lineHeight: 1.55 }}>{availability.message}</Typography>}
                 </Stack>
                 <Divider />
-                {fareLines.map((line) => (
-                  <Stack key={line.label} direction="row" justifyContent="space-between" spacing={2}>
-                    <Typography color="text.secondary">{line.label}</Typography>
-                    <Typography fontWeight={800}>₹ {line.amount}</Typography>
-                  </Stack>
-                ))}
+                <Stack spacing={1.35}>
+                  {fareLines.map((line) => (
+                    <Stack key={line.label} direction="row" justifyContent="space-between" spacing={2} sx={{ minWidth: 0 }}>
+                      <Typography color="text.secondary" sx={{ minWidth: 0 }}>{line.label}</Typography>
+                      <Typography fontWeight={850} sx={{ flexShrink: 0 }}>₹ {line.amount}</Typography>
+                    </Stack>
+                  ))}
+                </Stack>
                 <Divider />
-                <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, bgcolor: alpha(theme.palette.primary.main, 0.07) }}>
-                  <Stack spacing={0.5}>
-                    <Typography color="text.secondary" fontWeight={700}>Total payable amount</Typography>
-                    <Typography variant="h4" fontWeight={950} color="primary">₹ {review?.totalFare ?? '-'}</Typography>
-                  </Stack>
+                <Paper variant="outlined" sx={{ p: 2.25, borderRadius: 3, bgcolor: alpha(theme.palette.primary.main, 0.07), borderColor: alpha(theme.palette.primary.main, 0.18) }}>
+                  <Typography color="text.secondary" fontWeight={800}>Total payable amount</Typography>
+                  <Typography variant="h3" fontWeight={950} color="primary" sx={{ mt: 0.25, fontSize: { xs: '2.15rem', md: '2.35rem' } }}>₹ {review?.totalFare ?? '-'}</Typography>
                 </Paper>
-                <Stack spacing={0.75}>
-                  <Typography color="text.secondary">Passenger count: <strong>{passengerCount}</strong></Typography>
-                  <Typography color="text.secondary">Available seats: <strong>{review?.availableSeats ?? '-'}</strong></Typography>
-                  <Typography color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>Availability: <strong>{review?.availabilityStatus || 'Pending'}</strong></Typography>
+                <Stack spacing={0.9}>
+                  <SummaryLine label="Passenger count" value={passengerCount} />
+                  <SummaryLine label="Available seats" value={review?.availableSeats ?? '-'} />
+                  <Typography color="text.secondary" sx={{ overflowWrap: 'anywhere', lineHeight: 1.55 }}>Availability: <strong>{review?.availabilityStatus || 'Pending'}</strong></Typography>
                 </Stack>
-                <Stack direction={{ xs: 'column', sm: 'row', md: 'column' }} spacing={1.5} sx={{ '& .MuiButton-root': { width: '100%' } }}>
+                <Stack spacing={1.5} sx={{ '& .MuiButton-root': { width: '100%', py: 1.15 } }}>
                   <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={onBackToEdit} disabled={submitting}>Back/Edit</Button>
                   <Button variant="contained" size="large" startIcon={<ConfirmationNumberIcon />} onClick={onConfirmBooking} disabled={!canConfirm}>
-                    {submitting ? 'Processing...' : 'Confirm Final Booking'}
+                    {submitting ? 'Processing...' : 'Confirm Booking'}
                   </Button>
                 </Stack>
               </Stack>
@@ -163,15 +165,23 @@ export default function ReviewBookingPage({ train, values, review, reviewIsCurre
 }
 
 function ReviewCard({ icon, title, children }) {
-  return <Paper variant="outlined" sx={{ p: { xs: 2, md: 2.5 }, borderRadius: 3, width: '100%', maxWidth: '100%', minWidth: 0 }}><Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.75 }}>{icon}<Typography variant="h6" fontWeight={900}>{title}</Typography></Stack>{children}</Paper>;
+  return <Paper elevation={0} variant="outlined" sx={{ p: { xs: 2, md: 3 }, borderRadius: 4, width: '100%', maxWidth: '100%', minWidth: 0 }}><Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>{icon}<Typography variant="h5" fontWeight={950}>{title}</Typography></Stack>{children}</Paper>;
 }
 
 function StationBlock({ label, value, align = 'left' }) {
-  return <Box sx={{ minWidth: 0, textAlign: align }}><Typography variant="caption" color="text.secondary" fontWeight={900}>{label}</Typography><Typography variant="h5" fontWeight={950} sx={{ overflowWrap: 'anywhere' }}>{value}</Typography></Box>;
+  return <Box sx={{ minWidth: 0, flex: '0 1 190px', textAlign: align }}><Typography variant="overline" color="text.secondary" fontWeight={900}>{label}</Typography><Typography variant="h4" fontWeight={950} sx={{ overflowWrap: 'anywhere', fontSize: { xs: '1.55rem', sm: '2rem' } }}>{value}</Typography></Box>;
 }
 
-function Detail({ label, value, chip = false, compact = false }) {
-  return <Grid item xs={compact ? 4 : 12} sm={compact ? 2.3 : 6} md={compact ? 2.3 : 4}><Typography variant="caption" color="text.secondary" fontWeight={700}>{label}</Typography>{chip ? <Box sx={{ mt: 0.25 }}><Chip size="small" label={value} /></Box> : <Typography fontWeight={850} sx={{ overflowWrap: 'anywhere' }}>{value}</Typography>}</Grid>;
+function RouteLine() {
+  return <Box sx={{ flex: '1 1 44px', minWidth: { xs: 20, sm: 44 }, borderTop: (theme) => `2px dashed ${alpha(theme.palette.primary.main, 0.45)}` }} />;
+}
+
+function Detail({ label, value, chip = false, wide = false }) {
+  return <Grid item xs={12} sm={wide ? 12 : 6} md={wide ? 8 : 4} sx={{ minWidth: 0 }}><Typography variant="body2" color="text.secondary" fontWeight={800}>{label}</Typography>{chip ? <Box sx={{ mt: 0.5 }}><Chip label={value} sx={{ fontWeight: 800 }} /></Box> : <Typography variant="h6" fontWeight={900} sx={{ overflowWrap: 'anywhere', lineHeight: 1.35 }}>{value}</Typography>}</Grid>;
+}
+
+function SummaryLine({ label, value }) {
+  return <Stack direction="row" justifyContent="space-between" spacing={2}><Typography color="text.secondary">{label}</Typography><Typography fontWeight={900}>{value}</Typography></Stack>;
 }
 
 function normalizeFareLines(review) {
@@ -183,6 +193,24 @@ function normalizeFareLines(review) {
     { label: 'Convenience fee', amount: review.convenienceFee ?? '-' },
     { label: 'GST', amount: review.gst ?? '-' }
   ];
+}
+
+function getAvailabilityCopy(review, passengerCount) {
+  const availableSeats = Number(review?.availableSeats ?? 0);
+  const rawStatus = String(review?.availabilityStatus || '').trim();
+  const normalizedStatus = rawStatus.toUpperCase();
+  const likelyConfirmed = availableSeats >= passengerCount && !normalizedStatus.includes('WAIT') && !normalizedStatus.includes('WL') && !normalizedStatus.includes('RAC');
+  const waitlistRisk = normalizedStatus.includes('WAIT') || normalizedStatus.includes('WL') || availableSeats <= 0;
+  const shortLabel = likelyConfirmed ? 'Likely confirmed' : waitlistRisk ? 'Waitlist risk' : 'RAC/WL possible';
+  const fallback = likelyConfirmed
+    ? 'Confirmed seats appear available for all passengers. Final status is assigned by the booking service at confirmation.'
+    : 'Confirmed seats are limited for this passenger count. RAC or waitlist may be assigned during final confirmation.';
+
+  return {
+    shortLabel,
+    color: likelyConfirmed ? 'success' : waitlistRisk ? 'warning' : 'info',
+    message: rawStatus || fallback
+  };
 }
 
 function formatLabel(value) {

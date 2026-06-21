@@ -123,7 +123,7 @@ export default function BookingPage() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>
+    <Container maxWidth={showReview && review ? "xl" : "lg"} sx={{ py: { xs: 3, md: 5 }, px: { xs: 2, sm: 3, lg: 4 } }}>
       <Typography variant="h4" fontWeight={800} gutterBottom>Book ticket</Typography>
       <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 3, overflowX: 'auto', pb: 1 }}>
         {steps.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
