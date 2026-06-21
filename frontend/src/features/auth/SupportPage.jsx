@@ -615,7 +615,7 @@ useEffect(() => {
               </Typography>
             </Stack>
 
-            <Grid container spacing={2}>
+            <Grid container spacing={1.5}>
               {CONTACT_CHANNELS.map((ch) => (
                 <Grid item xs={12} md={4} key={ch.title}>
                   <ContactCard channel={ch} />
@@ -706,7 +706,7 @@ useEffect(() => {
               </Typography>
             </Stack>
 
-            <Grid container spacing={2}>
+            <Grid container spacing={1.5}>
               {/* OPTIMIZATION 1 applied here — iterating module-scope POLICIES array */}
               {POLICIES.map((policy) => (
                 <Grid item xs={12} sm={6} key={policy.title}>
@@ -740,14 +740,14 @@ useEffect(() => {
               border: '1px solid',
               borderColor: 'divider',
               borderRadius: 3,
-              p: { xs: 1.75, sm: 2.5 },
+              p: { xs: 1.5, sm: 2 },
               width: '100%',
               maxWidth: '100%',
               minWidth: 0,
             }}
           >
-            <Stack spacing={2}>
-              <Stack spacing={0.5}>
+            <Stack spacing={1.5}>
+              <Stack spacing={0.4}>
                 <Typography variant="overline" color="text.disabled" fontWeight={600} letterSpacing={1}>
                   Can't find what you're looking for?
                 </Typography>
@@ -759,7 +759,7 @@ useEffect(() => {
                 </Typography>
               </Stack>
 
-              <Grid container spacing={2}>
+              <Grid container spacing={1.5}>
                 <Grid item xs={12} sm={6}>
   <TextField
     fullWidth
@@ -795,7 +795,7 @@ useEffect(() => {
   fullWidth
   label="Describe your issue"
   multiline
-  minRows={4}
+  minRows={3}
   value={ticket.description}
   onChange={handleDescriptionChange}
   error={
@@ -819,9 +819,10 @@ useEffect(() => {
                 </Grid>
               </Grid>
 
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} alignItems={{ sm: 'center' }}>
                <Button
   variant="contained"
+  size="small"
   onClick={submitTicket}
   disabled={loading}
   sx={{ width: { xs: '100%', sm: 'auto' } }}
