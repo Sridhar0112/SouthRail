@@ -8,53 +8,53 @@ function getPalette(mode) {
 
   return {
     primary: isLight
-      ? { main: '#064E3B', light: '#0F766E', dark: '#043C2E', contrastText: '#FFFFFF' }
-      : { main: '#16A06F', light: '#3BBF8F', dark: '#0B5F48', contrastText: '#F4F7F5' },
+      ? { main: '#0B4FD9', light: '#2F7BFF', dark: '#062B6F', contrastText: '#FFFFFF' }
+      : { main: '#62A8FF', light: '#A7D1FF', dark: '#1B66D2', contrastText: '#061934' },
     secondary: isLight
-      ? { main: '#B7791F', light: '#D69E2E', dark: '#8A5A13', contrastText: '#FFFFFF' }
-      : { main: '#D6A84F', light: '#E2BD70', dark: '#9F7623', contrastText: '#13231E' },
-    success: isLight ? { main: '#13795B' } : { main: '#34C38F' },
-    warning: isLight ? { main: '#B7791F' } : { main: '#D6A84F' },
+      ? { main: '#F59E0B', light: '#FBBF24', dark: '#B45309', contrastText: '#071A3A' }
+      : { main: '#FDBA2D', light: '#FFE08A', dark: '#D97706', contrastText: '#071A3A' },
+    success: isLight ? { main: '#0E9F6E' } : { main: '#38D9A9' },
+    warning: isLight ? { main: '#F59E0B' } : { main: '#FDBA2D' },
     error: isLight ? { main: '#B42318' } : { main: '#F87171' },
     info: isLight ? { main: '#2563EB' } : { main: '#60A5FA' },
     background: {
-      default: isLight ? '#F4F7F5' : '#071713',
-      paper: isLight ? '#FFFFFF' : '#10251F'
+      default: isLight ? '#F4F8FF' : '#061226',
+      paper: isLight ? '#FFFFFF' : '#0B1B33'
     },
     surface: {
-      raised: isLight ? '#FFFFFF' : '#122A24',
-      elevated: isLight ? '#F9FBFA' : '#17352D',
-      input: isLight ? '#FFFFFF' : '#17352D'
+      raised: isLight ? '#FFFFFF' : '#0E223F',
+      elevated: isLight ? '#EEF6FF' : '#132B4D',
+      input: isLight ? '#FFFFFF' : '#102541'
     },
     text: {
-      primary: isLight ? '#13231E' : '#F4F7F5',
-      secondary: isLight ? '#52645E' : '#B8C7C1',
-      disabled: isLight ? '#8A9993' : '#74847E'
+      primary: isLight ? '#071A3A' : '#F4F8FF',
+      secondary: isLight ? '#50627D' : '#B8CAE6',
+      disabled: isLight ? '#8798B3' : '#7185A3'
     },
-    divider: isLight ? '#DDE5E1' : 'rgba(255,255,255,0.12)',
+    divider: isLight ? '#D9E6F7' : 'rgba(210,230,255,0.14)',
     action: {
-      hover: isLight ? 'rgba(6,78,59,0.07)' : 'rgba(255,255,255,0.08)',
-      selected: isLight ? 'rgba(6,78,59,0.11)' : 'rgba(22,160,111,0.18)',
-      disabled: isLight ? '#93A29C' : '#70827A',
-      disabledBackground: isLight ? '#E6ECE9' : 'rgba(255,255,255,0.08)'
+      hover: isLight ? 'rgba(11,79,217,0.07)' : 'rgba(167,209,255,0.09)',
+      selected: isLight ? 'rgba(47,123,255,0.12)' : 'rgba(98,168,255,0.18)',
+      disabled: isLight ? '#8EA0BA' : '#7287A8',
+      disabledBackground: isLight ? '#E6EEF9' : 'rgba(210,230,255,0.08)'
     },
     custom: {
       pageBackground: isLight
-        ? 'linear-gradient(180deg, #F8FBFA 0%, #F1F6F3 100%)'
-        : 'linear-gradient(180deg, #071713 0%, #081C18 100%)',
-      appBar: isLight ? alpha('#FFFFFF', 0.92) : alpha('#10251F', 0.92),
-      cardBorder: isLight ? '#DDE5E1' : 'rgba(255,255,255,0.13)',
-      cardShadow: isLight ? '0 10px 26px rgba(19,35,30,0.07)' : '0 12px 30px rgba(0,0,0,0.28)',
-      fieldBorder: isLight ? '#C9D6D0' : 'rgba(255,255,255,0.18)',
+        ? 'radial-gradient(circle at top left, rgba(47,123,255,0.14), transparent 34%), linear-gradient(180deg, #F8FBFF 0%, #EEF6FF 100%)'
+        : 'radial-gradient(circle at top left, rgba(98,168,255,0.16), transparent 36%), linear-gradient(180deg, #061226 0%, #08182E 100%)',
+      appBar: isLight ? alpha('#FFFFFF', 0.9) : alpha('#0B1B33', 0.9),
+      cardBorder: isLight ? '#D8E6F8' : 'rgba(210,230,255,0.14)',
+      cardShadow: isLight ? '0 18px 44px rgba(7,26,58,0.10)' : '0 18px 46px rgba(0,0,0,0.34)',
+      fieldBorder: isLight ? '#C7D8F0' : 'rgba(210,230,255,0.20)',
       heroOverlay: isLight
-        ? 'linear-gradient(90deg, rgba(5,40,32,0.90), rgba(5,40,32,0.62))'
-        : 'linear-gradient(90deg, rgba(4,22,18,0.96), rgba(7,35,29,0.76))',
+        ? 'linear-gradient(120deg, rgba(5,19,46,0.96), rgba(8,54,130,0.86) 52%, rgba(10,88,190,0.64))'
+        : 'linear-gradient(120deg, rgba(3,10,24,0.98), rgba(7,28,62,0.92) 52%, rgba(10,70,155,0.70))',
       heroGlow: isLight
-        ? 'linear-gradient(180deg, rgba(214,158,46,0.20), rgba(6,78,59,0.08))'
-        : 'linear-gradient(180deg, rgba(214,168,79,0.12), rgba(22,160,111,0.08))',
-      glassBg: isLight ? alpha('#FFFFFF', 0.9) : alpha('#10251F', 0.9),
-      glassBorder: isLight ? alpha('#FFFFFF', 0.6) : alpha('#FFFFFF', 0.16),
-      glassShadow: isLight ? '0 16px 36px rgba(19,35,30,0.14)' : '0 18px 42px rgba(0,0,0,0.34)'
+        ? 'radial-gradient(circle at 82% 18%, rgba(251,191,36,0.34), transparent 28%), radial-gradient(circle at 18% 82%, rgba(86,185,255,0.22), transparent 32%)'
+        : 'radial-gradient(circle at 82% 18%, rgba(253,186,45,0.22), transparent 30%), radial-gradient(circle at 14% 82%, rgba(98,168,255,0.18), transparent 34%)',
+      glassBg: isLight ? alpha('#FFFFFF', 0.9) : alpha('#0B1B33', 0.88),
+      glassBorder: isLight ? alpha('#FFFFFF', 0.72) : alpha('#D2E6FF', 0.16),
+      glassShadow: isLight ? '0 24px 60px rgba(7,26,58,0.18)' : '0 24px 64px rgba(0,0,0,0.42)'
     }
   };
 }
@@ -96,7 +96,7 @@ export function AppThemeProvider({ children }) {
         surface: palette.surface,
         custom: palette.custom
       },
-      shape: { borderRadius: 6 },
+      shape: { borderRadius: 14 },
       typography: {
         fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
         h1: { fontWeight: 800, letterSpacing: -0.5, fontSize: 'clamp(1.9rem, 4.2vw, 2.9rem)', lineHeight: 1.06 },
@@ -198,14 +198,14 @@ export function AppThemeProvider({ children }) {
             root: {
               minHeight: 30,
               padding: '4px 12px',
-              borderRadius: 6,
+              borderRadius: 999,
               fontSize: '0.82rem',
               whiteSpace: 'normal'
             },
             containedPrimary: {
-              boxShadow: isLight ? '0 7px 16px rgba(6,78,59,0.16)' : '0 8px 18px rgba(22,160,111,0.18)',
+              boxShadow: isLight ? '0 12px 24px rgba(11,79,217,0.22)' : '0 12px 26px rgba(98,168,255,0.20)',
               '&:hover': {
-                boxShadow: isLight ? '0 9px 20px rgba(6,78,59,0.20)' : '0 10px 22px rgba(22,160,111,0.22)'
+                boxShadow: isLight ? '0 14px 30px rgba(11,79,217,0.28)' : '0 14px 32px rgba(98,168,255,0.26)'
               }
             },
             outlined: {

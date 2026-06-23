@@ -21,7 +21,13 @@ import {
   Tooltip,
   Typography
 } from '@mui/material';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
+import DirectionsRailwayIcon from '@mui/icons-material/DirectionsRailway';
+import ExploreIcon from '@mui/icons-material/Explore';
 import SearchIcon from '@mui/icons-material/Search';
+import ShieldIcon from '@mui/icons-material/Shield';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { EmptyState, ErrorState, LoadingState } from '../../components/StateFeedback.jsx';
 import api from '../../services/api.js';
@@ -185,52 +191,67 @@ export default function HomePage() {
   return (
     <>
       <Box
-        className="hero-rail"
+        className="hero-rail southrail-home-hero"
         sx={{
           color: 'white',
-          minHeight: compactSearch ? 'auto' : { xs: 'auto', md: 430 },
-          py: compactSearch ? { xs: 3, md: 4 } : { xs: 4, sm: 5, md: 5 },
+          minHeight: compactSearch ? 'auto' : { xs: 'auto', md: 600 },
+          py: compactSearch ? { xs: 3, md: 4 } : { xs: 5, sm: 7, md: 8 },
           display: 'flex',
           alignItems: 'center'
         }}
       >
         <Container maxWidth="xl">
-          <Grid container spacing={compactSearch ? 2 : 4} alignItems="center" sx={{ minWidth: 0 }}>
+          <Grid container spacing={compactSearch ? 2 : 5} alignItems="center" sx={{ minWidth: 0 }}>
             {!compactSearch && (
-              <Grid item xs={12} md={6}>
-                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-                  <Typography variant="h2" sx={{ fontSize: { xs: '1.7rem', sm: '2.25rem', md: 46 }, lineHeight: 1.05, mb: 2, overflowWrap: 'anywhere' }}>
-                    South Indian railway booking, refined.
-                  </Typography>
-                  <Typography variant="h6" sx={{ maxWidth: 660, color: 'rgba(255,255,255,.84)', fontSize: { xs: '1rem', sm: '1.05rem' } }}>
-                    Search trains, check availability, review fare, and book tickets across supported South Indian routes.
-                  </Typography>
+              <Grid item xs={12} md={6.7}>
+                <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
+                  <Stack spacing={2.2} alignItems="flex-start">
+                    <Chip className="hero-kicker" icon={<DirectionsRailwayIcon />} label="SouthRail premium booking" />
+                    <Typography variant="h1" sx={{ maxWidth: 760, textShadow: '0 18px 46px rgba(0,0,0,.28)' }}>
+                      Book South India by rail with speed, clarity, and confidence.
+                    </Typography>
+                    <Typography variant="h6" sx={{ maxWidth: 690, color: 'rgba(235,245,255,.88)', fontWeight: 600, fontSize: { xs: '1rem', sm: '1.08rem' } }}>
+                      Plan scenic coastal, temple-city, and business routes with real-time train search, polished fare insights, and a smoother reservation flow.
+                    </Typography>
+                    <Stack direction="row" spacing={1.2} flexWrap="wrap" useFlexGap>
+                      {['Instant route search', 'Smart availability', 'Secure booking'].map((item) => (
+                        <Chip key={item} className="hero-proof-chip" icon={<CheckCircleIcon />} label={item} />
+                      ))}
+                    </Stack>
+                    <Grid container spacing={1.4} sx={{ maxWidth: 680, pt: 1 }}>
+                      <HeroStat value="120+" label="Southern routes" />
+                      <HeroStat value="24/7" label="Booking support" />
+                      <HeroStat value="3 min" label="Average search" />
+                    </Grid>
+                  </Stack>
                 </motion.div>
               </Grid>
             )}
-            <Grid item xs={12} md={compactSearch ? 12 : 6}>
+            <Grid item xs={12} md={compactSearch ? 12 : 5.3}>
               <Paper
-                className="glass-panel"
+                className="glass-panel booking-panel"
                 elevation={0}
                 sx={{
-                  p: { xs: 2, sm: compactSearch ? 2 : 3 },
-                  borderRadius: 1,
+                  p: { xs: 2.2, sm: compactSearch ? 2.4 : 3.2 },
+                  borderRadius: 4,
                   color: 'text.primary',
                   width: '100%',
                   maxWidth: '100%',
                   minWidth: 0
                 }}
               >
-                {compactSearch && (
-                  <Typography variant="h5" fontWeight={800} sx={{ mb: 2 }}>
-                    Search trains
-                  </Typography>
-                )}
+                <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2} sx={{ mb: 2.5 }}>
+                  <Box>
+                    <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 900, letterSpacing: 1.2 }}>Plan your journey</Typography>
+                    <Typography variant={compactSearch ? 'h5' : 'h4'} fontWeight={900}>Find your SouthRail train</Typography>
+                  </Box>
+                  <Box className="booking-badge"><ConfirmationNumberIcon fontSize="small" /></Box>
+                </Stack>
                 <Box component="form" onSubmit={handleSubmit(onSubmit, onInvalid)}>
                   <input type="hidden" {...register('source', { required: 'Source station is required' })} />
                   <input type="hidden" {...register('destination', { required: 'Destination station is required' })} />
                   <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} sm={compactSearch ? 3 : 5}>
+                    <Grid item xs={12} sm={compactSearch ? 3 : 5.35}>
                       <StationAutocomplete
                         label="From"
                         value={selectedSource}
@@ -262,10 +283,10 @@ export default function HomePage() {
                         helperText={errors.source?.message}
                       />
                     </Grid>
-                    <Grid item xs={12} sm={compactSearch ? 1 : 2} sx={{ display: 'grid', placeItems: 'center' }}>
-                      <Button type="button" onClick={swap} aria-label="Swap stations"><SwapHorizIcon /></Button>
+                    <Grid item xs={12} sm={compactSearch ? 1 : 1.3} sx={{ display: 'grid', placeItems: 'center' }}>
+                      <Button className="swap-button" type="button" onClick={swap} aria-label="Swap stations"><SwapHorizIcon /></Button>
                     </Grid>
-                    <Grid item xs={12} sm={compactSearch ? 3 : 5}>
+                    <Grid item xs={12} sm={compactSearch ? 3 : 5.35}>
                       <StationAutocomplete
                         label="To"
                         value={selectedDestination}
@@ -298,47 +319,19 @@ export default function HomePage() {
                       />
                     </Grid>
                     <Grid item xs={12} sm={compactSearch ? 2 : 4}>
-                      <TextField
-                        fullWidth
-                        type="date"
-                        label="Journey date"
-                        InputLabelProps={{ shrink: true }}
-                        inputProps={{ min: today }}
-                        error={!!errors.journeyDate}
-                        helperText={errors.journeyDate?.message}
-                        {...register('journeyDate', {
-                          required: 'Journey date is required',
-                          validate: (value) => value >= today || 'Please select today or a future journey date.'
-                        })}
-                      />
+                      <TextField fullWidth type="date" label="Journey date" InputLabelProps={{ shrink: true }} inputProps={{ min: today }} error={!!errors.journeyDate} helperText={errors.journeyDate?.message} {...register('journeyDate', { required: 'Journey date is required', validate: (value) => value >= today || 'Please select today or a future journey date.' })} />
                     </Grid>
                     <Grid item xs={12} sm={compactSearch ? 1.5 : 4}>
-                      <TextField select fullWidth label="Class" error={!!errors.travelClass} helperText={errors.travelClass?.message}
-                        {...register('travelClass', { required: 'Travel class is required' })}>
-                        {classes.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
-                      </TextField>
+                      <TextField select fullWidth label="Class" error={!!errors.travelClass} helperText={errors.travelClass?.message} {...register('travelClass', { required: 'Travel class is required' })}>{classes.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}</TextField>
                     </Grid>
                     <Grid item xs={12} sm={compactSearch ? 1.5 : 4}>
-                      <TextField select fullWidth label="Quota" error={!!errors.quota} helperText={errors.quota?.message}
-                        {...register('quota', { required: 'Quota is required' })}>
-                        {quotas.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
-                      </TextField>
+                      <TextField select fullWidth label="Quota" error={!!errors.quota} helperText={errors.quota?.message} {...register('quota', { required: 'Quota is required' })}>{quotas.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}</TextField>
                     </Grid>
                     <Grid item xs={12}>
-                      <Button fullWidth type="submit" variant="contained" size="medium" startIcon={<SearchIcon />} disabled={trains.loading}>
-                        {trains.loading ? 'Searching...' : 'Search trains'}
-                      </Button>
+                      <Button className="search-cta" fullWidth type="submit" variant="contained" size="large" startIcon={<SearchIcon />} disabled={trains.loading}>{trains.loading ? 'Searching...' : 'Search trains'}</Button>
                     </Grid>
-                    {recentSearches.length > 0 && (
-                      <Grid item xs={12}>
-                        <RecentSearches searches={recentSearches} onSelect={applyRecentSearch} />
-                      </Grid>
-                    )}
-                    {(sourceError || destinationError) && (
-                      <Grid item xs={12}>
-                        <Alert severity="warning">{sourceError || destinationError}</Alert>
-                      </Grid>
-                    )}
+                    {recentSearches.length > 0 && <Grid item xs={12}><RecentSearches searches={recentSearches} onSelect={applyRecentSearch} /></Grid>}
+                    {(sourceError || destinationError) && <Grid item xs={12}><Alert severity="warning">{sourceError || destinationError}</Alert></Grid>}
                   </Grid>
                 </Box>
               </Paper>
@@ -347,47 +340,64 @@ export default function HomePage() {
         </Container>
       </Box>
 
-      <Container maxWidth="xl" sx={{ py: compactSearch ? 3 : 4 }}>
+      {!compactSearch && (
+        <Container maxWidth="xl" sx={{ mt: { xs: -2, md: -4 }, position: 'relative', zIndex: 2 }}>
+          <Grid container spacing={2}>
+            <FeatureCard icon={<ExploreIcon />} title="Scenic southern corridors" text="Discover coastal, hill-country, and metro routes in a booking-first layout." />
+            <FeatureCard icon={<AccessTimeIcon />} title="Clear trip intelligence" text="Compare fares, duration, and availability before you commit." />
+            <FeatureCard icon={<ShieldIcon />} title="Premium secure flow" text="A focused reservation experience with crisp states and modern feedback." />
+          </Grid>
+        </Container>
+      )}
+
+      <Container maxWidth="xl" sx={{ py: compactSearch ? 3 : 5 }}>
         <Stack spacing={2.5}>
-          {searchIssue && (
-            <ErrorState
-              title={searchIssue.title}
-              message={searchIssue.message}
-              actionLabel={searchIssue.actionLabel}
-              onAction={searchIssue.actionLabel === "Use today's date" ? useToday : undefined}
-            />
-          )}
-
-          {!searchIssue && trains.error && (
-            <ErrorState title="Search could not be completed" message={trains.error} actionLabel="Retry" onAction={handleSubmit(onSubmit, onInvalid)} />
-          )}
-
+          {searchIssue && <ErrorState title={searchIssue.title} message={searchIssue.message} actionLabel={searchIssue.actionLabel} onAction={searchIssue.actionLabel === "Use today's date" ? useToday : undefined} />}
+          {!searchIssue && trains.error && <ErrorState title="Search could not be completed" message={trains.error} actionLabel="Retry" onAction={handleSubmit(onSubmit, onInvalid)} />}
           {trains.loading && <LoadingState message="Searching trains..." />}
-
-          {!trains.loading && !searchIssue && !trains.error && !trains.hasSearched && null}
-
-          {!trains.loading && !searchIssue && !trains.error && trains.hasSearched && !hasResults && (
-            <EmptyState
-              title="No trains found"
-              message="No trains are available for this route, date, and class. Try another class, date, or reverse route."
-            />
-          )}
-
+          {!trains.loading && !searchIssue && !trains.error && trains.hasSearched && !hasResults && <EmptyState title="No trains found" message="No trains are available for this route, date, and class. Try another class, date, or reverse route." />}
           {!trains.loading && !searchIssue && !trains.error && hasResults && (
             <>
               <Box sx={{ px: { xs: 0.5, sm: 0 } }}>
-                <Typography variant="h4" fontWeight={800}>Available trains</Typography>
+                <Typography variant="h4" fontWeight={900}>Available trains</Typography>
                 <Typography color="text.secondary">Choose a train based on fare, duration, and availability.</Typography>
               </Box>
               <RouteComparison results={sortedResults} />
-              <Grid container spacing={2}>
-                {sortedResults.map((train) => <TrainResultCard key={train.trainId} train={train} search={trains.selectedSearch} />)}
-              </Grid>
+              <Grid container spacing={2}>{sortedResults.map((train) => <TrainResultCard key={train.trainId} train={train} search={trains.selectedSearch} />)}</Grid>
             </>
           )}
         </Stack>
       </Container>
     </>
+  );
+}
+
+function HeroStat({ value, label }) {
+  return (
+    <Grid item xs={4}>
+      <Box className="hero-stat">
+        <Typography variant="h4">{value}</Typography>
+        <Typography variant="caption">{label}</Typography>
+      </Box>
+    </Grid>
+  );
+}
+
+function FeatureCard({ icon, title, text }) {
+  return (
+    <Grid item xs={12} md={4}>
+      <Card className="home-feature-card">
+        <CardContent>
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Box className="feature-icon">{icon}</Box>
+            <Box>
+              <Typography variant="h6">{title}</Typography>
+              <Typography variant="body2" color="text.secondary">{text}</Typography>
+            </Box>
+          </Stack>
+        </CardContent>
+      </Card>
+    </Grid>
   );
 }
 
