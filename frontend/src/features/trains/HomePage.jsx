@@ -31,6 +31,7 @@ import ShieldIcon from '@mui/icons-material/Shield';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import trainAccentOne from '../../assets/southrail/train-2.png';
 import trainAccentTwo from '../../assets/southrail/train-3.png';
+import trainAccentThree from '../../assets/southrail/hero-train.png';
 import { EmptyState, ErrorState, LoadingState } from '../../components/StateFeedback.jsx';
 import api from '../../services/api.js';
 import { getApiErrorMessage } from '../../utils/apiErrors.js';
@@ -347,7 +348,7 @@ export default function HomePage() {
         <Container maxWidth="xl" sx={{ mt: { xs: -2, md: -4 }, position: 'relative', zIndex: 2 }}>
           <Grid container spacing={2}>
             <FeatureCard icon={<ExploreIcon />} title="Scenic southern corridors" text="Discover coastal, hill-country, and metro routes in a booking-first layout." image={trainAccentOne} />
-            <FeatureCard icon={<AccessTimeIcon />} title="Clear trip intelligence" text="Compare fares, duration, and availability before you commit." />
+            <FeatureCard icon={<AccessTimeIcon />} title="Clear trip intelligence" text="Compare fares, duration, and availability before you commit." image ={trainAccentThree}/>
             <FeatureCard icon={<ShieldIcon />} title="Premium secure flow" text="A focused reservation experience with crisp states and modern feedback." image={trainAccentTwo} />
           </Grid>
         </Container>
