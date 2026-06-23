@@ -49,7 +49,7 @@ video {
   overflow: hidden;
   background-image:
     var(--southrail-hero-overlay),
-    url("https://images.unsplash.com/photo-1514250609276-c577268ef8fb?auto=format&fit=crop&w=1800&q=80");
+    url("https://chatgpt.com/backend-api/estuary/content?id=file_00000000fb2c7207b3fec2412a1f3b7f&ts=495065&p=fs&cid=1&sig=3393b65ee4ad77c635fc7a7a321ca0e81c3ee148ca2067044a659bbae9fb0c37&v=0");
   background-size: cover;
   background-position: center;
 }
@@ -122,7 +122,7 @@ a:focus-visible,
   background-image:
     var(--southrail-hero-overlay),
     linear-gradient(135deg, rgba(47, 123, 255, 0.28), transparent 38%),
-    url("https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=1900&q=82");
+    url("https://chatgpt.com/backend-api/estuary/content?id=file_00000000fb2c7207b3fec2412a1f3b7f&ts=495065&p=fs&cid=1&sig=3393b65ee4ad77c635fc7a7a321ca0e81c3ee148ca2067044a659bbae9fb0c37&v=0");
   background-position: center, center, center 58%;
 }
 
