@@ -2,20 +2,23 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import HomeHero from './components/HomeHero.jsx';
-import HomeResults from './components/HomeResults.jsx';
-import HomeShowcase from './components/HomeShowcase.jsx';
+import SearchCommandCenter from './components/SearchCommandCenter.jsx';
+import RouteExplorer from './components/RouteExplorer.jsx';
+import FeaturedDestinations from './components/FeaturedDestinations.jsx';
+import LiveRailStats from './components/LiveRailStats.jsx';
+import SmartRailInsights from './components/SmartRailInsights.jsx';
+import PremiumTrainResults from './components/PremiumTrainResults.jsx';
 import api from '../../services/api.js';
 import { getApiErrorMessage } from '../../utils/apiErrors.js';
 import { rememberSearch, searchTrains } from './trainSlice.js';
-import './homePageStyles.css';
+import './styles/home-page.css';
 
 const recentSearchKey = 'southrail_recent_searches';
 
 export default function HomePage() {
   const today = useMemo(() => getToday(), []);
   const defaultValues = useMemo(() => getInitialSearchValues(today), [today]);
-  const form = useForm({ defaultValues });
-  const { register, handleSubmit, setError, clearErrors, setValue, watch, formState: { errors } } = form;
+  const { register, handleSubmit, setError, clearErrors, setValue, watch, formState: { errors } } = useForm({ defaultValues });
   const dispatch = useDispatch();
   const trains = useSelector((state) => state.trains);
   const [selectedSource, setSelectedSource] = useState(() => stationFromCode(defaultValues.source));
@@ -36,7 +39,6 @@ export default function HomePage() {
   const sortedResults = useMemo(() => sortResults(trains.results), [trains.results]);
   const hasResults = sortedResults.length > 0;
   const hasSearchAttempt = trains.hasSearched || trains.loading || Boolean(searchIssue);
-  const compactSearch = hasSearchAttempt;
 
   const loadStationOptions = useCallback(async (query, setOptions, setLoading, setFieldError) => {
     const searchQuery = normalizeStationQuery(query);
@@ -76,16 +78,13 @@ export default function HomePage() {
 
   const onInvalid = () => setSearchIssue({ title: 'Search could not be completed', message: 'Please check source, destination, date, and class.', actionLabel: null });
   const useToday = () => { setValue('journeyDate', today, { shouldValidate: true }); clearErrors('journeyDate'); setSearchIssue(null); };
-
   const swap = () => {
     const source = watch('source'); const destination = watch('destination');
     setValue('source', destination, { shouldValidate: true }); setValue('destination', source, { shouldValidate: true });
     setSelectedSource(selectedDestination); setSelectedDestination(selectedSource); setSourceInput(destination || ''); setDestinationInput(source || '');
     lastSourceQuery.current = destination || ''; lastDestinationQuery.current = source || '';
   };
-
   const setStation = useCallback((field, option) => { const code = option?.code || ''; setValue(field, code, { shouldValidate: true }); clearErrors(field); }, [clearErrors, setValue]);
-
   const applyRecentSearch = (search) => {
     const normalized = normalizeSearch(search, today);
     Object.entries(normalized).forEach(([field, value]) => setValue(field, value, { shouldValidate: true }));
@@ -95,171 +94,22 @@ export default function HomePage() {
     setSearchIssue(search.journeyDate && search.journeyDate < today ? { title: 'Recent search updated', message: "That recent search used an old journey date, so today's date was selected.", actionLabel: null } : null);
   };
 
-  const searchProps = {
-    today, register, handleSubmit, onSubmit, onInvalid, errors, trains, selectedSource, selectedDestination, sourceInput, destinationInput,
-    sourceOptions, destinationOptions, sourceLoading, destinationLoading, sourceError, destinationError, recentSearches, applyRecentSearch, swap,
-    onSourceInput: (value) => { setSourceInput(value); setSelectedSource(null); setValue('source', '', { shouldValidate: true }); if (!value.trim()) { setSourceOptions([]); setSourceError(''); lastSourceQuery.current = ''; } },
-    onSourceClear: () => { setSourceInput(''); setSelectedSource(null); setSourceOptions([]); lastSourceQuery.current = ''; setValue('source', '', { shouldValidate: true }); },
-    onSourceChange: (option) => { setSelectedSource(option); setStation('source', option); },
-    onDestinationInput: (value) => { setDestinationInput(value); setSelectedDestination(null); setValue('destination', '', { shouldValidate: true }); if (!value.trim()) { setDestinationOptions([]); setDestinationError(''); lastDestinationQuery.current = ''; } },
-    onDestinationClear: () => { setDestinationInput(''); setSelectedDestination(null); setDestinationOptions([]); lastDestinationQuery.current = ''; setValue('destination', '', { shouldValidate: true }); },
-    onDestinationChange: (option) => { setSelectedDestination(option); setStation('destination', option); }
-  };
+  const searchProps = { today, register, handleSubmit, onSubmit, onInvalid, errors, trains, selectedSource, selectedDestination, sourceInput, destinationInput, sourceOptions, destinationOptions, sourceLoading, destinationLoading, sourceError, destinationError, recentSearches, applyRecentSearch, swap, onSourceInput: (value) => { setSourceInput(value); setSelectedSource(null); setValue('source', '', { shouldValidate: true }); if (!value.trim()) { setSourceOptions([]); setSourceError(''); lastSourceQuery.current = ''; } }, onSourceClear: () => { setSourceInput(''); setSelectedSource(null); setSourceOptions([]); lastSourceQuery.current = ''; setValue('source', '', { shouldValidate: true }); }, onSourceChange: (option) => { setSelectedSource(option); setStation('source', option); }, onDestinationInput: (value) => { setDestinationInput(value); setSelectedDestination(null); setValue('destination', '', { shouldValidate: true }); if (!value.trim()) { setDestinationOptions([]); setDestinationError(''); lastDestinationQuery.current = ''; } }, onDestinationClear: () => { setDestinationInput(''); setSelectedDestination(null); setDestinationOptions([]); lastDestinationQuery.current = ''; setValue('destination', '', { shouldValidate: true }); }, onDestinationChange: (option) => { setSelectedDestination(option); setStation('destination', option); } };
 
-  return <><HomeHero compact={compactSearch} searchProps={searchProps} />{!compactSearch && <HomeShowcase />}<HomeResults compactSearch={compactSearch} searchIssue={searchIssue} trains={trains} sortedResults={sortedResults} hasResults={hasResults} onRetry={handleSubmit(onSubmit, onInvalid)} onUseToday={useToday} getAvailabilityStatus={getAvailabilityStatus} formatFare={formatFare} formatDuration={formatDuration} getToday={getToday} /></>;
+  return <main className="sr-terminal-page"><HomeHero /><SearchCommandCenter searchProps={searchProps} hasSearchAttempt={hasSearchAttempt} /><FeaturedDestinations /><LiveRailStats /><SmartRailInsights /><RouteExplorer /><PremiumTrainResults searchIssue={searchIssue} trains={trains} sortedResults={sortedResults} hasResults={hasResults} onRetry={handleSubmit(onSubmit, onInvalid)} onUseToday={useToday} getAvailabilityStatus={getAvailabilityStatus} formatFare={formatFare} formatDuration={formatDuration} getToday={getToday} /></main>;
 }
 
-function getToday() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function getInitialSearchValues(today) {
-  const recent = readRecentSearches(today)[0];
-  return recent || { source: '', destination: '', journeyDate: today, travelClass: '3A', quota: 'GENERAL' };
-}
-
-function stationFromCode(code) {
-  return code ? { code, name: '' } : null;
-}
-
-function formatStationLabel(option) {
-  if (!option) {
-    return '';
-  }
-  return option.name ? `${option.code} - ${option.name}` : option.code;
-}
-
-function normalizeStationQuery(value) {
-  const query = String(value || '').trim();
-  const labelMatch = query.match(/^([A-Za-z0-9]+)\s+-\s+.+$/);
-  return (labelMatch ? labelMatch[1] : query).toUpperCase();
-}
-
-function cleanSearch(values) {
-  return {
-    source: String(values.source || '').trim().toUpperCase(),
-    destination: String(values.destination || '').trim().toUpperCase(),
-    journeyDate: values.journeyDate || '',
-    travelClass: values.travelClass || '3A',
-    quota: values.quota || 'GENERAL'
-  };
-}
-
-function normalizeSearch(values, today) {
-  return {
-    source: String(values.source || '').trim().toUpperCase(),
-    destination: String(values.destination || '').trim().toUpperCase(),
-    journeyDate: values.journeyDate && values.journeyDate >= today ? values.journeyDate : today,
-    travelClass: values.travelClass || '3A',
-    quota: values.quota || 'GENERAL'
-  };
-}
-
-function validateSearch(values, today) {
-  if (!values.source || !values.destination || !values.journeyDate || !values.travelClass || !values.quota) {
-    return { title: 'Search could not be completed', message: 'Please check source, destination, date, and class.' };
-  }
-  if (values.source === values.destination) {
-    return { title: 'Search could not be completed', message: 'Source and destination cannot be the same.', field: 'destination' };
-  }
-  if (values.journeyDate < today) {
-    return {
-      title: 'Search could not be completed',
-      message: 'Please select today or a future journey date.',
-      field: 'journeyDate',
-      actionLabel: "Use today's date",
-      fixDate: true
-    };
-  }
-  return null;
-}
-
-function readRecentSearches(today) {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(recentSearchKey) || '[]');
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-    return parsed
-      .map((item) => normalizeSearch(item, today))
-      .filter((item) => item.source && item.destination && item.source !== item.destination)
-      .slice(0, 5);
-  } catch {
-    return [];
-  }
-}
-
-function saveRecentSearch(search, today) {
-  const current = readRecentSearches(today);
-  const next = [search, ...current.filter((item) => (
-    item.source !== search.source ||
-    item.destination !== search.destination ||
-    item.travelClass !== search.travelClass ||
-    item.quota !== search.quota
-  ))].slice(0, 5);
-  localStorage.setItem(recentSearchKey, JSON.stringify(next));
-  return next;
-}
-
-function sortResults(results) {
-  return [...(results || [])].sort((a, b) => {
-    const aSeats = Number(a.availableSeats || 0);
-    const bSeats = Number(b.availableSeats || 0);
-    if ((aSeats > 0) !== (bSeats > 0)) {
-      return aSeats > 0 ? -1 : 1;
-    }
-    const timeCompare = minutesFromTime(a.departureTime) - minutesFromTime(b.departureTime);
-    if (timeCompare !== 0) {
-      return timeCompare;
-    }
-    return Number(a.durationMinutes || 0) - Number(b.durationMinutes || 0);
-  });
-}
-
-function minutesFromTime(value) {
-  const [hours = '0', minutes = '0'] = String(value || '00:00').split(':');
-  return Number(hours) * 60 + Number(minutes);
-}
-
-function getAvailabilityStatus(train) {
-  const seats = Number(train.availableSeats || 0);
-  if (seats > 0) {
-    return {
-      canBook: true,
-      color: seats < 10 ? 'warning' : 'success',
-      label: seats < 10 ? 'Limited seats' : 'Available',
-      detail: `${seats} seats available`
-    };
-  }
-  const prediction = String(train.prediction || '').trim();
-  const label = /class not available/i.test(prediction) ? 'Class not available' : 'Sold out';
-  return {
-    canBook: false,
-    color: 'error',
-    label,
-    detail: prediction && prediction !== label ? prediction : 'Booking is unavailable for this class'
-  };
-}
-
-function formatTime(value) {
-  if (!value) {
-    return '-';
-  }
-  const [hours = '00', minutes = '00'] = String(value).split(':');
-  return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
-}
-
-function formatDuration(minutes) {
-  const total = Number(minutes || 0);
-  const hours = Math.floor(total / 60);
-  const remainingMinutes = total % 60;
-  return `${hours}h ${String(remainingMinutes).padStart(2, '0')}m`;
-}
-
-function formatFare(value) {
-  const amount = Number(value);
-  if (!Number.isFinite(amount)) {
-    return 'Rs -';
-  }
-  return `Rs ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
+function getToday() { return new Date().toISOString().slice(0, 10); }
+function getInitialSearchValues(today) { const recent = readRecentSearches(today)[0]; return recent || { source: '', destination: '', journeyDate: today, travelClass: '3A', quota: 'GENERAL' }; }
+function stationFromCode(code) { return code ? { code, name: '' } : null; }
+function normalizeStationQuery(value) { const query = String(value || '').trim(); const labelMatch = query.match(/^([A-Za-z0-9]+)\s+-\s+.+$/); return (labelMatch ? labelMatch[1] : query).toUpperCase(); }
+function cleanSearch(values) { return { source: String(values.source || '').trim().toUpperCase(), destination: String(values.destination || '').trim().toUpperCase(), journeyDate: values.journeyDate || '', travelClass: values.travelClass || '3A', quota: values.quota || 'GENERAL' }; }
+function normalizeSearch(values, today) { return { source: String(values.source || '').trim().toUpperCase(), destination: String(values.destination || '').trim().toUpperCase(), journeyDate: values.journeyDate && values.journeyDate >= today ? values.journeyDate : today, travelClass: values.travelClass || '3A', quota: values.quota || 'GENERAL' }; }
+function validateSearch(values, today) { if (!values.source || !values.destination || !values.journeyDate || !values.travelClass || !values.quota) return { title: 'Search could not be completed', message: 'Please check source, destination, date, and class.' }; if (values.source === values.destination) return { title: 'Search could not be completed', message: 'Source and destination cannot be the same.', field: 'destination' }; if (values.journeyDate < today) return { title: 'Search could not be completed', message: 'Please select today or a future journey date.', field: 'journeyDate', actionLabel: "Use today's date", fixDate: true }; return null; }
+function readRecentSearches(today) { try { const parsed = JSON.parse(localStorage.getItem(recentSearchKey) || '[]'); if (!Array.isArray(parsed)) return []; return parsed.map((item) => normalizeSearch(item, today)).filter((item) => item.source && item.destination && item.source !== item.destination).slice(0, 5); } catch { return []; } }
+function saveRecentSearch(search, today) { const current = readRecentSearches(today); const next = [search, ...current.filter((item) => item.source !== search.source || item.destination !== search.destination || item.travelClass !== search.travelClass || item.quota !== search.quota)].slice(0, 5); localStorage.setItem(recentSearchKey, JSON.stringify(next)); return next; }
+function sortResults(results) { return [...(results || [])].sort((a, b) => { const aSeats = Number(a.availableSeats || 0); const bSeats = Number(b.availableSeats || 0); if ((aSeats > 0) !== (bSeats > 0)) return aSeats > 0 ? -1 : 1; const timeCompare = minutesFromTime(a.departureTime) - minutesFromTime(b.departureTime); if (timeCompare !== 0) return timeCompare; return Number(a.durationMinutes || 0) - Number(b.durationMinutes || 0); }); }
+function minutesFromTime(value) { const [hours = '0', minutes = '0'] = String(value || '00:00').split(':'); return Number(hours) * 60 + Number(minutes); }
+function getAvailabilityStatus(train) { const seats = Number(train.availableSeats || 0); if (seats > 0) return { canBook: true, color: seats < 10 ? 'warning' : 'success', label: seats < 10 ? 'Limited seats' : 'Available', detail: `${seats} seats available` }; const prediction = String(train.prediction || '').trim(); const label = /class not available/i.test(prediction) ? 'Class not available' : 'Sold out'; return { canBook: false, color: 'error', label, detail: prediction && prediction !== label ? prediction : 'Booking is unavailable for this class' }; }
+function formatDuration(minutes) { const total = Number(minutes || 0); const hours = Math.floor(total / 60); const remainingMinutes = total % 60; return `${hours}h ${String(remainingMinutes).padStart(2, '0')}m`; }
+function formatFare(value) { const amount = Number(value); if (!Number.isFinite(amount)) return '₹ -'; return `₹${amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`; }
