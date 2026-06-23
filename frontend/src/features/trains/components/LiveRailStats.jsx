@@ -1,0 +1,3 @@
+import { motion } from 'framer-motion';
+const stats = [['120+', 'Routes'], ['1M+', 'Searches'], ['24/7', 'Support'], ['99.9%', 'Availability']];
+export default function LiveRailStats() { return <section className="sr-network"><div className="sr-map-panel"><div className="sr-map-lines"><i /><i /><i /><b /><b /><b /></div><div className="sr-section-copy"><span>LIVE SOUTHRAIL NETWORK</span><h2>Southern routes, monitored like an airport operations floor</h2></div><div className="sr-stat-grid">{stats.map(([value, label]) => <motion.div className="sr-live-stat" key={label} whileInView={{ scale: [0.95, 1] }} viewport={{ once: true }}><strong>{value}</strong><span>{label}</span></motion.div>)}</div></div></section>; }
