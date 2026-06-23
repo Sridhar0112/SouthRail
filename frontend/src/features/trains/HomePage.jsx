@@ -29,6 +29,8 @@ import ExploreIcon from '@mui/icons-material/Explore';
 import SearchIcon from '@mui/icons-material/Search';
 import ShieldIcon from '@mui/icons-material/Shield';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import trainAccentOne from '../../assets/southrail/train-2.png';
+import trainAccentTwo from '../../assets/southrail/train-3.png';
 import { EmptyState, ErrorState, LoadingState } from '../../components/StateFeedback.jsx';
 import api from '../../services/api.js';
 import { getApiErrorMessage } from '../../utils/apiErrors.js';
@@ -207,11 +209,12 @@ export default function HomePage() {
                 <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
                   <Stack spacing={2.2} alignItems="flex-start">
                     <Chip className="hero-kicker" icon={<DirectionsRailwayIcon />} label="SouthRail premium booking" />
-                    <Typography variant="h1" sx={{ maxWidth: 760, textShadow: '0 18px 46px rgba(0,0,0,.28)' }}>
-                      Book South India by rail with speed, clarity, and confidence.
+                    <Typography variant="h1" className="hero-title" sx={{ maxWidth: 700 }}>
+                      Find Trains. Plan Journeys.
+                      <Box component="span" className="hero-title-accent">Create Memories.</Box>
                     </Typography>
-                    <Typography variant="h6" sx={{ maxWidth: 690, color: 'rgba(235,245,255,.88)', fontWeight: 600, fontSize: { xs: '1rem', sm: '1.08rem' } }}>
-                      Plan scenic coastal, temple-city, and business routes with real-time train search, polished fare insights, and a smoother reservation flow.
+                    <Typography variant="h6" className="hero-subtitle" sx={{ maxWidth: 570, fontWeight: 700, fontSize: { xs: '1rem', sm: '1.08rem' } }}>
+                      Search and discover the best train options across South India.
                     </Typography>
                     <Stack direction="row" spacing={1.2} flexWrap="wrap" useFlexGap>
                       {['Instant route search', 'Smart availability', 'Secure booking'].map((item) => (
@@ -343,9 +346,9 @@ export default function HomePage() {
       {!compactSearch && (
         <Container maxWidth="xl" sx={{ mt: { xs: -2, md: -4 }, position: 'relative', zIndex: 2 }}>
           <Grid container spacing={2}>
-            <FeatureCard icon={<ExploreIcon />} title="Scenic southern corridors" text="Discover coastal, hill-country, and metro routes in a booking-first layout." />
+            <FeatureCard icon={<ExploreIcon />} title="Scenic southern corridors" text="Discover coastal, hill-country, and metro routes in a booking-first layout." image={trainAccentOne} />
             <FeatureCard icon={<AccessTimeIcon />} title="Clear trip intelligence" text="Compare fares, duration, and availability before you commit." />
-            <FeatureCard icon={<ShieldIcon />} title="Premium secure flow" text="A focused reservation experience with crisp states and modern feedback." />
+            <FeatureCard icon={<ShieldIcon />} title="Premium secure flow" text="A focused reservation experience with crisp states and modern feedback." image={trainAccentTwo} />
           </Grid>
         </Container>
       )}
@@ -383,10 +386,11 @@ function HeroStat({ value, label }) {
   );
 }
 
-function FeatureCard({ icon, title, text }) {
+function FeatureCard({ icon, title, text, image }) {
   return (
     <Grid item xs={12} md={4}>
       <Card className="home-feature-card">
+        {image && <Box component="img" className="home-feature-image" src={image} alt="" aria-hidden="true" />}
         <CardContent>
           <Stack direction="row" spacing={1.5} alignItems="center">
             <Box className="feature-icon">{icon}</Box>
@@ -432,6 +436,7 @@ function RecentSearches({ searches, onSelect }) {
       <Typography variant="body2" color="text.secondary">Recent searches</Typography>
       {searches.slice(0, 4).map((item) => (
         <Chip
+          className="recent-search-chip"
           key={`${item.source}-${item.destination}-${item.journeyDate}-${item.travelClass}`}
           label={`${item.source} to ${item.destination} - ${item.journeyDate} - ${item.travelClass}`}
           onClick={() => onSelect(item)}
