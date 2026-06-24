@@ -17,3 +17,5 @@ export function formatFare(value) { const amount = Number(value); if (!Number.is
 export function formatTime(value) { if (!value) return '--:--'; const [hours = '00', minutes = '00'] = String(value).split(':'); return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`; }
 export function toSearchParams(search) { return new URLSearchParams(search).toString(); }
 export function fromSearchParams(searchParams, today) { return normalizeSearch(Object.fromEntries(searchParams.entries()), today); }
+
+export function searchKey(search = {}) { return [search.source || '', search.destination || '', search.journeyDate || '', search.travelClass || '', search.quota || ''].join('|'); }

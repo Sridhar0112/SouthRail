@@ -1,8 +1,8 @@
 import { Box, Button, Grid, Paper, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import trainTwo from '../../../assets/southrail/train-2.png';
-import trainThree from '../../../assets/southrail/train-3.png';
-import heroTrain from '../../../assets/southrail/hero-train.png';
+import trainTwo from '../../../../assets/southrail/train-2.png';
+import trainThree from '../../../../assets/southrail/train-3.png';
+import heroTrain from '../../../../assets/southrail/hero-train.png';
 import HomeSection from './HomeSection.jsx';
 
 const routes = [

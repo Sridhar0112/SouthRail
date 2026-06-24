@@ -123,7 +123,11 @@ export function AppThemeProvider({ children }) {
               '--southrail-glass-shadow': palette.custom.glassShadow,
               '--southrail-card-shadow': palette.custom.cardShadow,
               '--southrail-raised-surface': palette.surface.raised,
-              '--southrail-elevated-surface': palette.surface.elevated
+              '--southrail-elevated-surface': palette.surface.elevated,
+              '--southrail-radius-lg': '18px',
+              '--southrail-radius-xl': '26px',
+              '--southrail-transition-fast': '160ms ease',
+              '--southrail-focus-ring': isLight ? '0 0 0 3px rgba(245,158,11,0.35)' : '0 0 0 3px rgba(253,186,45,0.5)'
             }
           }
         },
