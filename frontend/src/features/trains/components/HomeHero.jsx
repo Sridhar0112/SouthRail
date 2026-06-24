@@ -1,30 +1,54 @@
-import { BookingSearchPanel, popularRoutes } from './SearchCommandCenter.jsx';
+import { Box, Chip, Container, Grid, Paper, Stack, Typography } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import TrainIcon from '@mui/icons-material/Train';
+import heroTrain from '../../../assets/southrail/hero-train.png';
+import JourneySearchCard from './JourneySearchCard.jsx';
 
-const trust = [
-  ['PCI-ready payments', 'Encrypted checkout'],
-  ['PNR-grade tickets', 'Instant itinerary'],
-  ['24/7 operations', 'Human support'],
-  ['Live seat logic', 'Availability first'],
-];
+const operatingSignals = ['Search trains', 'Check seats', 'Reserve tickets'];
 
 export default function HomeHero({ searchProps }) {
-  const applyRoute = (route) => searchProps.applyRecentSearch({ source: route.from, destination: route.to, journeyDate: searchProps.today, travelClass: '3A', quota: 'GENERAL' });
   return (
-    <section className="sr-reservation-hero">
-      <div className="sr-product-topbar"><div className="sr-brand-mark"><span>SR</span><div><strong>SouthRail</strong><small>Reservation System</small></div></div><div className="sr-topbar-meta"><b>LIVE</b><span>Southern Railway network</span></div></div>
-      <div className="sr-hero-grid">
-        <div className="sr-hero-copy">
-          <p className="sr-eyebrow">PRODUCTION RAIL BOOKING</p>
-          <h1>Search, compare, and reserve South India trains.</h1>
-          <p className="sr-hero-mantra">A high-confidence reservation flow for routes, availability, fares, quota, and seat booking.</p>
-          <div className="sr-trust-grid">{trust.map(([label, detail]) => <div key={label}><strong>{label}</strong><span>{detail}</span></div>)}</div>
-        </div>
-        <BookingSearchPanel searchProps={searchProps} compact />
-      </div>
-      <div className="sr-first-viewport-boards">
-        <div className="sr-route-table"><div className="sr-board-heading"><span>POPULAR ROUTES</span><b>Tap to prefill</b></div>{popularRoutes.map((route) => <button key={route.name} type="button" onClick={() => applyRoute(route)}><span>{route.name}</span><small>{route.fastest} · {route.demand} demand</small></button>)}</div>
-        <div className="sr-availability-board"><div className="sr-board-heading"><span>QUICK AVAILABILITY</span><b>Fast access</b></div><button type="button" onClick={() => searchProps.handleSubmit(searchProps.onSubmit, searchProps.onInvalid)()}>Check selected route now</button><button type="button" onClick={() => applyRoute(popularRoutes[0])}>Today: MS → MDU</button><button type="button" onClick={() => applyRoute(popularRoutes[1])}>Today: MAS → CBE</button></div>
-      </div>
+    <section className="sr-home-hero" aria-labelledby="southrail-home-title">
+      <Container maxWidth="xl">
+        <Grid container spacing={{ xs: 2, lg: 2.5 }} alignItems="stretch">
+          <Grid item xs={12} lg={7.2}>
+            <Paper className="sr-hero-panel sr-hero-panel--search" elevation={0}>
+              <Stack spacing={{ xs: 1.35, md: 1.6 }}>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
+                  <Chip className="sr-rail-chip" icon={<TrainIcon />} label="SouthRail reservation desk" color="primary" />
+                  <Chip className="sr-rail-chip" variant="outlined" label="Live route availability" />
+                </Stack>
+                <Box>
+                  <Typography id="southrail-home-title" variant="h1" className="sr-home-title">
+                    Search, check availability, and reserve South Indian trains.
+                  </Typography>
+                  <Typography color="text.secondary" className="sr-home-lede">
+                    A booking-first railway workspace for Chennai, Madurai, Coimbatore, Nagercoil, Salem, and the wider southern corridor.
+                  </Typography>
+                </Box>
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap className="sr-signal-row">
+                  {operatingSignals.map((signal) => (
+                    <span key={signal}><CheckCircleIcon fontSize="small" />{signal}</span>
+                  ))}
+                </Stack>
+                <JourneySearchCard compact searchProps={searchProps} {...searchProps} />
+              </Stack>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} lg={4.8}>
+            <Paper className="sr-hero-panel sr-hero-panel--image" elevation={0}>
+              <Box className="sr-hero-image-wrap">
+                <Box component="img" src={heroTrain} alt="SouthRail train at a platform used as the main journey search visual" />
+                <Box className="sr-platform-board">
+                  <span>NEXT DEPARTURES</span>
+                  <strong>MAS → MDU</strong>
+                  <small>3A · General · Seats monitored</small>
+                </Box>
+              </Box>
+            </Paper>
+          </Grid>
+        </Grid>
+      </Container>
     </section>
   );
 }

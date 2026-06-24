@@ -1,1 +1,76 @@
-:root{--sr-bg:#050816;--sr-panel:#0b1224;--sr-panel-2:#101a33;--sr-border:rgba(229,237,255,.13);--sr-gold:#d9a441;--sr-gold-2:#f4c96b;--sr-blue:#58a6ff;--sr-green:#22c55e;--sr-red:#ef4444;--sr-text:#f8fbff;--sr-muted:#9aa8c7}.sr-terminal-page{min-height:100vh;background:var(--sr-bg);color:var(--sr-text);overflow:hidden;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.sr-reservation-hero{min-height:100vh;padding:22px clamp(16px,4vw,56px) 30px;background:radial-gradient(circle at 85% 0,rgba(217,164,65,.16),transparent 30%),linear-gradient(180deg,#071024 0%,#050816 82%);display:flex;flex-direction:column;gap:18px}.sr-product-topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:14px 0}.sr-brand-mark{display:flex;align-items:center;gap:12px}.sr-brand-mark>span{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--sr-gold),#7c5a16);color:#061024;font-weight:1000;letter-spacing:-.08em}.sr-brand-mark strong{display:block;font-size:1.2rem}.sr-brand-mark small,.sr-topbar-meta span,.sr-trust-grid span,.sr-route-table small,.sr-availability-board b,.sr-board-heading b,.sr-departure small{color:var(--sr-muted)}.sr-topbar-meta{display:flex;align-items:center;gap:10px}.sr-topbar-meta b,.sr-command-header strong{color:var(--sr-green);border:1px solid rgba(34,197,94,.35);background:rgba(34,197,94,.08);padding:8px 12px;border-radius:999px;font-size:.75rem}.sr-hero-grid{flex:1;display:grid;grid-template-columns:minmax(0,.86fr) minmax(620px,1.14fr);gap:24px;align-items:center}.sr-eyebrow,.sr-command-header span,.sr-board-heading span,.sr-section-copy span{letter-spacing:.24em;color:var(--sr-gold-2);font-size:.72rem;font-weight:1000}.sr-hero-copy h1{font-size:clamp(3rem,6.6vw,6.8rem);line-height:.9;margin:16px 0 18px;letter-spacing:-.075em;max-width:850px}.sr-hero-mantra{color:#dce8ff;font-size:clamp(1rem,1.5vw,1.35rem);line-height:1.55;max-width:680px}.sr-trust-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:28px}.sr-trust-grid div{border:1px solid var(--sr-border);background:rgba(11,18,36,.72);border-radius:18px;padding:15px}.sr-trust-grid strong,.sr-trust-grid span{display:block}.sr-booking-panel,.sr-departure{background:rgba(11,18,36,.94);border:1px solid var(--sr-border);border-radius:28px;box-shadow:0 30px 90px rgba(0,0,0,.35)}.sr-booking-panel{padding:clamp(18px,3vw,30px)}.sr-command-header,.sr-departure-meta,.sr-premium-timeline{display:flex;align-items:center;justify-content:space-between;gap:18px}.sr-command-header h2,.sr-section-copy h2{font-size:clamp(1.8rem,3.6vw,3.4rem);line-height:.96;margin:8px 0 0;letter-spacing:-.055em}.sr-console-form{display:grid;grid-template-columns:1.35fr 54px 1.35fr .9fr .65fr .9fr .95fr;gap:12px;margin-top:24px}.sr-console-form .MuiInputBase-root,.sr-console-form .MuiFormLabel-root{color:var(--sr-text)!important}.sr-console-form fieldset{border-color:var(--sr-border)!important}.sr-console-form input,.sr-console-form select{color:var(--sr-text)!important}.sr-swap-control,.sr-command-submit,.sr-route-table button,.sr-availability-board button{border:0;cursor:pointer;font-weight:1000}.sr-swap-control{border-radius:16px;background:#121b34;color:var(--sr-gold-2);font-size:1.55rem}.sr-command-submit{border-radius:16px;background:linear-gradient(135deg,var(--sr-gold-2),var(--sr-gold));color:#130d01;font-size:1rem;box-shadow:0 14px 36px rgba(217,164,65,.22)}.sr-live-route{margin-top:20px;display:flex;align-items:center;gap:14px;color:#dbe7ff;font-weight:1000}.sr-live-route i{height:3px;flex:1;background:linear-gradient(90deg,var(--sr-blue),var(--sr-gold));position:relative}.sr-live-route i:after{content:"";position:absolute;right:0;top:-5px;width:13px;height:13px;border-radius:50%;background:var(--sr-gold)}.sr-console-warning{color:var(--sr-gold-2);font-weight:800}.sr-first-viewport-boards{display:grid;grid-template-columns:1.4fr .9fr;gap:16px}.sr-route-table,.sr-availability-board{border:1px solid var(--sr-border);background:rgba(5,8,22,.72);border-radius:22px;padding:16px}.sr-board-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.sr-route-table{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.sr-route-table .sr-board-heading{grid-column:1/-1}.sr-route-table button,.sr-availability-board button{text-align:left;border-radius:14px;background:#101a33;color:var(--sr-text);padding:14px;border:1px solid var(--sr-border)}.sr-route-table button span,.sr-route-table button small{display:block}.sr-route-table button span{font-weight:1000}.sr-availability-board{display:grid;gap:10px}.sr-availability-board button:first-of-type{background:var(--sr-gold);color:#130d01}.sr-results-deck{padding:70px clamp(16px,5vw,72px)}.sr-section-copy{max-width:850px;margin:0 auto 30px;text-align:center}.sr-premium-results{max-width:1180px;margin:auto;display:grid;gap:16px}.sr-departure{padding:24px}.sr-departure--closed{opacity:.66}.sr-train-identity{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:22px}.sr-train-identity span{font-size:1.35rem;font-weight:1000}.sr-train-identity strong{color:var(--sr-gold-2);font-size:1.05rem}.sr-station-block strong{font-size:2rem}.sr-station-block span{display:block;font-weight:1000;color:#dbe7ff}.sr-rail-time{flex:1;text-align:center}.sr-rail-time i{display:block;height:4px;background:linear-gradient(90deg,var(--sr-blue),var(--sr-gold));border-radius:999px;position:relative}.sr-rail-time i:before,.sr-rail-time i:after{content:"";position:absolute;top:-7px;width:18px;height:18px;border-radius:50%;background:#050816;border:4px solid var(--sr-gold)}.sr-rail-time i:before{left:0}.sr-rail-time i:after{right:0}.sr-rail-time span{display:inline-block;margin-top:12px;color:var(--sr-muted);font-weight:900}.sr-departure-meta{margin-top:24px;padding-top:20px;border-top:1px solid var(--sr-border)}.sr-departure-meta b{display:block}.sr-green{color:var(--sr-green)}.sr-red{color:var(--sr-red)}.sr-reserve-seat{background:var(--sr-gold);color:#160d00;text-decoration:none;border-radius:16px;padding:15px 20px;font-weight:1000;text-align:center}.sr-disabled-link{background:#243047;color:#9aa8c7}@media (max-width:1100px){.sr-hero-grid,.sr-first-viewport-boards{grid-template-columns:1fr}.sr-console-form{grid-template-columns:1fr 52px 1fr}.sr-command-submit{min-height:54px}.sr-route-table{grid-template-columns:repeat(2,1fr)}}@media (max-width:720px){.sr-reservation-hero{min-height:auto}.sr-product-topbar,.sr-command-header,.sr-departure-meta,.sr-premium-timeline,.sr-train-identity{align-items:stretch;flex-direction:column}.sr-hero-copy h1{font-size:3.2rem}.sr-trust-grid,.sr-console-form,.sr-route-table{grid-template-columns:1fr}.sr-swap-control{height:52px}.sr-results-deck{padding:52px 16px}.sr-departure{padding:18px}.sr-reserve-seat{display:block}}
+.sr-home-page {
+  min-height: 100vh;
+  color: var(--mui-palette-text-primary, inherit);
+}
+.sr-home-hero { padding: clamp(18px, 3vw, 34px) 0 clamp(22px, 4vw, 44px); }
+.sr-hero-panel,.sr-route-card,.sr-benefit-panel,.sr-preview-row,.sr-quick-card,.sr-results-bridge,.sr-search-card { border: 1px solid var(--southrail-glass-border); background: var(--southrail-glass-bg); box-shadow: var(--southrail-card-shadow); }
+.sr-hero-panel { height: 100%; overflow: hidden; border-radius: 24px; }
+.sr-hero-panel--search { padding: clamp(18px, 3vw, 30px); }
+.sr-hero-panel--image { min-height: 100%; background: linear-gradient(145deg, rgba(11, 79, 217, 0.14), rgba(245, 158, 11, 0.12)); }
+.sr-home-title { max-width: 900px; margin: 0 0 10px; }
+.sr-home-lede { max-width: 780px; font-size: clamp(0.92rem, 1.5vw, 1.05rem); }
+.sr-rail-chip.MuiChip-root { height: 26px; font-weight: 900; }
+.sr-signal-row span { display: inline-flex; align-items: center; gap: 6px; color: var(--mui-palette-text-secondary); font-weight: 800; font-size: 0.8rem; }
+.sr-signal-row svg { color: var(--mui-palette-success-main); }
+.sr-hero-image-wrap { position: relative; height: 100%; min-height: 520px; isolation: isolate; }
+.sr-hero-image-wrap::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(7, 26, 58, 0.08), rgba(7, 26, 58, 0.72)); z-index: 1; }
+.sr-hero-image-wrap img,.sr-route-card > img,.sr-benefit-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sr-platform-board { position: absolute; left: 18px; right: 18px; bottom: 18px; z-index: 2; padding: 16px; border-radius: 18px; color: #fff; background: rgba(3, 10, 24, 0.82); border: 1px solid rgba(255, 255, 255, 0.18); }
+.sr-platform-board span,.sr-section-heading .MuiTypography-overline,.sr-benefit-panel .MuiTypography-overline,.sr-route-card .MuiTypography-overline,.sr-search-card .MuiTypography-overline { color: var(--mui-palette-secondary-main); font-weight: 1000; letter-spacing: 0.16em; }
+.sr-platform-board strong,.sr-platform-board small { display: block; }
+.sr-platform-board strong { font-size: 1.35rem; }
+.sr-platform-board small { color: rgba(255, 255, 255, 0.76); }
+.sr-search-card { padding: clamp(14px, 2.2vw, 20px); border-radius: 20px; }
+.sr-search-head { margin-bottom: 14px; }
+.sr-booking-badge { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; color: var(--mui-palette-primary-main); background: var(--mui-palette-action-hover); }
+.sr-field-icon { display: inline-flex; margin-right: 6px; color: var(--mui-palette-primary-main); }
+.sr-swap-cell { text-align: center; }
+.sr-swap-button.MuiButton-root { min-width: 42px; width: 42px; height: 38px; border-radius: 999px; background: var(--mui-palette-action-hover); }
+.sr-search-cta.MuiButton-root { min-height: 42px; font-weight: 900; }
+.sr-recent-row { margin-top: -2px; }
+.sr-recent-row > p { font-weight: 900; }
+.sr-recent-chip.MuiChip-root { cursor: pointer; }
+.sr-home-section { padding: clamp(26px, 5vw, 58px) 0; }
+.sr-section-heading { max-width: 820px; margin-bottom: 18px; }
+.sr-section-heading .MuiTypography-h2 { margin: 0; }
+.sr-route-card { position: relative; min-height: 320px; overflow: hidden; border-radius: 22px; }
+.sr-route-card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5, 18, 42, 0.02), rgba(5, 18, 42, 0.88)); }
+.sr-route-card-content { position: absolute; inset: auto 14px 14px; z-index: 1; color: #fff; }
+.sr-route-card h5 { display: flex; align-items: center; gap: 6px; color: #fff; }
+.sr-route-card span { color: rgba(255, 255, 255, 0.78); font-weight: 800; font-size: 0.8rem; }
+.sr-route-card .MuiButton-root { width: fit-content; }
+.sr-benefit-panel { border-radius: 26px; padding: clamp(16px, 3vw, 26px); overflow: hidden; }
+.sr-benefit-image { height: min(460px, 58vw); min-height: 280px; overflow: hidden; border-radius: 22px; border: 1px solid var(--southrail-glass-border); }
+.sr-benefit-row { display: grid; grid-template-columns: 48px 1fr; gap: 12px; align-items: start; padding: 14px; border-radius: 18px; background: var(--southrail-raised-surface); }
+.sr-benefit-row > b { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; color: var(--mui-palette-primary-main); background: var(--mui-palette-action-hover); }
+.sr-preview-board { max-width: 1180px; }
+.sr-preview-row { padding: 15px; border-radius: 20px; }
+.sr-preview-train { min-width: min(100%, 260px); }
+.sr-preview-train strong,.sr-preview-train span { display: block; }
+.sr-preview-route { flex: 1; display: grid; grid-template-columns: auto 1fr auto 1fr auto; gap: 10px; align-items: center; min-width: min(100%, 360px); }
+.sr-preview-route div { display: grid; gap: 2px; }
+.sr-preview-route small { color: var(--mui-palette-text-secondary); font-weight: 900; }
+.sr-preview-route i { height: 3px; min-width: 40px; border-radius: 999px; background: linear-gradient(90deg, var(--mui-palette-primary-main), var(--mui-palette-secondary-main)); }
+.sr-preview-actions { min-width: min(100%, 280px); justify-content: flex-end; }
+.sr-search-results-section { padding-top: 18px; }
+.sr-results-bridge { max-width: 1180px; margin: 0 auto; padding: clamp(14px, 2vw, 18px); border-radius: 22px; display: grid; gap: 12px; }
+.sr-result-message { display: grid; gap: 5px; }
+.sr-result-message strong { font-size: 1rem; }
+.sr-result-message span { color: var(--mui-palette-text-secondary); }
+.sr-result-message button { width: fit-content; border: 0; border-radius: 999px; padding: 7px 13px; font-weight: 900; color: var(--mui-palette-primary-contrastText); background: var(--mui-palette-primary-main); }
+.sr-live-result-row { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(280px, 1.4fr) minmax(190px, auto); gap: 14px; align-items: center; padding: 14px; border-radius: 18px; border: 1px solid var(--southrail-glass-border); background: var(--southrail-raised-surface); }
+.sr-live-result-row strong,.sr-live-result-row span { display: block; }
+.sr-live-result-route { display: grid; grid-template-columns: auto auto 1fr auto 1fr auto auto; gap: 8px; align-items: center; }
+.sr-live-result-route i { height: 3px; border-radius: 999px; background: linear-gradient(90deg, var(--mui-palette-primary-main), var(--mui-palette-secondary-main)); }
+.sr-live-result-route small { color: var(--mui-palette-text-secondary); font-weight: 900; }
+.sr-live-result-row a { display: inline-flex; margin-top: 6px; padding: 7px 12px; border-radius: 999px; font-weight: 900; color: var(--mui-palette-primary-contrastText); background: var(--mui-palette-primary-main); }
+.sr-status-good { color: var(--mui-palette-success-main); }
+.sr-status-stop { color: var(--mui-palette-error-main); }
+.sr-disabled-booking { opacity: 0.58; }
+.sr-quick-section { padding-bottom: clamp(40px, 7vw, 78px); }
+.sr-quick-card { height: 100%; padding: 16px; border-radius: 20px; display: grid; gap: 8px; }
+.sr-quick-card > span { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; color: var(--mui-palette-primary-main); background: var(--mui-palette-action-hover); }
+.sr-quick-card .MuiButton-root { justify-self: start; padding-left: 0; }
+@media (max-width: 1199.95px) { .sr-hero-image-wrap { min-height: 360px; } }
+@media (max-width: 899.95px) { .sr-preview-route,.sr-live-result-row,.sr-live-result-route { grid-template-columns: 1fr; } .sr-preview-route i,.sr-live-result-route i { display: none; } .sr-preview-actions { justify-content: flex-start; } }
+@media (max-width: 599.95px) { .sr-home-hero { padding-top: 14px; } .sr-hero-panel { border-radius: 18px; } .sr-hero-image-wrap { min-height: 300px; } .sr-route-card { min-height: 280px; } .sr-benefit-row { grid-template-columns: 1fr; } }
