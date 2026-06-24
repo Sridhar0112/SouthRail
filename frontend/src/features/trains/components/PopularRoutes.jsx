@@ -1,8 +1,9 @@
-import { Box, Button, Container, Grid, Paper, Stack, Typography } from '@mui/material';
+import { Box, Button, Grid, Paper, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import trainTwo from '../../../assets/southrail/train-2.png';
 import trainThree from '../../../assets/southrail/train-3.png';
 import heroTrain from '../../../assets/southrail/hero-train.png';
+import HomeSection from './HomeSection.jsx';
 
 const routes = [
   { from: 'Chennai', to: 'Madurai', code: 'MS → MDU', time: '7h 45m', demand: 'High demand', image: trainTwo },
@@ -13,20 +14,18 @@ const routes = [
 
 export default function PopularRoutes() {
   return (
-    <section className="sr-home-section" aria-labelledby="popular-routes-title">
-      <Container maxWidth="xl">
-        <SectionHeader eyebrow="Popular South Indian routes" title="Start with the corridors passengers search most." copy="Route cards keep railway context visible while giving returning passengers fast starting points for planning." />
-        <Grid container spacing={1.5}>
-          {routes.map((route) => <RouteCard key={route.code} route={route} />)}
-        </Grid>
-      </Container>
-    </section>
+    <HomeSection id="popular-routes" eyebrow="Popular South Indian routes" title="Start with the corridors passengers search most." copy="Route cards keep railway context visible while giving returning passengers fast starting points for planning.">
+      <Grid container spacing={1.5} alignItems="stretch">
+        {routes.map((route) => <RouteCard key={route.code} route={route} />)}
+      </Grid>
+    </HomeSection>
   );
 }
 
+
 function RouteCard({ route }) {
   return (
-    <Grid item xs={12} sm={6} lg={3}>
+    <Grid item xs={12} sm={6} lg={3} sx={{ display: 'flex' }}>
       <Paper className="sr-route-card" elevation={0}>
         <Box component="img" src={route.image} alt={`${route.from} to ${route.to} SouthRail route train`} />
         <Stack className="sr-route-card-content" spacing={1}>
@@ -40,8 +39,4 @@ function RouteCard({ route }) {
       </Paper>
     </Grid>
   );
-}
-
-function SectionHeader({ eyebrow, title, copy }) {
-  return <Stack className="sr-section-heading" spacing={0.75}><Typography variant="overline">{eyebrow}</Typography><Typography id="popular-routes-title" variant="h2">{title}</Typography><Typography color="text.secondary">{copy}</Typography></Stack>;
 }
