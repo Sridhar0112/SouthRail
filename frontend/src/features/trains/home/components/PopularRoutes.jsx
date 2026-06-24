@@ -1,20 +1,21 @@
 import { Box, Button, Grid, Paper, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import SearchIcon from '@mui/icons-material/Search';
 import trainTwo from '../../../../assets/southrail/train-2.png';
 import trainThree from '../../../../assets/southrail/train-3.png';
 import heroTrain from '../../../../assets/southrail/hero-train.png';
 import HomeSection from './HomeSection.jsx';
+import { getToday, toSearchParams } from '../../searchUtils.js';
 
 const routes = [
-  { from: 'Chennai', to: 'Madurai', code: 'MS → MDU', time: '7h 45m', demand: 'High demand', image: trainTwo },
-  { from: 'Chennai', to: 'Coimbatore', code: 'MAS → CBE', time: '6h 50m', demand: 'Frequent service', image: heroTrain },
-  { from: 'Madurai', to: 'Nagercoil', code: 'MDU → NCJ', time: '4h 35m', demand: 'Coastal link', image: trainThree },
-  { from: 'Trichy', to: 'Salem', code: 'TPJ → SA', time: '3h 55m', demand: 'Business route', image: trainTwo }
+  { from: 'Chennai Egmore', to: 'Madurai', code: 'MS → MDU', source: 'MS', destination: 'MDU', time: '7h 45m', demand: 'High demand', image: trainTwo },
+  { from: 'Chennai Central', to: 'Coimbatore', code: 'MAS → CBE', source: 'MAS', destination: 'CBE', time: '6h 50m', demand: 'Frequent service', image: heroTrain },
+  { from: 'Madurai', to: 'Nagercoil', code: 'MDU → NCJ', source: 'MDU', destination: 'NCJ', time: '4h 35m', demand: 'Coastal link', image: trainThree }
 ];
 
 export default function PopularRoutes() {
   return (
-    <HomeSection id="popular-routes" eyebrow="Popular South Indian routes" title="Start with the corridors passengers search most." copy="Route cards keep railway context visible while giving returning passengers fast starting points for planning.">
+    <HomeSection id="popular-routes" eyebrow="Popular routes" title="Compare high-traffic corridors quickly." copy="Choose a route card to open train results with a default class and quota.">
       <Grid container spacing={1.5} alignItems="stretch">
         {routes.map((route) => <RouteCard key={route.code} route={route} />)}
       </Grid>
@@ -22,10 +23,17 @@ export default function PopularRoutes() {
   );
 }
 
-
 function RouteCard({ route }) {
+  const search = toSearchParams({
+    source: route.source,
+    destination: route.destination,
+    journeyDate: getToday(),
+    travelClass: '3A',
+    quota: 'GENERAL'
+  });
+
   return (
-    <Grid item xs={12} sm={6} lg={3} sx={{ display: 'flex' }}>
+    <Grid item xs={12} md={4} sx={{ display: 'flex' }}>
       <Paper className="sr-route-card" elevation={0}>
         <Box component="img" src={route.image} alt={`${route.from} to ${route.to} SouthRail route train`} />
         <Stack className="sr-route-card-content" spacing={1}>
@@ -34,7 +42,7 @@ function RouteCard({ route }) {
           <Stack direction="row" justifyContent="space-between" spacing={1}>
             <span>{route.time}</span><span>{route.demand}</span>
           </Stack>
-          <Button size="small" variant="contained">Check route</Button>
+          <Button size="small" variant="contained" startIcon={<SearchIcon />} href={`/trains/search?${search}`}>Search trains</Button>
         </Stack>
       </Paper>
     </Grid>
