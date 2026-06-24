@@ -104,3 +104,63 @@
 @media (max-width: 1199.95px) { .sr-hero-image-wrap { min-height: clamp(300px, 48vw, 420px); } }
 @media (max-width: 899.95px) { .sr-home-section { padding: clamp(22px, 6vw, 42px) 0; } .sr-live-result-row { grid-template-columns: 1fr; align-items: stretch; } .sr-live-result-route { grid-template-columns: minmax(0, 1fr); } .sr-live-result-route i { display: none; } }
 @media (max-width: 599.95px) { .sr-home-hero { padding-top: 12px; } .sr-hero-panel--search { padding: 14px; } .sr-search-card { padding: 12px; } .sr-search-head { align-items: flex-start; } .sr-swap-cell { text-align: left; } .sr-swap-button.MuiButton-root { transform: rotate(90deg); } .sr-preview-row,.sr-live-result-row,.sr-info-card,.sr-quick-card { padding: 14px; border-radius: 18px; } .sr-platform-board { left: 12px; right: 12px; bottom: 12px; padding: 12px; } }
+
+/* Utility-first home refactor: compact first viewport, reusable scales, dense booking flow. */
+.sr-home-page {
+  --sr-blue-900: #061936;
+  --sr-blue-700: #0b4fd9;
+  --sr-amber-500: #f59e0b;
+  --sr-space-1: 4px;
+  --sr-space-2: 8px;
+  --sr-space-3: 12px;
+  --sr-space-4: 16px;
+  --sr-space-5: 20px;
+  --sr-space-6: 24px;
+  --sr-radius-md: 14px;
+  --sr-radius-lg: 18px;
+  --sr-radius-xl: 24px;
+}
+.sr-home-hero {
+  min-height: calc(100svh - 50px);
+  padding: var(--sr-space-3) 0 var(--sr-space-4);
+  display: flex;
+  align-items: stretch;
+  background-image: linear-gradient(110deg, rgba(247,251,255,.98) 0%, rgba(232,242,255,.94) 45%, rgba(5,24,58,.48) 78%, rgba(4,17,43,.82) 100%), url('../../../assets/southrail/hero-train.png');
+  background-size: cover;
+  background-position: center right;
+}
+.sr-hero-container { display: flex; }
+.sr-hero-viewport { width: 100%; justify-content: center; }
+.sr-hero-grid { display: grid; grid-template-columns: minmax(300px, .82fr) minmax(560px, 1.18fr); gap: var(--sr-space-4); align-items: end; }
+.sr-hero-copy { max-width: 560px; }
+.sr-home-title.MuiTypography-root { max-width: 580px; margin: 0; font-size: clamp(2rem, 4.4vw, 4.15rem); line-height: .96; letter-spacing: -0.07em; font-weight: 950; color: var(--sr-blue-900); text-wrap: balance; }
+.sr-home-lede { max-width: 520px; font-size: clamp(.88rem, 1.1vw, 1rem); font-weight: 750; }
+.sr-search-tabs .MuiChip-root { height: 30px; padding-inline: 4px; font-size: .75rem; box-shadow: 0 10px 22px rgba(7,26,58,.08); }
+.sr-alert-strip { padding: 9px 12px; border: 1px solid var(--southrail-glass-border); border-radius: 999px; background: rgba(255,255,255,.86); box-shadow: 0 14px 28px rgba(7,26,58,.08); font-size: .76rem; color: var(--mui-palette-text-secondary); }
+.sr-alert-strip svg,.sr-alert-strip strong { color: var(--sr-amber-500); }
+.sr-search-card { padding: var(--sr-space-4); border-radius: var(--sr-radius-xl); background: rgba(255,255,255,.94); }
+.sr-search-head { margin-bottom: var(--sr-space-3); }
+.sr-search-head .MuiTypography-h5 { font-size: 1.05rem; }
+.sr-search-card .MuiOutlinedInput-root { border-radius: 10px; }
+.sr-search-card .MuiInputBase-input { padding-block: 7px; }
+.sr-booking-badge { width: 34px; height: 34px; border-radius: 10px; }
+.sr-search-cta.MuiButton-root { min-height: 38px; }
+.sr-quick-rail { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sr-space-3); }
+.sr-quick-rail .MuiButton-root { justify-content: flex-start; min-height: 40px; border-radius: 14px; background: rgba(7,26,58,.9); box-shadow: 0 12px 26px rgba(7,26,58,.16); }
+.sr-home-section { padding: clamp(22px, 3.4vw, 42px) 0; }
+.sr-route-card { min-height: 240px; }
+.sr-info-card,.sr-quick-card { border-radius: var(--sr-radius-lg); padding: var(--sr-space-4); }
+.sr-results-page { padding: clamp(18px, 3vw, 34px) 0; }
+.sr-results-shell { display: grid; gap: var(--sr-space-5); padding: clamp(16px, 3vw, 28px); border-radius: var(--sr-radius-xl); border: 1px solid var(--southrail-glass-border); background: var(--southrail-glass-bg); box-shadow: var(--southrail-card-shadow); }
+
+@media (min-width: 1200px) and (max-height: 820px) {
+  .sr-home-hero { min-height: calc(100svh - 49px); padding-block: 10px 12px; }
+  .sr-home-title.MuiTypography-root { font-size: clamp(2rem, 3.8vw, 3.35rem); }
+  .sr-home-lede { font-size: .88rem; }
+  .sr-search-card { padding: 12px; }
+  .sr-search-head { margin-bottom: 8px; }
+  .sr-recent-row { display: none !important; }
+}
+@media (max-width: 1199.95px) { .sr-hero-grid { grid-template-columns: 1fr; align-items: stretch; } .sr-hero-copy { max-width: 760px; } .sr-home-hero { min-height: auto; } }
+@media (max-width: 699.95px) { .sr-quick-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); } .sr-alert-strip { border-radius: 16px; } }
+@media (max-width: 599.95px) { .sr-home-title.MuiTypography-root { font-size: clamp(2rem, 11vw, 3rem); } .sr-search-card { padding: 12px; } .sr-quick-rail .MuiButton-root { min-height: 38px; font-size: .76rem; } }

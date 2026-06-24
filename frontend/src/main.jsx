@@ -11,6 +11,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute.jsx";
 import "./styles.css";
 
 const HomePage = lazy(() => import("./features/trains/HomePage.jsx"));
+const TrainSearchResultsPage = lazy(() => import("./features/trains/TrainSearchResultsPage.jsx"));
 const LoginPage = lazy(() => import("./features/auth/LoginPage.jsx"));
 const RegisterPage = lazy(() => import("./features/auth/RegisterPage.jsx"));
 const ForgotPasswordPage = lazy(
@@ -47,6 +48,7 @@ const router = createBrowserRouter([
     errorElement: <ErrorBoundary />,
     children: [
       { index: true, element: <HomePage /> },
+      { path: "trains/search", element: <TrainSearchResultsPage /> },
       { path: "login", element: <LoginPage /> },
       { path: "register", element: <RegisterPage /> },
       { path: "forgot-password", element: <ForgotPasswordPage /> },

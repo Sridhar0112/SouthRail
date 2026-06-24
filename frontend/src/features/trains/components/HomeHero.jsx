@@ -1,53 +1,36 @@
-import { Box, Chip, Container, Grid, Paper, Stack, Typography } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { Box, Chip, Container, Stack, Typography } from '@mui/material';
+import CampaignIcon from '@mui/icons-material/Campaign';
+import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
+import DirectionsRailwayIcon from '@mui/icons-material/DirectionsRailway';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import SearchIcon from '@mui/icons-material/Search';
 import TrainIcon from '@mui/icons-material/Train';
-import heroTrain from '../../../assets/southrail/hero-train.png';
 import JourneySearchCard from './JourneySearchCard.jsx';
+import QuickActions from './QuickActions.jsx';
 
-const operatingSignals = ['Search trains', 'Check seats', 'Reserve tickets'];
+const tabs = ['Book ticket', 'PNR status', 'Live trains'];
 
 export default function HomeHero({ searchProps }) {
   return (
     <section className="sr-home-hero" aria-labelledby="southrail-home-title">
-      <Container maxWidth="xl">
-        <Grid container spacing={{ xs: 2, lg: 2.5 }} alignItems="stretch">
-          <Grid item xs={12} lg={7.2}>
-            <Paper className="sr-hero-panel sr-hero-panel--search" elevation={0}>
-              <Stack spacing={{ xs: 1.35, md: 1.6 }}>
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
-                  <Chip className="sr-rail-chip" icon={<TrainIcon />} label="SouthRail reservation desk" color="primary" />
-                  <Chip className="sr-rail-chip" variant="outlined" label="Live route availability" />
-                </Stack>
-                <Box>
-                  <Typography id="southrail-home-title" variant="h1" className="sr-home-title">
-                    Search, check availability, and reserve South Indian trains.
-                  </Typography>
-                  <Typography color="text.secondary" className="sr-home-lede">
-                    A booking-first railway workspace for Chennai, Madurai, Coimbatore, Nagercoil, Salem, and the wider southern corridor.
-                  </Typography>
-                </Box>
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap className="sr-signal-row">
-                  {operatingSignals.map((signal) => (
-                    <span key={signal}><CheckCircleIcon fontSize="small" />{signal}</span>
-                  ))}
-                </Stack>
-                <JourneySearchCard compact searchProps={searchProps} {...searchProps} />
+      <Container maxWidth="xl" className="sr-hero-container">
+        <Stack spacing={1.25} className="sr-hero-viewport">
+          <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center" className="sr-search-tabs" role="tablist" aria-label="Railway services">
+            {tabs.map((tab, index) => <Chip key={tab} role="tab" aria-selected={index === 0} color={index === 0 ? 'primary' : 'default'} variant={index === 0 ? 'filled' : 'outlined'} icon={index === 0 ? <SearchIcon /> : undefined} label={tab} />)}
+          </Stack>
+          <Box className="sr-hero-grid">
+            <Stack spacing={1} className="sr-hero-copy">
+              <Chip className="sr-rail-chip" icon={<TrainIcon />} label="SouthRail booking desk" color="primary" />
+              <Typography id="southrail-home-title" variant="h1" className="sr-home-title">Book southern rail journeys without losing the timetable.</Typography>
+              <Typography color="text.secondary" className="sr-home-lede">Search trains, compare seats, check fares, and continue critical passenger services from a compact railway utility hub.</Typography>
+              <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap className="sr-alert-strip" aria-label="Rail alerts and news">
+                <CampaignIcon fontSize="small" /><strong>Alerts</strong><span>Premium Tatkal opens 10:00</span><span>Festival demand high on MAS–MDU</span><span>Use PNR for coach updates</span>
               </Stack>
-            </Paper>
-          </Grid>
-          <Grid item xs={12} lg={4.8}>
-            <Paper className="sr-hero-panel sr-hero-panel--image" elevation={0}>
-              <Box className="sr-hero-image-wrap">
-                <Box component="img" src={heroTrain} alt="SouthRail train at a platform used as the main journey search visual" />
-                <Box className="sr-platform-board">
-                  <span>NEXT DEPARTURES</span>
-                  <strong>MAS → MDU</strong>
-                  <small>3A · General · Seats monitored</small>
-                </Box>
-              </Box>
-            </Paper>
-          </Grid>
-        </Grid>
+            </Stack>
+            <JourneySearchCard compact searchProps={searchProps} {...searchProps} />
+          </Box>
+          <QuickActions variant="rail" actions={[{ title: 'PNR status', to: '/pnr', icon: <ConfirmationNumberIcon /> }, { title: 'My tickets', to: '/my-tickets', icon: <DirectionsRailwayIcon /> }, { title: 'Offers', to: '#offers', icon: <LocalOfferIcon /> }, { title: 'Support', to: '/support', icon: <CampaignIcon /> }]} />
+        </Stack>
       </Container>
     </section>
   );
