@@ -2,7 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import HomeHero from './components/HomeHero.jsx';
-import PremiumTrainResults from './components/PremiumTrainResults.jsx';
+import PopularRoutes from './components/PopularRoutes.jsx';
+import BookingBenefits from './components/BookingBenefits.jsx';
+import AvailabilityPreview from './components/AvailabilityPreview.jsx';
+import QuickActions from './components/QuickActions.jsx';
 import api from '../../services/api.js';
 import { getApiErrorMessage } from '../../utils/apiErrors.js';
 import { rememberSearch, searchTrains } from './trainSlice.js';
@@ -91,7 +94,29 @@ export default function HomePage() {
 
   const searchProps = { today, register, handleSubmit, onSubmit, onInvalid, errors, trains, selectedSource, selectedDestination, sourceInput, destinationInput, sourceOptions, destinationOptions, sourceLoading, destinationLoading, sourceError, destinationError, recentSearches, applyRecentSearch, swap, onSourceInput: (value) => { setSourceInput(value); setSelectedSource(null); setValue('source', '', { shouldValidate: true }); if (!value.trim()) { setSourceOptions([]); setSourceError(''); lastSourceQuery.current = ''; } }, onSourceClear: () => { setSourceInput(''); setSelectedSource(null); setSourceOptions([]); lastSourceQuery.current = ''; setValue('source', '', { shouldValidate: true }); }, onSourceChange: (option) => { setSelectedSource(option); setStation('source', option); }, onDestinationInput: (value) => { setDestinationInput(value); setSelectedDestination(null); setValue('destination', '', { shouldValidate: true }); if (!value.trim()) { setDestinationOptions([]); setDestinationError(''); lastDestinationQuery.current = ''; } }, onDestinationClear: () => { setDestinationInput(''); setSelectedDestination(null); setDestinationOptions([]); lastDestinationQuery.current = ''; setValue('destination', '', { shouldValidate: true }); }, onDestinationChange: (option) => { setSelectedDestination(option); setStation('destination', option); } };
 
-  return <main className="sr-terminal-page"><HomeHero searchProps={searchProps} hasSearchAttempt={hasSearchAttempt} /><PremiumTrainResults searchIssue={searchIssue} trains={trains} sortedResults={sortedResults} hasResults={hasResults} onRetry={handleSubmit(onSubmit, onInvalid)} onUseToday={useToday} getAvailabilityStatus={getAvailabilityStatus} formatFare={formatFare} formatDuration={formatDuration} getToday={getToday} /></main>;
+  return (
+    <main className="sr-home-page">
+      <HomeHero searchProps={searchProps} hasSearchAttempt={hasSearchAttempt} />
+      <PopularRoutes />
+      <BookingBenefits />
+      <AvailabilityPreview />
+      {hasSearchAttempt && (
+        <PremiumSearchResults
+          searchIssue={searchIssue}
+          trains={trains}
+          sortedResults={sortedResults}
+          hasResults={hasResults}
+          onRetry={handleSubmit(onSubmit, onInvalid)}
+          onUseToday={useToday}
+          getAvailabilityStatus={getAvailabilityStatus}
+          formatFare={formatFare}
+          formatDuration={formatDuration}
+          getToday={getToday}
+        />
+      )}
+      <QuickActions />
+    </main>
+  );
 }
 
 function getToday() { return new Date().toISOString().slice(0, 10); }
@@ -108,3 +133,30 @@ function minutesFromTime(value) { const [hours = '0', minutes = '0'] = String(va
 function getAvailabilityStatus(train) { const seats = Number(train.availableSeats || 0); if (seats > 0) return { canBook: true, color: seats < 10 ? 'warning' : 'success', label: seats < 10 ? 'Limited seats' : 'Available', detail: `${seats} seats available` }; const prediction = String(train.prediction || '').trim(); const label = /class not available/i.test(prediction) ? 'Class not available' : 'Sold out'; return { canBook: false, color: 'error', label, detail: prediction && prediction !== label ? prediction : 'Booking is unavailable for this class' }; }
 function formatDuration(minutes) { const total = Number(minutes || 0); const hours = Math.floor(total / 60); const remainingMinutes = total % 60; return `${hours}h ${String(remainingMinutes).padStart(2, '0')}m`; }
 function formatFare(value) { const amount = Number(value); if (!Number.isFinite(amount)) return '₹ -'; return `₹${amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`; }
+function formatTime(value) { if (!value) return '--:--'; const [hours = '00', minutes = '00'] = String(value).split(':'); return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`; }
+
+
+function PremiumSearchResults({ searchIssue, trains, sortedResults, hasResults, onRetry, onUseToday, getAvailabilityStatus, formatFare, formatDuration, getToday }) {
+  return (
+    <section className="sr-home-section sr-search-results-section" id="results">
+      <div className="sr-results-bridge">
+        {searchIssue && <ResultMessage title={searchIssue.title} message={searchIssue.message} actionLabel={searchIssue.actionLabel} onAction={searchIssue.actionLabel === "Use today's date" ? onUseToday : undefined} />}
+        {!searchIssue && trains.error && <ResultMessage title="Search could not be completed" message={trains.error} actionLabel="Retry" onAction={onRetry} />}
+        {trains.loading && <ResultMessage title="Searching trains..." message="Checking route inventory and class availability." />}
+        {!trains.loading && !searchIssue && !trains.error && trains.hasSearched && !hasResults && <ResultMessage title="No trains found" message="No trains are available for this route, date, and class. Try another class, date, or reverse route." />}
+        {!trains.loading && !searchIssue && !trains.error && hasResults && sortedResults.map((train) => <SearchResultRow key={train.trainId} train={train} search={trains.selectedSearch} getAvailabilityStatus={getAvailabilityStatus} formatFare={formatFare} formatDuration={formatDuration} getToday={getToday} />)}
+      </div>
+    </section>
+  );
+}
+
+function ResultMessage({ title, message, actionLabel, onAction }) {
+  return <div className="sr-result-message"><strong>{title}</strong><span>{message}</span>{actionLabel && <button type="button" onClick={onAction}>{actionLabel}</button>}</div>;
+}
+
+function SearchResultRow({ train, search, getAvailabilityStatus, formatFare, formatDuration, getToday }) {
+  const availability = getAvailabilityStatus(train);
+  const canBook = availability.canBook;
+  const bookingParams = new URLSearchParams({ sourceStationCode: train.sourceCode || search?.source || '', destinationStationCode: train.destinationCode || search?.destination || '', journeyDate: search?.journeyDate || getToday(), travelClass: search?.travelClass || '3A', quota: search?.quota || 'GENERAL' });
+  return <article className="sr-live-result-row"><div><strong>{train.trainName || 'Train'}</strong><span>{train.trainNumber || '-'} · {search?.travelClass || '3A'} · {search?.quota || 'GENERAL'}</span></div><div className="sr-live-result-route"><b>{formatTime(train.departureTime)}</b><span>{train.sourceCode || search?.source}</span><i /> <small>{formatDuration(train.durationMinutes)}</small><i /><b>{formatTime(train.arrivalTime)}</b><span>{train.destinationCode || search?.destination}</span></div><div><b className={canBook ? 'sr-status-good' : 'sr-status-stop'}>{availability.detail}</b><strong>{formatFare(train.fare)}</strong><a className={canBook ? '' : 'sr-disabled-booking'} href={canBook ? `/booking/${train.trainId}?${bookingParams.toString()}` : '#'} onClick={(event) => { if (!canBook) event.preventDefault(); }}>{canBook ? 'Reserve seat' : availability.label}</a></div></article>;
+}
