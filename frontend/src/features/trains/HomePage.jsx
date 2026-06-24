@@ -2,11 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import HomeHero from './components/HomeHero.jsx';
-import SearchCommandCenter from './components/SearchCommandCenter.jsx';
-import RouteExplorer from './components/RouteExplorer.jsx';
-import FeaturedDestinations from './components/FeaturedDestinations.jsx';
-import LiveRailStats from './components/LiveRailStats.jsx';
-import SmartRailInsights from './components/SmartRailInsights.jsx';
 import PremiumTrainResults from './components/PremiumTrainResults.jsx';
 import api from '../../services/api.js';
 import { getApiErrorMessage } from '../../utils/apiErrors.js';
@@ -96,7 +91,7 @@ export default function HomePage() {
 
   const searchProps = { today, register, handleSubmit, onSubmit, onInvalid, errors, trains, selectedSource, selectedDestination, sourceInput, destinationInput, sourceOptions, destinationOptions, sourceLoading, destinationLoading, sourceError, destinationError, recentSearches, applyRecentSearch, swap, onSourceInput: (value) => { setSourceInput(value); setSelectedSource(null); setValue('source', '', { shouldValidate: true }); if (!value.trim()) { setSourceOptions([]); setSourceError(''); lastSourceQuery.current = ''; } }, onSourceClear: () => { setSourceInput(''); setSelectedSource(null); setSourceOptions([]); lastSourceQuery.current = ''; setValue('source', '', { shouldValidate: true }); }, onSourceChange: (option) => { setSelectedSource(option); setStation('source', option); }, onDestinationInput: (value) => { setDestinationInput(value); setSelectedDestination(null); setValue('destination', '', { shouldValidate: true }); if (!value.trim()) { setDestinationOptions([]); setDestinationError(''); lastDestinationQuery.current = ''; } }, onDestinationClear: () => { setDestinationInput(''); setSelectedDestination(null); setDestinationOptions([]); lastDestinationQuery.current = ''; setValue('destination', '', { shouldValidate: true }); }, onDestinationChange: (option) => { setSelectedDestination(option); setStation('destination', option); } };
 
-  return <main className="sr-terminal-page"><HomeHero /><SearchCommandCenter searchProps={searchProps} hasSearchAttempt={hasSearchAttempt} /><FeaturedDestinations /><LiveRailStats /><SmartRailInsights /><RouteExplorer /><PremiumTrainResults searchIssue={searchIssue} trains={trains} sortedResults={sortedResults} hasResults={hasResults} onRetry={handleSubmit(onSubmit, onInvalid)} onUseToday={useToday} getAvailabilityStatus={getAvailabilityStatus} formatFare={formatFare} formatDuration={formatDuration} getToday={getToday} /></main>;
+  return <main className="sr-terminal-page"><HomeHero searchProps={searchProps} hasSearchAttempt={hasSearchAttempt} /><PremiumTrainResults searchIssue={searchIssue} trains={trains} sortedResults={sortedResults} hasResults={hasResults} onRetry={handleSubmit(onSubmit, onInvalid)} onUseToday={useToday} getAvailabilityStatus={getAvailabilityStatus} formatFare={formatFare} formatDuration={formatDuration} getToday={getToday} /></main>;
 }
 
 function getToday() { return new Date().toISOString().slice(0, 10); }
