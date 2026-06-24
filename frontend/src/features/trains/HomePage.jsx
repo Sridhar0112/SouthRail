@@ -6,6 +6,7 @@ import PopularRoutes from './components/PopularRoutes.jsx';
 import BookingBenefits from './components/BookingBenefits.jsx';
 import AvailabilityPreview from './components/AvailabilityPreview.jsx';
 import QuickActions from './components/QuickActions.jsx';
+import { HomeFooter, OffersSection, SpecialTrains, TravelServices } from './components/HomeMarketingSections.jsx';
 import api from '../../services/api.js';
 import { getApiErrorMessage } from '../../utils/apiErrors.js';
 import { rememberSearch, searchTrains } from './trainSlice.js';
@@ -97,9 +98,13 @@ export default function HomePage() {
   return (
     <main className="sr-home-page">
       <HomeHero searchProps={searchProps} hasSearchAttempt={hasSearchAttempt} />
+      <QuickActions />
       <PopularRoutes />
-      <BookingBenefits />
+      <SpecialTrains />
       <AvailabilityPreview />
+      <OffersSection />
+      <BookingBenefits />
+      <TravelServices />
       {hasSearchAttempt && (
         <PremiumSearchResults
           searchIssue={searchIssue}
@@ -114,7 +119,7 @@ export default function HomePage() {
           getToday={getToday}
         />
       )}
-      <QuickActions />
+      <HomeFooter />
     </main>
   );
 }
