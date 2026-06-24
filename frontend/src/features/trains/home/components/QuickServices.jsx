@@ -1,15 +1,15 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@mui/material';
-import CampaignIcon from '@mui/icons-material/Campaign';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import DirectionsRailwayIcon from '@mui/icons-material/DirectionsRailway';
-import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 
 const services = [
   { title: 'PNR status', to: '/pnr', icon: <ConfirmationNumberIcon /> },
-  { title: 'My tickets', to: '/my-tickets', icon: <DirectionsRailwayIcon /> },
-  { title: 'Offers', to: '#offers', icon: <LocalOfferIcon /> },
-  { title: 'Support', to: '/support', icon: <CampaignIcon /> }
+  { title: 'My tickets', to: '/my-tickets', icon: <ReceiptLongIcon /> },
+  { title: 'Dashboard', to: '/dashboard', icon: <DirectionsRailwayIcon /> },
+  { title: 'Support', to: '/support', icon: <HelpOutlineIcon /> }
 ];
 
 export default function QuickServices() {

@@ -10,10 +10,10 @@ export default function HeroViewport({ searchProps }) {
     <section className="sr-hero-viewport" aria-labelledby="southrail-home-title">
       <Container maxWidth="xl" className="sr-hero-container">
         <Box className="sr-hero-shell">
-          <Stack className="sr-hero-copy" spacing={1}>
+          <Stack className="sr-hero-copy" spacing={0.75}>
             <HeroBadge />
-            <Typography id="southrail-home-title" variant="h1" className="sr-home-title">Book southern rail journeys without losing the timetable.</Typography>
-            <Typography className="sr-home-lede">Search trains, compare seats, check fares, and keep the booking workflow in one compact railway desk.</Typography>
+            <Typography id="southrail-home-title" variant="h1" className="sr-home-title">Search trains and manage railway reservations.</Typography>
+            <Typography className="sr-home-lede">Start with route, date, class, and quota. Then compare availability, book tickets, track PNR, or get support from the same product desk.</Typography>
           </Stack>
           <Box className="sr-booking-desk">
             <SearchTabs />
