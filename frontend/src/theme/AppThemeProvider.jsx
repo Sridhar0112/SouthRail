@@ -105,8 +105,8 @@ export function AppThemeProvider({ children }) {
         h4: { fontWeight: 800, letterSpacing: -0.2, fontSize: 'clamp(1.18rem, 2vw, 1.48rem)', lineHeight: 1.2 },
         h5: { fontWeight: 800, letterSpacing: -0.1, fontSize: 'clamp(1.04rem, 1.5vw, 1.22rem)', lineHeight: 1.24 },
         h6: { fontWeight: 800, letterSpacing: -0.05, fontSize: '1rem', lineHeight: 1.28 },
-        body1: { fontSize: '0.86rem', lineHeight: 1.5 },
-        body2: { fontSize: '0.8rem', lineHeight: 1.45 },
+        body1: { fontSize: '0.95rem', lineHeight: 1.6 },
+        body2: { fontSize: '0.875rem', lineHeight: 1.5 },
         button: { textTransform: 'none', fontWeight: 700 }
       },
       components: {
@@ -175,13 +175,16 @@ export function AppThemeProvider({ children }) {
           styleOverrides: {
             root: {
               minWidth: 0,
+              maxWidth: '1400px',
+              paddingLeft: 24,
+              paddingRight: 24,
               '@media (max-width: 599.95px)': {
-                paddingLeft: 14,
-                paddingRight: 14
+                paddingLeft: 16,
+                paddingRight: 16
               },
               '@media (max-width: 359.95px)': {
-                paddingLeft: 12,
-                paddingRight: 12
+                paddingLeft: 14,
+                paddingRight: 14
               }
             }
           }
@@ -200,10 +203,10 @@ export function AppThemeProvider({ children }) {
           defaultProps: { size: 'medium' },
           styleOverrides: {
             root: {
-              minHeight: 30,
-              padding: '4px 12px',
+              minHeight: 38,
+              padding: '8px 16px',
               borderRadius: 999,
-              fontSize: '0.82rem',
+              fontSize: '0.9rem',
               whiteSpace: 'normal'
             },
             containedPrimary: {
@@ -229,7 +232,7 @@ export function AppThemeProvider({ children }) {
               backgroundColor: palette.surface.input,
               color: palette.text.primary,
               borderRadius: 6,
-              fontSize: '0.86rem',
+              fontSize: '0.95rem',
               transition: 'background-color 160ms ease, border-color 160ms ease',
               '& .MuiOutlinedInput-notchedOutline': {
                 borderColor: palette.custom.fieldBorder
@@ -255,7 +258,7 @@ export function AppThemeProvider({ children }) {
             },
             input: {
               color: palette.text.primary,
-              padding: '8px 10px'
+              padding: '10px 12px'
             }
           }
         },
@@ -338,8 +341,8 @@ export function AppThemeProvider({ children }) {
             root: {
               borderRadius: 999,
               fontWeight: 700,
-              fontSize: '0.68rem',
-              height: 20
+              fontSize: '0.75rem',
+              height: 24
             },
             outlined: {
               borderColor: palette.custom.fieldBorder
@@ -448,12 +451,12 @@ export function AppThemeProvider({ children }) {
           styleOverrides: {
             root: {
               overflowWrap: 'anywhere',
-              padding: '6px 9px',
-              fontSize: '0.78rem'
+              padding: '10px 12px',
+              fontSize: '0.875rem'
             },
             head: {
               fontWeight: 800,
-              fontSize: '0.72rem',
+              fontSize: '0.78rem',
               textTransform: 'uppercase',
               letterSpacing: 0.35
             }
