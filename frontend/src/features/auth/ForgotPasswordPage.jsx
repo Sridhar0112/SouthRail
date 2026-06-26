@@ -63,8 +63,11 @@ export default function ForgotPasswordPage() {
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <Box component="form" onSubmit={form.handleSubmit(submit)}>
           <Stack spacing={1.5}>
-            <TextField label="Email" autoComplete="email" error={!!form.formState.errors.email} helperText={form.formState.errors.email?.message}
-              {...form.register('email', { required: 'Email is required' })} />
+            <TextField label="Email" type="email" autoComplete="email" error={!!form.formState.errors.email} helperText={form.formState.errors.email?.message}
+              {...form.register('email', {
+                required: 'Email is required',
+                pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Enter a valid email address' }
+              })} />
             <Button type="submit" variant="contained" disabled={loading} fullWidth>{loading ? 'Sending reset link...' : 'Send reset link'}</Button>
             <Button component={Link} to="/login" fullWidth>Back to login</Button>
           </Stack>

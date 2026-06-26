@@ -17,7 +17,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import PersonIcon from '@mui/icons-material/Person';
 import TrainIcon from '@mui/icons-material/Train';
 import { ColorModeContext } from '../theme/AppThemeProvider.jsx';
-import { logout } from '../features/auth/authSlice.js';
+import { logout, setAuthenticatedUser } from '../features/auth/authSlice.js';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 function getInitials(name = '') {
@@ -37,9 +37,14 @@ export function Shell() {
   const pageSettleTimerRef = useRef(null);
 
   useEffect(() => {
-    const clearAuth = () => dispatch(logout());
+    const clearAuth = () => dispatch(setAuthenticatedUser(null));
+    const updateAuth = (event) => dispatch(setAuthenticatedUser(event.detail?.user || null));
     window.addEventListener('southrail-auth-cleared', clearAuth);
-    return () => window.removeEventListener('southrail-auth-cleared', clearAuth);
+    window.addEventListener('southrail-auth-updated', updateAuth);
+    return () => {
+      window.removeEventListener('southrail-auth-cleared', clearAuth);
+      window.removeEventListener('southrail-auth-updated', updateAuth);
+    };
   }, [dispatch]);
 
   const closeAllMenus = () => {
@@ -181,7 +186,7 @@ export function Shell() {
                   toggleColorMode();
                 }}
                 color="primary"
-                sx={{ width: 30, height: 28, bgcolor: 'action.hover', flexShrink: 0, '&:hover': { bgcolor: 'action.selected' } }}
+                sx={{ width: 44, height: 44, bgcolor: 'action.hover', flexShrink: 0, '&:hover': { bgcolor: 'action.selected' } }}
               >
                 {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
               </IconButton>
@@ -205,8 +210,8 @@ export function Shell() {
                   >
                     <Avatar
                       sx={{
-                        width: 30,
-                        height: 28,
+                        width: 40,
+                        height: 40,
                         bgcolor: 'primary.main',
                         fontSize: 12,
                         fontWeight: 700,
@@ -291,7 +296,7 @@ export function Shell() {
                   setAnchorEl(null);
                   setMobileNavOpen(true);
                 }}
-                sx={{ display: { xs: 'inline-flex', md: 'none' }, width: 30, height: 28, bgcolor: 'action.hover', flexShrink: 0 }}
+                sx={{ display: { xs: 'inline-flex', md: 'none' }, width: 44, height: 44, bgcolor: 'action.hover', flexShrink: 0 }}
                 aria-label="Open navigation menu"
               >
                 <MenuIcon />

@@ -89,7 +89,8 @@ export default function LoginPage() {
     setUnlockMessage("");
     try {
       await dispatch(login(values)).unwrap();
-      navigate(location.state?.from?.pathname || "/dashboard");
+      const from = location.state?.from;
+      navigate(from ? `${from.pathname}${from.search || ""}${from.hash || ""}` : "/dashboard");
     } catch (payload) {
       const response = normalizeLoginPayload(payload);
       const errorMessage = response.message;
@@ -217,6 +218,7 @@ export default function LoginPage() {
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                       onClick={() => setShowPassword(!showPassword)}
                       edge="end"
                     >

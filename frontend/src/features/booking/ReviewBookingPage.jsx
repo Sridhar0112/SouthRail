@@ -16,9 +16,9 @@ const notes = [
   'Cancellation/refund rules apply.'
 ];
 
-export default function ReviewBookingPage({ train, values, review, reviewIsCurrent, passengerCount, submitting, loadingReview, submitError, onBackToEdit, onConfirmBooking }) {
+export default function ReviewBookingPage({ train, values, review, reviewIsCurrent, passengerCount, submitting, loadingReview, submitError, canConfirm: hasEnoughSeats, onBackToEdit, onConfirmBooking }) {
   const theme = useTheme();
-  const canConfirm = Boolean(review) && reviewIsCurrent && !submitting && !loadingReview;
+  const canConfirm = Boolean(review) && reviewIsCurrent && hasEnoughSeats && !submitting && !loadingReview;
   const fareLines = normalizeFareLines(review);
   const source = values.sourceStationCode || '-';
   const destination = values.destinationStationCode || '-';
@@ -48,6 +48,7 @@ export default function ReviewBookingPage({ train, values, review, reviewIsCurre
 
         {!reviewIsCurrent && <Alert severity="warning">Booking details changed. Please review again before confirming.</Alert>}
         {submitError && <Alert severity="error">{submitError}</Alert>}
+        {reviewIsCurrent && !hasEnoughSeats && <Alert severity="warning">Not enough confirmed seats are available for this passenger count. Please reduce passengers or choose another train.</Alert>}
 
         <Grid container spacing={{ xs: 1.25, md: 1.5 }} alignItems="flex-start" sx={{ width: '100%', m: 0 }}>
           <Grid item xs={12} lg={8} sx={{ minWidth: 0, pl: '0 !important', pt: '0 !important' }}>
@@ -152,7 +153,7 @@ export default function ReviewBookingPage({ train, values, review, reviewIsCurre
                 <Stack spacing={1.1} sx={{ '& .MuiButton-root': { width: '100%', py: 0.45 } }}>
                   <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={onBackToEdit} disabled={submitting}>Back/Edit</Button>
                   <Button variant="contained" startIcon={<ConfirmationNumberIcon />} onClick={onConfirmBooking} disabled={!canConfirm}>
-                    {submitting ? 'Processing...' : 'Confirm Booking'}
+                    {submitting ? 'Processing...' : hasEnoughSeats ? 'Confirm Booking' : 'Not enough seats'}
                   </Button>
                 </Stack>
               </Stack>

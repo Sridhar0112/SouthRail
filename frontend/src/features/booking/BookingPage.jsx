@@ -14,6 +14,7 @@ import { EmptyState, ErrorState, LoadingState, SuccessState } from '../../compon
 import ReviewBookingPage from './ReviewBookingPage.jsx';
 import { getApiErrorMessage, isAuthError } from '../../utils/apiErrors.js';
 import { formatAmount, getBookingStatusLabel, getBookingStatusMessage, getBookingStatusTitle, getQueueText, normalizeBookingStatus, safeText } from '../../utils/bookingStatus.js';
+import { getLocalDateString } from '../../utils/date.js';
 
 const steps = ['Passenger details', 'Review booking', 'Confirmation'];
 const travelClasses = ['1A', '2A', '3A', 'SL', 'CC', '2S'];
@@ -24,7 +25,7 @@ const berthOptions = ['LOWER', 'MIDDLE', 'UPPER', 'SIDE_LOWER', 'SIDE_UPPER', 'N
 export default function BookingPage() {
   const { trainId } = useParams();
   const [searchParams] = useSearchParams();
-  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const today = useMemo(() => getLocalDateString(), []);
   const [train, setTrain] = useState(null);
   const [trainError, setTrainError] = useState('');
   const [response, setResponse] = useState(null);
@@ -52,6 +53,7 @@ export default function BookingPage() {
   const currentValues = form.watch();
   const currentSignature = useMemo(() => JSON.stringify(currentValues), [currentValues]);
   const reviewIsCurrent = review && reviewedSignature === currentSignature;
+  const hasEnoughSeats = Number(review?.availableSeats ?? 0) >= passengerCount;
   const activeStep = response ? 2 : reviewIsCurrent || submitError ? 1 : 0;
   const passengerCount = currentValues.passengers?.length || 0;
 
@@ -154,11 +156,12 @@ export default function BookingPage() {
             loadingReview={loadingReview}
             submitError={submitError}
             onBackToEdit={() => setShowReview(false)}
+            canConfirm={hasEnoughSeats}
             onConfirmBooking={form.handleSubmit(submit)}
           />
         ) : (
           <Paper elevation={1} sx={{ p: { xs: 1.15, md: 1.35 }, borderRadius: 2.5, width: '100%', maxWidth: '100%', minWidth: 0 }}>
-            <Box component="form" onSubmit={form.handleSubmit(submit)}>
+            <Box component="form" onSubmit={form.handleSubmit(prepareReview)}>
               <Stack spacing={1.35}>
                 <SectionHeader
                   overline="Journey details"
@@ -254,8 +257,8 @@ export default function BookingPage() {
                       {loadingReview ? 'Preparing review...' : 'Review booking'}
                     </Button>
                     <Button type="submit" variant="contained" startIcon={<ConfirmationNumberIcon />}
-                      disabled={!reviewIsCurrent || review.availableSeats === 0 || submitting}>
-                      {submitting ? 'Processing...' : 'Confirm booking'}
+                      disabled={!reviewIsCurrent || !hasEnoughSeats || submitting}>
+                      {submitting ? 'Processing...' : hasEnoughSeats ? 'Confirm booking' : 'Not enough seats'}
                     </Button>
                   </Stack>
                 </Stack>

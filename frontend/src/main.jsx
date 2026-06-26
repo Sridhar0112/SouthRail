@@ -40,6 +40,7 @@ const ProfilePage = lazy(() => import("./components/ProfilePage.jsx"));
 const AdminSupportTicketsPage = lazy(
   () => import("./features/dashboard/AdminSupportTicketsPage.jsx"),
 );
+const NotFoundPage = lazy(() => import("./components/NotFoundPage.jsx"));
 const router = createBrowserRouter([
   {
     path: "/",
@@ -111,6 +112,15 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: "admin/support-tickets/:ticketId",
+        element: (
+          <ProtectedRoute role="ROLE_ADMIN">
+            <AdminSupportTicketsPage />
+          </ProtectedRoute>
+        ),
+      },
+      { path: "*", element: <NotFoundPage /> },
     ],
   },
 ]);
@@ -120,7 +130,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <Provider store={store}>
       <AppThemeProvider>
         <CssBaseline />
-        <Suspense fallback={<LinearProgress />}>
+        <Suspense fallback={<LinearProgress aria-label="Loading page" />}>
           <RouterProvider router={router} />
         </Suspense>
       </AppThemeProvider>

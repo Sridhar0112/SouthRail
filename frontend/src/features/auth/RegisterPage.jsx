@@ -118,7 +118,11 @@ const checkPasswordStrength = (password) => {
               autoComplete="email"
               error={!!form.formState.errors.email}
               helperText={form.formState.errors.email?.message}
-              {...form.register('email', { required: 'Email is required' })}
+              type="email"
+              {...form.register('email', {
+                required: 'Email is required',
+                pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Enter a valid email address' }
+              })}
             />
 
 <TextField
@@ -156,6 +160,7 @@ const checkPasswordStrength = (password) => {
     endAdornment: (
       <InputAdornment position="end">
         <IconButton
+          aria-label={showPassword ? 'Hide password' : 'Show password'}
           onClick={() => setShowPassword(!showPassword)}
           edge="end"
         >

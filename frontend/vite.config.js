@@ -10,7 +10,7 @@ export default defineConfig({
     }
   },
   build: {
-    sourcemap: true,
+    sourcemap: process.env.VITE_ENABLE_SOURCEMAP === 'true',
     chunkSizeWarningLimit: 900
   }
 });

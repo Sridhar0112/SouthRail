@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -51,6 +51,7 @@ const STATUS_CONFIG = {
 
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
 
@@ -60,11 +61,12 @@ export default function VerifyEmailPage() {
       setStatus('missing');
       return;
     }
+    let redirectTimer;
     api.post('/auth/verify-email', { token })
       .then(() => {
         setStatus('verified');
-        setTimeout(() => {
-          window.location.href = '/login';
+        redirectTimer = window.setTimeout(() => {
+          navigate('/login');
         }, 3000);
       })
       .catch((apiError) => {
@@ -76,7 +78,12 @@ export default function VerifyEmailPage() {
         );
         setStatus('failed');
       });
-  }, [searchParams]);
+    return () => {
+      if (redirectTimer) {
+        window.clearTimeout(redirectTimer);
+      }
+    };
+  }, [navigate, searchParams]);
 
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.loading;
   const Icon = cfg.icon;

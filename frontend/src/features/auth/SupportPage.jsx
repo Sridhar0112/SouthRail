@@ -1,10 +1,11 @@
 import { useState, useMemo, useCallback, memo,useEffect } from 'react';
-import { Link } from 'react-router-dom';
+
 import {
   Alert,
   Snackbar,
   Box,
   Button,
+  ButtonBase,
   Chip,
   Collapse,
   Container,
@@ -17,6 +18,7 @@ import {
   Typography,
 } from '@mui/material';
 import api from '../../services/api.js';
+import { getApiErrorMessage } from '../../utils/apiErrors.js';
 import TrainIcon from '@mui/icons-material/Train';
 import SearchIcon from '@mui/icons-material/Search';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -166,22 +168,22 @@ const POLICIES = [
     title: 'Cancellation & Refund Policy',
     description:
       'Eligible bookings can be cancelled through the SouthRail cancellation process. Refund amount, cancellation charges, and refund percentage are automatically calculated according to the configured cancellation policy before cancellation is confirmed.',
-    to: '/policies/refunds',
+    href: '#support-ticket',
   },
   {
     title: 'Baggage policy',
     description: 'Permitted luggage sizes and weights, oversized items, and how to pre-book extra bags.',
-    to: '/policies/baggage',
+    href: '#support-ticket',
   },
   {
     title: 'Accessibility & assistance',
     description: 'Services available for passengers with reduced mobility, visual or hearing impairments, and special dietary needs.',
-    to: '/policies/accessibility',
+    href: '#support-ticket',
   },
   {
     title: 'Privacy policy',
     description: 'How we collect, use, and protect your personal data in line with applicable regulations.',
-    to: '/policies/privacy',
+    href: '#support-ticket',
   },
 ];
 
@@ -244,9 +246,13 @@ const FaqItem = memo(function FaqItem({ item }) {
       elevation={0}
       sx={open ? sxFaqPaperOpen : sxFaqPaperClosed}
     >
-      <Box
+      <ButtonBase
         onClick={handleToggle}
+        aria-expanded={open}
+        aria-controls={`faq-panel-${item.id}`}
         sx={{
+          width: '100%',
+          textAlign: 'left',
           px: { xs: 2.5, sm: 3 },
           py: 2,
           display: 'flex',
@@ -265,8 +271,8 @@ const FaqItem = memo(function FaqItem({ item }) {
         {open
           ? <ExpandLessIcon sx={{ color: 'primary.main', flexShrink: 0 }} />
           : <ExpandMoreIcon sx={{ color: 'text.disabled', flexShrink: 0 }} />}
-      </Box>
-      <Collapse in={open}>
+      </ButtonBase>
+      <Collapse in={open} id={`faq-panel-${item.id}`}>
         <Box sx={{ px: { xs: 2.5, sm: 3 }, pb: 2.5, pt: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
           <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.75 }}>
             {item.answer}
@@ -435,11 +441,11 @@ const submitTicket = useCallback(async () => {
       description: ticket.description.trim(),
     });
 
-    const val=response?.data?.id.slice(0, 8).toUpperCase();
+    const val = String(response?.data?.id || '').slice(0, 8).toUpperCase();
     setSnackbar({
       open: true,
       severity: 'success',
-      message: `Support ticket created successfully. Ticket ID: ${val}`,
+      message: val ? `Support ticket created successfully. Ticket ID: ${val}` : 'Support ticket created successfully.',
     });
 
     setTicket({
@@ -453,7 +459,7 @@ const submitTicket = useCallback(async () => {
     setSnackbar({
       open: true,
       severity: 'error',
-      message: 'Failed to create support ticket. Please try again.',
+      message: getApiErrorMessage(error, 'Failed to create support ticket. Please try again.'),
     });
   } finally {
     setLoading(false);
@@ -712,8 +718,8 @@ useEffect(() => {
                 <Grid item xs={12} sm={6} key={policy.title}>
                   <Paper
                     elevation={0}
-                    component={Link}
-                    to={policy.to}
+                    component="a"
+                    href={policy.href}
                     sx={sxPolicyPaper}
                   >
                     <InfoOutlinedIcon sx={sxInfoIcon} />
@@ -735,6 +741,7 @@ useEffect(() => {
 
           {/* ── Submit a ticket ── */}
           <Paper
+            id="support-ticket"
             elevation={0}
             sx={{
               border: '1px solid',

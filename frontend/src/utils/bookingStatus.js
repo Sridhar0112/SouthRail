@@ -9,8 +9,8 @@ export function safeText(value, fallback = '-') {
 
 export function formatAmount(value) {
   const amount = Number(value);
-  if (!Number.isFinite(amount)) return 'Rs -';
-  return `Rs ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (!Number.isFinite(amount)) return '₹ -';
+  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
 }
 
 export function getBookingStatusLabel(status, reservationLabel) {

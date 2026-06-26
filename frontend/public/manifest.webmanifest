@@ -1,0 +1,10 @@
+{
+  "name": "SouthRail Reservations",
+  "short_name": "SouthRail",
+  "description": "SouthRail railway reservation portal",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7faf8",
+  "theme_color": "#0b3d2e",
+  "icons": []
+}

@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import api from '../../services/api.js';
+import api, { clearAuthStorage, setAuthStorage } from '../../services/api.js';
 import { getApiErrorMessage } from '../../utils/apiErrors.js';
 
 const savedUser = readSavedUser();
@@ -7,9 +7,11 @@ const savedUser = readSavedUser();
 export const login = createAsyncThunk('auth/login', async (payload, { rejectWithValue }) => {
   try {
     const { data } = await api.post('/auth/login', payload);
-    localStorage.setItem('southrail_access_token', data.accessToken || '');
-    localStorage.setItem('southrail_refresh_token', data.refreshToken || '');
-    localStorage.setItem('southrail_user', JSON.stringify(data.user || null));
+    setAuthStorage({
+      accessToken: data.accessToken || '',
+      refreshToken: data.refreshToken || '',
+      user: data.user || null
+    });
     return data.user || null;
   } catch (error) {
     return rejectWithValue(normalizeLoginError(error));
@@ -47,7 +49,14 @@ const authSlice = createSlice({
         ...state.user,
         ...action.payload
       };
-      localStorage.setItem('southrail_user', JSON.stringify(state.user));
+      setAuthStorage({
+        accessToken: localStorage.getItem('southrail_access_token') || '',
+        refreshToken: localStorage.getItem('southrail_refresh_token') || '',
+        user: state.user
+      });
+    },
+    setAuthenticatedUser(state, action) {
+      state.user = action.payload || null;
     }
   },
   extraReducers: (builder) => {
@@ -100,11 +109,5 @@ function readSavedUser() {
   }
 }
 
-function clearAuthStorage() {
-  localStorage.removeItem('southrail_access_token');
-  localStorage.removeItem('southrail_refresh_token');
-  localStorage.removeItem('southrail_user');
-}
-
-export const { logout, clearRegistrationResult, updateUser } = authSlice.actions;
+export const { logout, clearRegistrationResult, updateUser, setAuthenticatedUser } = authSlice.actions;
 export default authSlice.reducer;

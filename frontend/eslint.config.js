@@ -24,10 +24,14 @@ export default [
         clearInterval: 'readonly',
         URLSearchParams: 'readonly',
         Event: 'readonly',
+        CustomEvent: 'readonly',
+        process: 'readonly',
         alert: 'readonly'
       }
     },
     rules: {
+      // Core no-unused-vars does not understand JSX usage without a React ESLint plugin.
+      // Keep it disabled until the plugin can be installed in this environment.
       'no-unused-vars': 'off',
       'no-console': ['warn', { allow: ['warn', 'error'] }]
     }

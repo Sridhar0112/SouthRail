@@ -54,32 +54,38 @@ export default function AdminPage() {
     setData(emptyAdminData());
     setErrors({});
 
-    const requests = [
-      ['summary', () => api.get('/admin/summary')],
-      ['users', () => fetchPagedRows('/admin/users')],
-      ['trains', () => fetchPagedRows('/admin/trains')],
-      ['routes', () => fetchPagedRows('/admin/routes')],
-      ['stations', () => fetchPagedRows('/admin/stations')],
-      ['bookings', () => fetchPagedRows('/admin/bookings')]
-    ];
+    try {
+      const requests = [
+        ['summary', () => api.get('/admin/summary')],
+        ['users', () => fetchPagedRows('/admin/users')],
+        ['trains', () => fetchPagedRows('/admin/trains')],
+        ['routes', () => fetchPagedRows('/admin/routes')],
+        ['stations', () => fetchPagedRows('/admin/stations')],
+        ['bookings', () => fetchPagedRows('/admin/bookings')]
+      ];
 
-    const results = await Promise.allSettled(requests.map(([, request]) => request()));
-    const nextData = emptyAdminData();
-    const nextErrors = {};
+      const results = await Promise.allSettled(requests.map(([, request]) => request()));
+      const nextData = emptyAdminData();
+      const nextErrors = {};
 
-    results.forEach((result, index) => {
-      const [key] = requests[index];
-      if (result.status === 'fulfilled') {
-        nextData[key] = key === 'summary' ? result.value.data : result.value.rows;
-      } else {
-        nextErrors[key] = getAdminErrorMessage(result.reason, `Unable to load admin ${key}.`);
-      }
-    });
+      results.forEach((result, index) => {
+        const [key] = requests[index];
+        if (result.status === 'fulfilled') {
+          nextData[key] = key === 'summary' ? result.value.data : result.value.rows;
+        } else {
+          nextErrors[key] = getAdminErrorMessage(result.reason, `Unable to load admin ${key}.`);
+        }
+      });
 
-    setData(nextData);
-    setErrors(nextErrors);
-    setLastUpdated(new Date());
-    setLoading(false);
+      setData(nextData);
+      setErrors(nextErrors);
+      setLastUpdated(new Date());
+    } catch (error) {
+      setErrors({ summary: getAdminErrorMessage(error, 'Unable to load admin data.') });
+      setData(emptyAdminData());
+    } finally {
+      setLoading(false);
+    }
   };
 
   const metrics = useMemo(() => buildAdminMetricsWithKpis(data), [data]);

@@ -105,8 +105,8 @@ export function AppThemeProvider({ children }) {
         h4: { fontWeight: 800, letterSpacing: -0.2, fontSize: 'clamp(1.18rem, 2vw, 1.48rem)', lineHeight: 1.2 },
         h5: { fontWeight: 800, letterSpacing: -0.1, fontSize: 'clamp(1.04rem, 1.5vw, 1.22rem)', lineHeight: 1.24 },
         h6: { fontWeight: 800, letterSpacing: -0.05, fontSize: '1rem', lineHeight: 1.28 },
-        body1: { fontSize: '0.86rem', lineHeight: 1.5 },
-        body2: { fontSize: '0.8rem', lineHeight: 1.45 },
+        body1: { fontSize: '0.94rem', lineHeight: 1.55 },
+        body2: { fontSize: '0.86rem', lineHeight: 1.5 },
         button: { textTransform: 'none', fontWeight: 700 }
       },
       components: {
@@ -196,11 +196,11 @@ export function AppThemeProvider({ children }) {
           defaultProps: { size: 'medium' },
           styleOverrides: {
             root: {
-              minHeight: 30,
-              padding: '4px 12px',
+              minHeight: 40,
+              padding: '7px 14px',
               borderRadius: 6,
               fontSize: '0.82rem',
-              whiteSpace: 'normal'
+              whiteSpace: 'nowrap'
             },
             containedPrimary: {
               boxShadow: isLight ? '0 7px 16px rgba(6,78,59,0.16)' : '0 8px 18px rgba(22,160,111,0.18)',

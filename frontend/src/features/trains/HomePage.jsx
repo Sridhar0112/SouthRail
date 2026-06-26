@@ -27,6 +27,7 @@ import { EmptyState, ErrorState, LoadingState } from '../../components/StateFeed
 import api from '../../services/api.js';
 import { getApiErrorMessage } from '../../utils/apiErrors.js';
 import { rememberSearch, searchTrains } from './trainSlice.js';
+import { getLocalDateString } from '../../utils/date.js';
 
 const classes = ['1A', '2A', '3A', 'SL', 'CC', '2S'];
 const quotas = ['GENERAL', 'TATKAL', 'LADIES', 'SENIOR_CITIZEN', 'PREMIUM_TATKAL'];
@@ -230,7 +231,7 @@ export default function HomePage() {
                   <input type="hidden" {...register('source', { required: 'Source station is required' })} />
                   <input type="hidden" {...register('destination', { required: 'Destination station is required' })} />
                   <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} sm={compactSearch ? 3 : 5}>
+                    <Grid item xs={12} sm={12} md={compactSearch ? 3 : 5}>
                       <StationAutocomplete
                         label="From"
                         value={selectedSource}
@@ -262,10 +263,10 @@ export default function HomePage() {
                         helperText={errors.source?.message}
                       />
                     </Grid>
-                    <Grid item xs={12} sm={compactSearch ? 1 : 2} sx={{ display: 'grid', placeItems: 'center' }}>
+                    <Grid item xs={12} sm={12} md={compactSearch ? 1 : 2} sx={{ display: 'grid', placeItems: 'center' }}>
                       <Button type="button" onClick={swap} aria-label="Swap stations"><SwapHorizIcon /></Button>
                     </Grid>
-                    <Grid item xs={12} sm={compactSearch ? 3 : 5}>
+                    <Grid item xs={12} sm={12} md={compactSearch ? 3 : 5}>
                       <StationAutocomplete
                         label="To"
                         value={selectedDestination}
@@ -297,7 +298,7 @@ export default function HomePage() {
                         helperText={errors.destination?.message}
                       />
                     </Grid>
-                    <Grid item xs={12} sm={compactSearch ? 2 : 4}>
+                    <Grid item xs={12} sm={6} md={compactSearch ? 2 : 4}>
                       <TextField
                         fullWidth
                         type="date"
@@ -312,13 +313,13 @@ export default function HomePage() {
                         })}
                       />
                     </Grid>
-                    <Grid item xs={12} sm={compactSearch ? 1.5 : 4}>
+                    <Grid item xs={12} sm={6} md={compactSearch ? 2 : 4}>
                       <TextField select fullWidth label="Class" error={!!errors.travelClass} helperText={errors.travelClass?.message}
                         {...register('travelClass', { required: 'Travel class is required' })}>
                         {classes.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
                       </TextField>
                     </Grid>
-                    <Grid item xs={12} sm={compactSearch ? 1.5 : 4}>
+                    <Grid item xs={12} sm={6} md={compactSearch ? 2 : 4}>
                       <TextField select fullWidth label="Quota" error={!!errors.quota} helperText={errors.quota?.message}
                         {...register('quota', { required: 'Quota is required' })}>
                         {quotas.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
@@ -331,7 +332,7 @@ export default function HomePage() {
                     </Grid>
                     {recentSearches.length > 0 && (
                       <Grid item xs={12}>
-                        <RecentSearches searches={recentSearches} onSelect={applyRecentSearch} />
+                        <RecentSearches searches={recentSearches} onSelect={applyRecentSearch} onClear={() => { localStorage.removeItem(recentSearchKey); setRecentSearches([]); }} />
                       </Grid>
                     )}
                     {(sourceError || destinationError) && (
@@ -416,7 +417,7 @@ function StationAutocomplete({ label, value, inputValue, options, loading, onInp
   );
 }
 
-function RecentSearches({ searches, onSelect }) {
+function RecentSearches({ searches, onSelect, onClear }) {
   return (
     <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
       <Typography variant="body2" color="text.secondary">Recent searches</Typography>
@@ -428,6 +429,7 @@ function RecentSearches({ searches, onSelect }) {
           variant="outlined"
         />
       ))}
+      <Button type="button" size="small" onClick={onClear}>Clear</Button>
     </Stack>
   );
 }
@@ -573,7 +575,7 @@ function RouteComparison({ results }) {
 }
 
 function getToday() {
-  return new Date().toISOString().slice(0, 10);
+  return getLocalDateString();
 }
 
 function getInitialSearchValues(today) {
@@ -722,7 +724,7 @@ function formatDuration(minutes) {
 function formatFare(value) {
   const amount = Number(value);
   if (!Number.isFinite(amount)) {
-    return 'Rs -';
+    return '₹ -';
   }
-  return `Rs ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
 }
