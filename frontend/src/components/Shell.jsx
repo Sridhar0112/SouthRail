@@ -20,6 +20,7 @@ import { ColorModeContext } from '../theme/AppThemeProvider.jsx';
 import { logout } from '../features/auth/authSlice.js';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
+
 function getInitials(name = '') {
   return name.trim().split(/\s+/).map((w) => w[0]).join('').toUpperCase().slice(0, 2);
 }
@@ -35,11 +36,15 @@ export function Shell() {
   const [isPageSettling, setIsPageSettling] = useState(true);
   const avatarButtonRef = useRef(null);
   const pageSettleTimerRef = useRef(null);
+  const authClearedListenerRef = useRef(null);
 
   useEffect(() => {
     const clearAuth = () => dispatch(logout());
+    authClearedListenerRef.current = clearAuth;
     window.addEventListener('southrail-auth-cleared', clearAuth);
-    return () => window.removeEventListener('southrail-auth-cleared', clearAuth);
+    return () => {
+      window.removeEventListener('southrail-auth-cleared', clearAuth);
+    };
   }, [dispatch]);
 
   const closeAllMenus = () => {
@@ -96,17 +101,17 @@ export function Shell() {
     setIsPageSettling(true);
 
     if (pageSettleTimerRef.current) {
-      window.clearTimeout(pageSettleTimerRef.current);
+      clearTimeout(pageSettleTimerRef.current);
     }
 
-    pageSettleTimerRef.current = window.setTimeout(() => {
+    pageSettleTimerRef.current = setTimeout(() => {
       setIsPageSettling(false);
       pageSettleTimerRef.current = null;
     }, 1000);
 
     return () => {
       if (pageSettleTimerRef.current) {
-        window.clearTimeout(pageSettleTimerRef.current);
+        clearTimeout(pageSettleTimerRef.current);
         pageSettleTimerRef.current = null;
       }
     };
@@ -182,6 +187,7 @@ export function Shell() {
                 }}
                 color="primary"
                 sx={{ width: 30, height: 28, bgcolor: 'action.hover', flexShrink: 0, '&:hover': { bgcolor: 'action.selected' } }}
+                aria-label="Toggle theme"
               >
                 {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
               </IconButton>
