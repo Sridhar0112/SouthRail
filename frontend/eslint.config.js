@@ -1,4 +1,6 @@
 import js from '@eslint/js';
+import react from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
 
 export default [
   { ignores: ['dist/**', 'node_modules/**'] },
@@ -6,7 +8,7 @@ export default [
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
-      ecmaVersion: 'latest',
+      ecmaVersion: 2021,
       sourceType: 'module',
       parserOptions: { ecmaFeatures: { jsx: true } },
       globals: {
@@ -28,8 +30,19 @@ export default [
       }
     },
     rules: {
-      'no-unused-vars': 'off',
-      'no-console': ['warn', { allow: ['warn', 'error'] }]
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'react/react-in-jsx-scope': 'off'
+    }
+  },
+  {
+    files: ['**/*.{js,jsx}'],
+    plugins: {
+      react: react,
+      'react-hooks': reactHooks
+    },
+    rules: {
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn'
     }
   }
 ];
