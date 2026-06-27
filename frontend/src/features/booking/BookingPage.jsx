@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams,useNavigate } from 'react-router-dom';
 import { Alert, Box, Button, Card, CardContent, Chip, Container, Divider, Grid, LinearProgress, MenuItem, Paper, Stack, Step, StepLabel, Stepper, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
@@ -36,7 +36,7 @@ export default function BookingPage() {
   const [loadingReview, setLoadingReview] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showReview, setShowReview] = useState(false);
-
+   const navigate = useNavigate();
   const form = useForm({
     defaultValues: {
       trainId,
@@ -98,6 +98,8 @@ export default function BookingPage() {
     try {
       const { data } = await api.post('/bookings', values);
       setResponse(data);
+      console.log(data.bookingId)
+      navigate(`/payment/${data.bookingId}`);
       setShowReview(false);
     } catch (apiError) {
       setSubmitError(isAuthError(apiError)

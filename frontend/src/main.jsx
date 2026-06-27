@@ -19,6 +19,9 @@ const ForgotPasswordPage = lazy(
 const ResetPasswordPage = lazy(
   () => import("./features/auth/ResetPasswordPage.jsx"),
 );
+const PaymentPage= lazy(
+  () => import("./components/PaymentPage.jsx"),
+);
 const VerifyEmailPage = lazy(
   () => import("./features/auth/VerifyEmailPage.jsx"),
 );
@@ -79,6 +82,7 @@ const router = createBrowserRouter([
       },
       { path: "unlock-account", element: <UnlockAccountPage /> },
       { path: "support", element: <SupportPage /> },
+      {path:"payment/:bookingId",element:<PaymentPage/>},
       {
         path: "profile",
         element: (

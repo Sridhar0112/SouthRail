@@ -68,3 +68,7 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
     org.springframework.security: DEBUG
+gemini:
+  api-key: ${GEMINI_API_KEY}
+  base-url: https://generativelanguage.googleapis.com/v1beta
+  default-model: gemini-2.5-flash
