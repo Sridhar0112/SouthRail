@@ -188,7 +188,7 @@ export default function HomePage() {
         className="hero-rail"
         sx={{
           color: 'white',
-          minHeight: compactSearch ? 'auto' : { xs: 'auto', md: 430 },
+          minHeight: compactSearch ? 'auto' : { xs: 'auto', md: 530 },
           py: compactSearch ? { xs: 3, md: 4 } : { xs: 4, sm: 5, md: 5 },
           display: 'flex',
           alignItems: 'center'
