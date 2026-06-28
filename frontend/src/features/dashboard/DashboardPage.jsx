@@ -210,7 +210,7 @@ export default function DashboardPage() {
         maxWidth="xl"
         sx={{ mt: { xs: -2, md: -2.5 }, position: "relative", zIndex: 1 }}
       >
-        <Stack spacing={{ xs: 2.25, md: 2.75 }}>
+        <Stack spacing={{ xs: 1.5, md: 2 }}>
           {/* KPI strip */}
           {loading.history ? (
             <KpiSkeleton />
@@ -226,7 +226,7 @@ export default function DashboardPage() {
           )}
 
           {/* Next Journey + Insights */}
-          <Grid container spacing={2.25}>
+          <Grid container spacing={2}>
             <Grid item xs={12} lg={8}>
               <NextJourneySection
                 loading={loading.history}
@@ -323,9 +323,9 @@ function HeroSection({
     <Box
       sx={{
         background: `linear-gradient(135deg, ${greens.dark} 0%, ${greens.main} 60%, ${greens.mid} 100%)`,
-        pt: { xs: 2.25, md: 2.75 },
-        pb: { xs: 2.5, md: 3 },
-        px: { xs: 2, md: 0 },
+        pt: { xs: 1.5, md: 2 },
+        pb: { xs: 1.5, md: 2 },
+        px: { xs: 1.5, md: 0 },
         position: "relative",
         overflow: "hidden",
       }}
@@ -357,11 +357,11 @@ function HeroSection({
       />
 
       <Container maxWidth="xl">
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          spacing={2}
-          justifyContent="space-between"
-          alignItems={{ xs: "flex-start", md: "center" }}
+            <Stack
+              direction={{ xs: "column", md: "row" }}
+              spacing={1.5}
+              justifyContent="space-between"
+              alignItems={{ xs: "flex-start", md: "center" }}
         >
           {/* Left: Identity */}
           <Stack
@@ -371,11 +371,11 @@ function HeroSection({
           >
             <Avatar
               sx={{
-                width: 44,
-                height: 44,
+                width: 36,
+                height: 36,
                 bgcolor: alpha("#ffffff", 0.92),
                 color: greens.dark,
-                fontSize: 22,
+                fontSize: 18,
                 fontWeight: 900,
                 border: `1px solid ${alpha("#fff", 0.3)}`,
                 flexShrink: 0,
@@ -558,7 +558,7 @@ function HeroStat({ label, value, highlightColor }) {
         sx={{
           color: highlightColor || "#fff",
           fontWeight: 900,
-          fontSize: { xs: 18, md: 22 },
+          fontSize: { xs: 16, md: 18 },
           lineHeight: 1,
         }}
       >
@@ -567,11 +567,11 @@ function HeroStat({ label, value, highlightColor }) {
       <Typography
         sx={{
           color: alpha("#fff", 0.55),
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: 600,
           letterSpacing: 0.5,
           textTransform: "uppercase",
-          mt: 0.3,
+          mt: 0.2,
         }}
       >
         {label}
@@ -655,7 +655,7 @@ function KpiStrip({ metrics }) {
           <Paper
             elevation={0}
             sx={{
-              p: { xs: 1.5, md: 1.25 },
+              p: { xs: 1.25, md: 1 },
               borderRadius: 2,
               bgcolor: t.raisedBg,
               border: `1px solid ${t.cardBorder}`,
@@ -663,20 +663,21 @@ function KpiStrip({ metrics }) {
               height: "100%",
               "&:hover": {
                 boxShadow: t.cardShadow,
-                transform: "translateY(-2px)",
+                transform: "translateY(-1px)",
               },
             }}
           >
-            <Stack spacing={1.5}>
+            <Stack spacing={1}>
               <Box
                 sx={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 2,
+                  width: 28,
+                  height: 28,
+                  borderRadius: 1.5,
                   bgcolor: alpha(card.color, 0.1),
                   color: card.color,
                   display: "grid",
                   placeItems: "center",
+                  '& .MuiSvgIcon-root': { fontSize: 16 }
                 }}
               >
                 {card.icon}
@@ -685,7 +686,7 @@ function KpiStrip({ metrics }) {
                 <Typography
                   sx={{
                     color: t.textSub,
-                    fontSize: { xs: 11, md: 10 },
+                    fontSize: { xs: 10, md: 9 },
                     fontWeight: 600,
                     letterSpacing: 0.3,
                     textTransform: "uppercase",
@@ -697,10 +698,10 @@ function KpiStrip({ metrics }) {
                 <Typography
                   sx={{
                     fontWeight: 900,
-                    fontSize: { xs: 18, md: 20 },
+                    fontSize: { xs: 16, md: 17 },
                     color: t.textMain,
                     lineHeight: 1.1,
-                    mt: 0.5,
+                    mt: 0.25,
                     wordBreak: "break-word",
                   }}
                 >
@@ -733,12 +734,12 @@ function KpiSkeleton() {
           >
             <Skeleton
               variant="rounded"
-              width={36}
-              height={36}
-              sx={{ mb: 1.5, borderRadius: 2 }}
+              width={28}
+              height={28}
+              sx={{ mb: 1, borderRadius: 1.5 }}
             />
-            <Skeleton width="70%" height={12} sx={{ mb: 0.5 }} />
-            <Skeleton width="50%" height={26} />
+            <Skeleton width="70%" height={10} sx={{ mb: 0.5 }} />
+            <Skeleton width="50%" height={22} />
           </Paper>
         </Grid>
       ))}
@@ -788,11 +789,11 @@ function NextJourneySection({
       )}
 
       {!loading && !error && visibleBookings.length === 0 && (
-        <Box sx={{ py: 5, textAlign: "center" }}>
+        <Box sx={{ py: 4, textAlign: "center" }}>
           <TrainIcon
-            sx={{ fontSize: 56, color: alpha(t.primary, 0.18), mb: 1.5 }}
+            sx={{ fontSize: 44, color: alpha(t.primary, 0.18), mb: 1 }}
           />
-          <Typography fontWeight={700} color={t.textMain} gutterBottom>
+          <Typography fontWeight={700} color={t.textMain} sx={{ mb: 0.25 }}>
             No upcoming trips
           </Typography>
           <Typography color={t.textSub} variant="body2" sx={{ mb: 1.25 }}>
@@ -882,14 +883,14 @@ function TicketCard({ booking, onCancelBooking, featured }) {
           }}
         />
       )}
-      <Box sx={{ p: { xs: 1.5, md: 1.75 } }}>
+      <Box sx={{ p: { xs: 1.25, md: 1.5 } }}>
         {/* Train name + status */}
         <Stack
           direction={{ xs: "column", sm: "row" }}
           justifyContent="space-between"
           alignItems={{ xs: "flex-start", sm: "flex-start" }}
-          spacing={1}
-          sx={{ mb: 1.5 }}
+          spacing={0.5}
+          sx={{ mb: 1 }}
         >
           <Box>
             {featured && (
@@ -1364,11 +1365,11 @@ function BookingHistoryCard({
           </Stack>
 
           {allRows.length === 0 && (
-            <Box sx={{ py: 5, textAlign: "center" }}>
+            <Box sx={{ py: 3, textAlign: "center" }}>
               <ConfirmationNumberIcon
-                sx={{ fontSize: 48, color: alpha(t.primary, 0.2), mb: 1 }}
+                sx={{ fontSize: 40, color: alpha(t.primary, 0.2), mb: 0.5 }}
               />
-              <Typography fontWeight={700} color={t.textMain} gutterBottom>
+              <Typography fontWeight={700} color={t.textMain} sx={{ mb: 0.25 }}>
                 No bookings yet
               </Typography>
               <Typography color={t.textSub} variant="body2">
@@ -1377,9 +1378,9 @@ function BookingHistoryCard({
             </Box>
           )}
           {allRows.length > 0 && rows.length === 0 && (
-            <Box sx={{ py: 4, textAlign: "center" }}>
+            <Box sx={{ py: 3, textAlign: "center" }}>
               <SearchIcon
-                sx={{ fontSize: 40, color: alpha(t.primary, 0.2), mb: 1 }}
+                sx={{ fontSize: 32, color: alpha(t.primary, 0.2), mb: 0.5 }}
               />
               <Typography color={t.textSub} variant="body2">
                 No bookings match your search.
@@ -1610,35 +1611,35 @@ function SectionCard({ id, title, subtitle, icon, action, children }) {
         overflow: "hidden",
       }}
     >
-      <Box sx={{ px: { xs: 1.5, md: 2 }, pt: { xs: 1.5, md: 1.75 }, pb: 1.25 }}>
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          justifyContent="space-between"
-          alignItems={{ sm: "center" }}
-          spacing={1}
-          sx={{ mb: 1.25 }}
-        >
-          <Stack direction="row" spacing={1.25} alignItems="center">
-            {icon}
-            <Box sx={{ minWidth: 0 }}>
-              <Typography
-                variant="h6"
-                fontWeight={900}
-                color={t.textMain}
-                sx={{ lineHeight: 1.2, overflowWrap: "anywhere" }}
-              >
-                {title}
-              </Typography>
-              {subtitle && (
-                <Typography variant="body2" color={t.textSub}>
-                  {subtitle}
+        <Box sx={{ px: { xs: 1.5, md: 1.75 }, pt: { xs: 1.25, md: 1.5 }, pb: 1 }}>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            justifyContent="space-between"
+            alignItems={{ sm: "center" }}
+            spacing={0.5}
+            sx={{ mb: 1 }}
+          >
+            <Stack direction="row" spacing={1} alignItems="center">
+              {icon}
+              <Box sx={{ minWidth: 0 }}>
+                <Typography
+                  variant="subtitle1"
+                  fontWeight={900}
+                  color={t.textMain}
+                  sx={{ lineHeight: 1.2, overflowWrap: "anywhere" }}
+                >
+                  {title}
                 </Typography>
-              )}
-            </Box>
+                {subtitle && (
+                  <Typography variant="caption" color={t.textSub}>
+                    {subtitle}
+                  </Typography>
+                )}
+              </Box>
+            </Stack>
+            {action}
           </Stack>
-          {action}
-        </Stack>
-        <Divider sx={{ mb: 1.5, borderColor: t.divider }} />
+          <Divider sx={{ mb: 1, borderColor: t.divider }} />
         {children}
       </Box>
     </Paper>

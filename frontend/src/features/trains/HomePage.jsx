@@ -182,7 +182,7 @@ export default function HomePage() {
         }}
       >
         <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1 }}>
-          <Grid container spacing={compactSearch ? 2 : 5} alignItems="center" sx={{ minWidth: 0 }}>
+          <Grid container spacing={compactSearch ? 2 : 3} alignItems="center">
             {!compactSearch && (
               <Grid item xs={12} md={6}>
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
@@ -210,7 +210,7 @@ export default function HomePage() {
                   >
                     Search trains, check availability, compare fares, and book across supported South Indian routes.
                   </Typography>
-                  <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+                  <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap sx={{ mt: 3 }}>
                     {[
                       { icon: <AccessTimeIcon sx={{ fontSize: 16 }} />, text: 'Real-time availability' },
                       { icon: <CurrencyRupeeIcon sx={{ fontSize: 16 }} />, text: 'Fare comparison' },
@@ -218,7 +218,7 @@ export default function HomePage() {
                     ].map((item) => (
                       <Stack key={item.text} direction="row" spacing={0.6} alignItems="center" sx={{ color: alpha('#FFFFFF', 0.7) }}>
                         {item.icon}
-                        <Typography variant="caption" sx={{ fontWeight: 500 }}>{item.text}</Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 500, whiteSpace: 'nowrap' }}>{item.text}</Typography>
                       </Stack>
                     ))}
                   </Stack>

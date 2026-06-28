@@ -113,7 +113,7 @@ export default function LoginPage() {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ py: { xs: 3, sm: 5 } }}>
+    <Container maxWidth="xs" sx={{ py: { xs: 2, sm: 4 } }}>
       <Paper
         elevation={0}
         sx={{
@@ -156,7 +156,7 @@ export default function LoginPage() {
         {verificationMessage && <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>{verificationMessage}</Alert>}
 
         <Box component="form" onSubmit={handleSubmit(onSubmit)}>
-          <Stack spacing={2.5}>
+          <Stack spacing={2}>
             <TextField
               label="Email"
               placeholder="you@example.com"

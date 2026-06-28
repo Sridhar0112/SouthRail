@@ -75,15 +75,15 @@ export default function RegisterPage() {
 
   if (successMessage) {
     return (
-      <Container maxWidth="sm" sx={{ py: { xs: 3, sm: 5 } }}>
+      <Container maxWidth="xs" sx={{ py: { xs: 2, sm: 4 } }}>
         <Paper elevation={0} sx={{
-          p: { xs: 2.5, sm: 3.5 }, borderRadius: 4, textAlign: 'center',
+          p: { xs: 2, sm: 2.5 }, borderRadius: 3, textAlign: 'center',
           width: '100%', maxWidth: '100%', minWidth: 0,
           border: '1px solid', borderColor: 'var(--southrail-glass-border)',
           boxShadow: 'var(--southrail-glass-shadow)',
           background: (theme) => alpha(theme.palette.surface.raised, 0.96),
         }}>
-          <Typography variant="h4" fontWeight={800} gutterBottom sx={{ fontSize: { xs: '1.35rem', sm: '1.7rem' } }}>
+          <Typography variant="h5" fontWeight={800} gutterBottom>
             Verify your email
           </Typography>
           <Alert severity="success" sx={{ mb: 1.5, textAlign: 'left', borderRadius: 2 }}>
@@ -94,10 +94,10 @@ export default function RegisterPage() {
               Verification email sent to: <strong>{registeredEmail}</strong>
             </Typography>
           )}
-          <Typography color="text.secondary" sx={{ mb: 2, overflowWrap: 'anywhere' }}>
+          <Typography color="text.secondary" sx={{ mb: 1.5, overflowWrap: 'anywhere' }} variant="body2">
             Please open the verification link from your email. After verification, you can login and access your dashboard.
           </Typography>
-          <Button component={Link} to="/login" variant="contained" fullWidth sx={{ borderRadius: 2, py: 1.4 }}>
+          <Button component={Link} to="/login" variant="contained" fullWidth sx={{ borderRadius: 2, py: 1.2 }}>
             Go to login
           </Button>
         </Paper>
@@ -106,37 +106,37 @@ export default function RegisterPage() {
   }
 
   return (
-    <Container maxWidth="sm" sx={{ py: { xs: 3, sm: 5 } }}>
+    <Container maxWidth="xs" sx={{ py: { xs: 2, sm: 4 } }}>
       <Paper elevation={0} sx={{
-        p: { xs: 2.5, sm: 3.5 }, borderRadius: 4,
+        p: { xs: 1.75, sm: 2.25 }, borderRadius: 3,
         width: '100%', maxWidth: '100%', minWidth: 0,
         border: '1px solid', borderColor: 'var(--southrail-glass-border)',
         boxShadow: 'var(--southrail-glass-shadow)',
         background: (theme) => alpha(theme.palette.surface.raised, 0.96),
       }}>
-        <Stack spacing={0.5} sx={{ mb: 3, textAlign: 'center' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+        <Stack spacing={0.5} sx={{ mb: 2, textAlign: 'center' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 0.75 }}>
             <Box sx={{
-              width: 48, height: 48, borderRadius: 2.5,
+              width: 40, height: 40, borderRadius: 2,
               background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: (theme) => `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`
             }}>
-              <TrainIcon sx={{ fontSize: 24, color: 'primary.contrastText' }} />
+              <TrainIcon sx={{ fontSize: 20, color: 'primary.contrastText' }} />
             </Box>
           </Box>
-          <Typography variant="h4" fontWeight={800} sx={{ fontSize: { xs: '1.4rem', sm: '1.7rem' } }}>
+          <Typography variant="h5" fontWeight={800}>
             Create account
           </Typography>
-          <Typography color="text.secondary">
+          <Typography color="text.secondary" variant="caption">
             Join SouthRail for easy train bookings
           </Typography>
         </Stack>
 
-        {apiError && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{apiError}</Alert>}
+        {apiError && <Alert severity="error" sx={{ mb: 1.5, borderRadius: 2 }}>{apiError}</Alert>}
 
         <Box component="form" onSubmit={form.handleSubmit(onSubmit)}>
-          <Stack spacing={2.5} sx={{ '& .MuiTextField-root': { width: '100%' } }}>
+          <Stack spacing={2} sx={{ '& .MuiTextField-root': { width: '100%' } }}>
             <TextField
               label="Full name"
               placeholder="Your full name"

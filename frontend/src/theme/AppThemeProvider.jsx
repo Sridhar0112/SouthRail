@@ -126,6 +126,7 @@ export function AppThemeProvider({ children }) {
       components: {
         MuiCssBaseline: {
           styleOverrides: {
+            html: { overflowX: 'hidden' },
             body: {
               backgroundColor: palette.background.default,
               backgroundImage: palette.custom.pageBg,
@@ -133,6 +134,7 @@ export function AppThemeProvider({ children }) {
               scrollBehavior: 'smooth',
               WebkitFontSmoothing: 'antialiased',
               MozOsxFontSmoothing: 'grayscale',
+              overflowX: 'hidden',
               '--southrail-glass-bg': palette.custom.glassBg,
               '--southrail-glass-border': palette.custom.glassBorder,
               '--southrail-glass-shadow': palette.custom.glassShadow,

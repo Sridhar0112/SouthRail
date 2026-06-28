@@ -121,40 +121,40 @@ export default function ResetPasswordPage() {
   return (
     <Box sx={{ minHeight: '100vh', background: (theme) => theme.palette.custom.pageBg, display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ height: 4, background: (theme) => `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})` }} />
-      <Container maxWidth="sm" sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', py: { xs: 2, sm: 3 } }}>
-        <Box sx={{ textAlign: 'center', mb: 4 }}>
-          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1.2, mb: 1 }}>
+      <Container maxWidth="xs" sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', py: { xs: 2, sm: 3 } }}>
+        <Box sx={{ textAlign: 'center', mb: 2.5 }}>
+          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
             <Box sx={{
-              width: 40, height: 40, borderRadius: 2.5,
+              width: 36, height: 36, borderRadius: 2,
               background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: (theme) => `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`
             }}>
-              <TrainIcon sx={{ fontSize: 20, color: 'primary.contrastText' }} />
+              <TrainIcon sx={{ fontSize: 18, color: 'primary.contrastText' }} />
             </Box>
           </Box>
         </Box>
 
         <Paper elevation={0} sx={{
-          borderRadius: 4,
+          borderRadius: 3,
           border: '1px solid', borderColor: 'var(--southrail-card-border)',
           boxShadow: 'var(--southrail-card-shadow)',
           bgcolor: 'surface.raised',
           overflow: 'hidden',
         }}>
           <Box sx={{
-            px: { xs: 3, sm: 5 }, py: { xs: 2.5, sm: 3 },
+            px: { xs: 2.5, sm: 4 }, py: { xs: 2, sm: 2.5 },
             background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
           }}>
-            <Typography variant="h5" sx={{ color: 'primary.contrastText', fontWeight: 700 }}>
+            <Typography variant="subtitle1" sx={{ color: 'primary.contrastText', fontWeight: 700 }}>
               Reset your password
             </Typography>
-            <Typography variant="body2" sx={{ color: (theme) => alpha(theme.palette.primary.contrastText, 0.75), mt: 0.5 }}>
+            <Typography variant="body2" sx={{ color: (theme) => alpha(theme.palette.primary.contrastText, 0.75), mt: 0.25 }}>
               Create a new secure password to regain access to your SouthRail account.
             </Typography>
           </Box>
 
-          <Box sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2, sm: 2.5 } }}>
+          <Box sx={{ px: { xs: 1.75, sm: 2.25 }, py: { xs: 1.75, sm: 2 } }}>
             {missingToken && (
               <Alert severity="error" sx={{ mb: 1.5, borderRadius: 2 }}>
                 Reset link is invalid or missing. Please request a new password reset link.
@@ -168,7 +168,7 @@ export default function ResetPasswordPage() {
               <SuccessPanel onNavigate={() => navigate('/login')} />
             ) : (
               <Box component="form" onSubmit={form.handleSubmit(submit)} noValidate>
-                <Stack spacing={2.5}>
+                <Stack spacing={2}>
                   <Box>
                     <TextField
                       label="New password"

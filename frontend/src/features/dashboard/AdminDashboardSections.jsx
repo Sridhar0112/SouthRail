@@ -91,8 +91,8 @@ export function AdminHeader({ lastUpdated, onRefresh, metrics }) {
       sx={(theme) => ({
         position: 'relative',
         overflow: 'hidden',
-        p: { xs: 2, md: 3 },
-        borderRadius: 3,
+        p: { xs: 1.5, md: 2.25 },
+        borderRadius: 2.5,
         border: `1px solid ${theme.palette.custom?.cardBorder || theme.palette.divider}`,
         color: '#F4F7F5',
         background: theme.palette.mode === 'dark'
@@ -111,33 +111,33 @@ export function AdminHeader({ lastUpdated, onRefresh, metrics }) {
       />
       <Stack
         direction={{ xs: 'column', md: 'row' }}
-        spacing={2.5}
+        spacing={1.5}
         justifyContent="space-between"
         alignItems={{ xs: 'flex-start', md: 'center' }}
         sx={{ position: 'relative', zIndex: 1 }}
       >
-        <Stack direction="row" spacing={1.75} alignItems="flex-start">
+        <Stack direction="row" spacing={1.25} alignItems="flex-start">
           <Avatar
             variant="rounded"
             sx={{
-              width: 50,
-              height: 50,
-              borderRadius: 2.5,
+              width: 40,
+              height: 40,
+              borderRadius: 2,
               bgcolor: alpha('#FFFFFF', 0.16),
               color: '#FFFFFF',
               border: `1px solid ${alpha('#FFFFFF', 0.28)}`
             }}
           >
-            <TrainIcon />
+            <TrainIcon sx={{ fontSize: 20 }} />
           </Avatar>
           <Box>
-            <Typography variant="overline" sx={{ opacity: 0.78, fontWeight: 800, letterSpacing: 1.1 }}>
+            <Typography variant="overline" sx={{ opacity: 0.78, fontWeight: 800, letterSpacing: 1.1, fontSize: 10 }}>
               SouthRail Console
             </Typography>
-            <Typography variant="h4" fontWeight={900} sx={{ lineHeight: 1.12 }}>
+            <Typography variant="h5" fontWeight={900} sx={{ lineHeight: 1.12 }}>
               Admin Management
             </Typography>
-            <Typography sx={{ opacity: 0.86, maxWidth: 560, mt: 0.5 }}>
+            <Typography variant="body2" sx={{ opacity: 0.86, maxWidth: 560, mt: 0.25 }}>
               Operations overview for users, trains, routes, stations, and bookings, built from live API records.
             </Typography>
           </Box>
@@ -207,34 +207,35 @@ export function AdminMetricCard({ label, value, helperText, iconKey, color = 'pr
         height: '100%',
         overflow: 'hidden',
         position: 'relative',
-        borderRadius: 2.5,
+        borderRadius: 2,
         transition: 'transform 160ms ease, box-shadow 160ms ease',
         '&:hover': {
-          transform: 'translateY(-2px)',
-          boxShadow: theme.palette.mode === 'dark' ? '0 16px 34px rgba(0,0,0,0.36)' : '0 16px 30px rgba(19,35,30,0.12)'
+          transform: 'translateY(-1px)',
+          boxShadow: theme.palette.mode === 'dark' ? '0 8px 20px rgba(0,0,0,0.3)' : '0 8px 18px rgba(19,35,30,0.1)'
         }
       })}
     >
-      <Box sx={{ position: 'absolute', insetBlock: 0, left: 0, width: 4, bgcolor: color }} />
-      <CardContent sx={{ p: 2, pl: 2.5, '&:last-child': { pb: 2 } }}>
-        <Stack direction="row" spacing={1.5} alignItems="flex-start" justifyContent="space-between">
+      <Box sx={{ position: 'absolute', insetBlock: 0, left: 0, width: 3, bgcolor: color }} />
+      <CardContent sx={{ p: 1.5, pl: 2, '&:last-child': { pb: 1.5 } }}>
+        <Stack direction="row" spacing={1} alignItems="flex-start" justifyContent="space-between">
           <Box sx={{ minWidth: 0 }}>
-            <Typography color="text.secondary" variant="caption" fontWeight={800} textTransform="uppercase" letterSpacing={0.4}>
+            <Typography color="text.secondary" variant="caption" fontWeight={800} textTransform="uppercase" letterSpacing={0.4} sx={{ fontSize: 10 }}>
               {label}
             </Typography>
-            <Typography variant="h4" fontWeight={950} sx={{ lineHeight: 1.18, mt: 0.25 }}>{formatter(value)}</Typography>
-            <Typography color="text.secondary" variant="caption" sx={{ display: 'block', mt: 0.5 }}>{helperText}</Typography>
+            <Typography variant="h5" fontWeight={950} sx={{ lineHeight: 1.18, mt: 0.25, fontSize: { xs: 20, md: 22 } }}>{formatter(value)}</Typography>
+            <Typography color="text.secondary" variant="caption" sx={{ display: 'block', mt: 0.25, fontSize: 10 }}>{helperText}</Typography>
           </Box>
           <Box
             sx={{
-              width: 40,
-              height: 40,
+              width: 34,
+              height: 34,
               flex: '0 0 auto',
-              borderRadius: 2,
+              borderRadius: 1.5,
               display: 'grid',
               placeItems: 'center',
               bgcolor: (theme) => alpha(resolveColor(theme, color), 0.12),
-              color
+              color,
+              '& .MuiSvgIcon-root': { fontSize: 18 }
             }}
           >
             {icon}
@@ -247,10 +248,10 @@ export function AdminMetricCard({ label, value, helperText, iconKey, color = 'pr
 
 export function AdminChartCard({ title, subtitle, children, icon, accent = 'primary', headerExtra }) {
   return (
-    <Card sx={{ height: '100%', borderRadius: 2.5 }}>
-      <CardContent sx={{ p: 2.25, '&:last-child': { pb: 2.25 } }}>
-        <Stack direction="row" spacing={1.5} justifyContent="space-between" alignItems="flex-start" sx={{ mb: 1.5 }}>
-          <Stack direction="row" spacing={1.25} alignItems="flex-start" sx={{ minWidth: 0 }}>
+    <Card sx={{ height: '100%', borderRadius: 2 }}>
+      <CardContent sx={{ p: 1.75, '&:last-child': { pb: 1.75 } }}>
+        <Stack direction="row" spacing={1} justifyContent="space-between" alignItems="flex-start" sx={{ mb: 1 }}>
+          <Stack direction="row" spacing={1} alignItems="flex-start" sx={{ minWidth: 0 }}>
             {icon && (
               <Box
                 sx={{

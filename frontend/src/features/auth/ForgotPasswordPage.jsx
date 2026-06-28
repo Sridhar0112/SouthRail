@@ -28,31 +28,31 @@ export default function ForgotPasswordPage() {
 
   if (message) {
     return (
-      <Container maxWidth="sm" sx={{ py: { xs: 3, sm: 5 } }}>
+      <Container maxWidth="xs" sx={{ py: { xs: 2, sm: 4 } }}>
         <Paper elevation={0} sx={{
-          p: { xs: 3, sm: 4 }, borderRadius: 4, textAlign: 'center',
+          p: { xs: 2, sm: 2.5 }, borderRadius: 3, textAlign: 'center',
           width: '100%', minWidth: 0,
           border: '1px solid', borderColor: 'var(--southrail-glass-border)',
           boxShadow: 'var(--southrail-glass-shadow)',
           background: (theme) => alpha(theme.palette.surface.raised, 0.96),
         }}>
-          <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
+          <Box sx={{ mb: 1.5, display: 'flex', justifyContent: 'center' }}>
             <Box sx={{
-              width: 64, height: 64, borderRadius: '50%',
+              width: 52, height: 52, borderRadius: '50%',
               bgcolor: (theme) => alpha(theme.palette.success.main, 0.1),
               display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
-              <MarkEmailReadIcon color="success" sx={{ fontSize: 36 }} />
+              <MarkEmailReadIcon color="success" sx={{ fontSize: 28 }} />
             </Box>
           </Box>
-          <Typography variant="h4" fontWeight={800} gutterBottom sx={{ fontSize: { xs: '1.35rem', sm: '1.7rem' } }}>
+          <Typography variant="h6" fontWeight={800} gutterBottom>
             Check your email
           </Typography>
-          <Typography color="text.secondary" sx={{ mb: 3, overflowWrap: 'anywhere', lineHeight: 1.6 }}>
+          <Typography color="text.secondary" variant="body2" sx={{ mb: 2, overflowWrap: 'anywhere', lineHeight: 1.6 }}>
             If an account exists for this email address, a password reset email has been sent.
             Please check your inbox and spam folder.
           </Typography>
-          <Button component={Link} to="/login" variant="contained" fullWidth sx={{ borderRadius: 2, py: 1.4 }}>
+          <Button component={Link} to="/login" variant="contained" fullWidth sx={{ borderRadius: 2, py: 1.2 }}>
             Back to sign in
           </Button>
         </Paper>
@@ -61,37 +61,37 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <Container maxWidth="sm" sx={{ py: { xs: 3, sm: 5 } }}>
+    <Container maxWidth="xs" sx={{ py: { xs: 2, sm: 4 } }}>
       <Paper elevation={0} sx={{
-        p: { xs: 2.5, sm: 3.5 }, borderRadius: 4,
+        p: { xs: 1.75, sm: 2.25 }, borderRadius: 3,
         width: '100%', minWidth: 0,
         border: '1px solid', borderColor: 'var(--southrail-glass-border)',
         boxShadow: 'var(--southrail-glass-shadow)',
         background: (theme) => alpha(theme.palette.surface.raised, 0.96),
       }}>
-        <Stack spacing={0.5} sx={{ mb: 3, textAlign: 'center' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+        <Stack spacing={0.5} sx={{ mb: 2, textAlign: 'center' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 0.75 }}>
             <Box sx={{
-              width: 48, height: 48, borderRadius: 2.5,
+              width: 40, height: 40, borderRadius: 2,
               background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: (theme) => `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`
             }}>
-              <TrainIcon sx={{ fontSize: 24, color: 'primary.contrastText' }} />
+              <TrainIcon sx={{ fontSize: 20, color: 'primary.contrastText' }} />
             </Box>
           </Box>
-          <Typography variant="h4" fontWeight={800} sx={{ fontSize: { xs: '1.4rem', sm: '1.7rem' } }}>
+          <Typography variant="h5" fontWeight={800}>
             Reset password
           </Typography>
-          <Typography color="text.secondary">
+          <Typography color="text.secondary" variant="caption">
             Enter your registered email address
           </Typography>
         </Stack>
 
-        {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{error}</Alert>}
+        {error && <Alert severity="error" sx={{ mb: 1.5, borderRadius: 2 }}>{error}</Alert>}
 
         <Box component="form" onSubmit={form.handleSubmit(submit)}>
-          <Stack spacing={2.5}>
+          <Stack spacing={2}>
             <TextField
               label="Email"
               placeholder="you@example.com"
