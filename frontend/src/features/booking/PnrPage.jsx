@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
@@ -57,7 +57,7 @@ export default function PnrPage() {
   const validationMessage = useMemo(() => validatePnr(pnr), [pnr]);
   const canTrack = !validationMessage && !loading;
 
-  const search = async (value = pnr, options = {}) => {
+  const search = useCallback(async (value = pnr, options = {}) => {
     const trimmedPnr = String(value || "").trim();
     const issue = validatePnr(trimmedPnr);
     setTouched(true);
@@ -88,7 +88,7 @@ export default function PnrPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pnr, setSearchParams]);
 
   useEffect(() => {
     const queryPnr = searchParams.get("pnr");
@@ -96,7 +96,7 @@ export default function PnrPage() {
       setPnr(queryPnr);
       search(queryPnr, { updateUrl: false });
     }
-  }, [searchParams]);
+  }, [searchParams, search]);
 
   const clearSearch = () => {
     setPnr("");

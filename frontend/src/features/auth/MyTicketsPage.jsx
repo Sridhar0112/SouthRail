@@ -31,7 +31,6 @@ import TaskAltOutlinedIcon from '@mui/icons-material/TaskAltOutlined';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
-import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import api from '../../services/api.js';
 
 // ─── Constants ───────────────────────────────────────────────────────────────

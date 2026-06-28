@@ -13,7 +13,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { useNavigate, useParams, useSearchParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import {
   Alert,
   Box,
@@ -61,19 +61,6 @@ const UPI_OPTIONS = [
   { id: "paytm", label: "Paytm", icon: "🟦" }
 ]
 
-const CARD_OPTIONS = [
-  {
-    id: "debit",
-    label: "Debit Card",
-    icon: <CreditCardIcon sx={{ fontSize: 18 }} />
-  },
-  {
-    id: "credit",
-    label: "Credit Card",
-    icon: <CreditCardIcon sx={{ fontSize: 18 }} />
-  }
-]
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function loadRazorpayScript() {
@@ -90,16 +77,13 @@ function loadRazorpayScript() {
   })
 }
 
-function formatAmount(paise) {
-  return (paise / 100).toLocaleString("en-IN", { maximumFractionDigits: 0 })
-}
-
 function formatRupees(rupees) {
   return rupees.toLocaleString("en-IN", { maximumFractionDigits: 0 })
 }
 
 // ─── API Service ──────────────────────────────────────────────────────────────
 
+/* global fetch */
 const api = {
   async createOrder(bookingId, amount) {
     const res = await fetch("/api/payment/create-order", {
@@ -180,7 +164,6 @@ function SectionCard({ icon, title, children }) {
 }
 
 function DetailRow({ label, value }) {
-  const theme = useTheme()
   return (
     <Box
       sx={{
@@ -422,7 +405,6 @@ export default function PaymentPage() {
   const theme = useTheme()
   const navigate = useNavigate()
   const { bookingId } = useParams()
-  const [searchParams] = useSearchParams()
 
   const [booking, setBooking] = useState(null)
   const [loadingBooking, setLoadingBooking] = useState(true)

@@ -449,7 +449,7 @@ const submitTicket = useCallback(async () => {
     });
 
     setSubmitted(false);
-  } catch (error) {
+  } catch {
     setSnackbar({
       open: true,
       severity: 'error',

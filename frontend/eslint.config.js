@@ -41,6 +41,8 @@ export default [
       'react-hooks': reactHooks
     },
     rules: {
+      'react/jsx-uses-vars': 'error',
+      'react/jsx-uses-react': 'error',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn'
     }

@@ -98,7 +98,6 @@ export default function BookingPage() {
     try {
       const { data } = await api.post('/bookings', values);
       setResponse(data);
-      console.log(data.bookingId)
       navigate(`/payment/${data.bookingId}`);
       setShowReview(false);
     } catch (apiError) {

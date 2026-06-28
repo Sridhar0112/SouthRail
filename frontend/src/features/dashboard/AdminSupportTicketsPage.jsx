@@ -885,7 +885,7 @@ export default function AdminSupportTicketsPage() {
     try {
       const { data } = await api.get('/support/admin/tickets');
       setTickets(Array.isArray(data) ? data : []);
-    } catch (apiError) {
+    } catch {
       setError('Unable to load support tickets right now.');
     } finally {
       setLoading(false);
@@ -972,7 +972,7 @@ export default function AdminSupportTicketsPage() {
       if (selectedTicket?.id === ticketId) {
         setSelectedTicket((prev) => ({ ...prev, status }));
       }
-    } catch (apiError) {
+    } catch {
       alert('Failed to update ticket status');
     } finally {
       setStatusLoading(false);
@@ -1218,11 +1218,11 @@ export default function AdminSupportTicketsPage() {
                       {loading && <LoadingRows />}
 
                       {!loading &&
-                        paginatedTickets.map((ticket, idx) => (
-                         
+                        paginatedTickets.map((ticket) => (
+                          
                             <TableRow
                               hover
-                               key={ticket.id}
+                                key={ticket.id}
                               tabIndex={0}
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter' || e.key === ' ') {

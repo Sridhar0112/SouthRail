@@ -29,18 +29,10 @@ import SellOutlinedIcon from '@mui/icons-material/SellOutlined';
 import BookmarkBorderOutlinedIcon from '@mui/icons-material/BookmarkBorderOutlined';
 import ConfirmationNumberOutlinedIcon from '@mui/icons-material/ConfirmationNumberOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import api from '../../services/api.js';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-
-const STATUS_META = {
-  OPEN:        { label: 'Open',        color: 'primary' },
-  IN_PROGRESS: { label: 'In Progress', color: 'warning' },
-  RESOLVED:    { label: 'Resolved',    color: 'success' },
-  CLOSED:      { label: 'Closed',      color: 'default' },
-};
 
 const TOPIC_LABELS = {
   account:   'Account',
@@ -74,18 +66,6 @@ function initialsOf(name = '') {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return '?';
   return (parts[0][0] + (parts[1]?.[0] || '')).toUpperCase();
-}
-
-function StatusChip({ status, size = 'small' }) {
-  const meta = STATUS_META[status] ?? { label: status, color: 'default' };
-  return (
-    <Chip
-      label={meta.label}
-      color={meta.color}
-      size={size}
-      sx={{ fontWeight: 700, letterSpacing: 0.3, borderRadius: 1.5, px: 0.5 }}
-    />
-  );
 }
 
 // ── Message bubble ──
