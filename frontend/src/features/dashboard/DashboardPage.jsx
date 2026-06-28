@@ -52,10 +52,9 @@ import {
 } from "../../components/StateFeedback.jsx";
 import {
   RailwayStatusChip,
-  formatStatus,
 } from "../../components/RailwayStatusChip.jsx";
 import { getApiErrorMessage, isAuthError } from "../../utils/apiErrors.js";
-import { getBookingStatusLabel } from "../../utils/bookingStatus.js";
+import { formatStatus, getBookingStatusLabel } from "../../utils/bookingStatus.js";
 
 // ─── Theme helpers ───────────────────────────────────────────────────────────
 // SouthRail branding is expressed through the theme's primary/secondary palette

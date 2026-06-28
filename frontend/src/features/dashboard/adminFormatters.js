@@ -2,25 +2,7 @@
 // No JSX, no data aggregation — only value -> display-string transforms.
 
 import { getApiErrorMessage, isAuthError } from '../../utils/apiErrors.js';
-
-export function normalizeStatus(status) {
-  return String(status || '').trim().toUpperCase();
-}
-
-export function formatStatus(status) {
-  const value = normalizeStatus(status);
-  return value ? value.replaceAll('_', ' ') : 'UNKNOWN';
-}
-
-export function getStatusColor(status) {
-  const value = normalizeStatus(status);
-  if (value === 'CONFIRMED' || value === 'BOOKED') return 'success';
-  if (value === 'RAC') return 'info';
-  if (value === 'WAITLISTED' || value === 'WAITLIST' || value === 'PENDING') return 'warning';
-  if (value === 'CANCELLED' || value === 'FAILED') return 'error';
-  if (value === 'REFUNDED') return 'info';
-  return 'default';
-}
+export { formatStatus, getStatusColor, normalizeBookingStatus as normalizeStatus } from '../../utils/bookingStatus.js';
 
 export function statusBarColor(status) {
   const color = getStatusColor(status);

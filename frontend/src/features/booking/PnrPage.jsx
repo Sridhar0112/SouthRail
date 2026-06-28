@@ -38,10 +38,9 @@ import {
 } from "../../components/StateFeedback.jsx";
 import {
   RailwayStatusChip,
-  formatStatus,
 } from "../../components/RailwayStatusChip.jsx";
 import { getApiErrorMessage } from "../../utils/apiErrors.js";
-import { getBookingStatusLabel, getBookingStatusMessage, getQueueText } from "../../utils/bookingStatus.js";
+import { formatStatus, getBookingStatusLabel, getBookingStatusMessage, getQueueText } from "../../utils/bookingStatus.js";
 
 export default function PnrPage() {
   const [searchParams, setSearchParams] = useSearchParams();

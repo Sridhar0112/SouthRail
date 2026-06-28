@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -122,19 +122,27 @@ export default function ResetPasswordPage() {
   const missingToken = !token;
 
   /* ── Original submit logic — untouched ── */
+  const redirectTimerRef = useRef(null);
+
   const submit = async (values) => {
     setError('');
     setLoading(true);
     try {
       await api.post('/auth/reset-password', { token, password: values.password });
       setSuccess(true);
-      setTimeout(() => { navigate('/login'); }, 5000);
+      redirectTimerRef.current = setTimeout(() => { navigate('/login'); }, 5000);
     } catch (apiError) {
       setError(getApiErrorMessage(apiError, 'Reset link is invalid, expired, or already used.'));
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+    };
+  }, []);
 
   return (
     <Box sx={{

@@ -57,6 +57,8 @@ export default function UnlockAccountPage() {
   useEffect(() => {
     if (hasCalled.current) return;
     hasCalled.current = true;
+    let active = true;
+    let redirectTimer;
 
     const token = searchParams.get('token');
 
@@ -65,14 +67,16 @@ export default function UnlockAccountPage() {
       return;
     }
 
-    api.post('/auth/unlock-account', { token })
-      .then(() => {
+    (async () => {
+      try {
+        await api.post('/auth/unlock-account', { token });
+        if (!active) return;
         setStatus('success');
-        setTimeout(() => {
-          window.location.href = '/login';
+        redirectTimer = setTimeout(() => {
+          if (active) window.location.href = '/login';
         }, 5000);
-      })
-      .catch((apiError) => {
+      } catch (apiError) {
+        if (!active) return;
         setError(
           getApiErrorMessage(
             apiError,
@@ -80,7 +84,13 @@ export default function UnlockAccountPage() {
           )
         );
         setStatus('failed');
-      });
+      }
+    })();
+
+    return () => {
+      active = false;
+      if (redirectTimer) clearTimeout(redirectTimer);
+    };
   }, [searchParams]);
 
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.loading;

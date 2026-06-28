@@ -39,6 +39,11 @@ export function getBookingStatusMessage(status) {
   return 'Please check PNR status before travel.';
 }
 
+export function formatStatus(status) {
+  const value = normalizeBookingStatus(status);
+  return value ? value.replaceAll('_', ' ') : 'UNKNOWN';
+}
+
 export function getBookingStatusColor(status) {
   const value = normalizeBookingStatus(status);
   if (value === 'CONFIRMED' || value === 'BOOKED') return 'success';
@@ -47,6 +52,10 @@ export function getBookingStatusColor(status) {
   if (value === 'CANCELLED' || value === 'FAILED') return 'error';
   if (value === 'REFUNDED') return 'info';
   return 'default';
+}
+
+export function getStatusColor(status) {
+  return getBookingStatusColor(status);
 }
 
 export function getQueueText(queuePosition) {

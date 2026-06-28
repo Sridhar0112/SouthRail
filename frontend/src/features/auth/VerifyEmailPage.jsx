@@ -55,19 +55,24 @@ export default function VerifyEmailPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    let active = true;
+    let redirectTimer;
     const token = searchParams.get('token');
     if (!token) {
       setStatus('missing');
       return;
     }
-    api.post('/auth/verify-email', { token })
-      .then(() => {
+
+    (async () => {
+      try {
+        await api.post('/auth/verify-email', { token });
+        if (!active) return;
         setStatus('verified');
-        setTimeout(() => {
-          window.location.href = '/login';
+        redirectTimer = setTimeout(() => {
+          if (active) window.location.href = '/login';
         }, 3000);
-      })
-      .catch((apiError) => {
+      } catch (apiError) {
+        if (!active) return;
         setError(
           getApiErrorMessage(
             apiError,
@@ -75,7 +80,13 @@ export default function VerifyEmailPage() {
           )
         );
         setStatus('failed');
-      });
+      }
+    })();
+
+    return () => {
+      active = false;
+      if (redirectTimer) clearTimeout(redirectTimer);
+    };
   }, [searchParams]);
 
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.loading;

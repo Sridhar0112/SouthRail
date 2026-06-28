@@ -82,7 +82,7 @@ const router = createBrowserRouter([
       },
       { path: "unlock-account", element: <UnlockAccountPage /> },
       { path: "support", element: <SupportPage /> },
-      {path:"payment/:bookingId",element:<PaymentPage/>},
+      {path:"payment/:bookingId",element:<ProtectedRoute><PaymentPage/></ProtectedRoute>},
       {
         path: "profile",
         element: (
