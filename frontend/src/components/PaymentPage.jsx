@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom"
 import {
   Alert,
   Box,
+  Button,
   Card,
   CardContent,
   Chip,
@@ -24,6 +25,7 @@ import TrainIcon from "@mui/icons-material/Train"
 import PersonIcon from "@mui/icons-material/Person"
 import PaymentIcon from "@mui/icons-material/Payment"
 import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid"
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong"
 import CreditCardIcon from "@mui/icons-material/CreditCard"
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance"
 import WalletIcon from "@mui/icons-material/Wallet"
@@ -213,9 +215,7 @@ export default function PaymentPage() {
     <Box
       sx={{
         minHeight: "100vh",
-        background:
-          theme.palette.custom?.pageBackground ??
-          theme.palette.background.default
+        background: theme.palette.custom.pageBg
       }}
     >
       {/* ── Header ── */}
@@ -224,9 +224,7 @@ export default function PaymentPage() {
         sx={{
           borderBottom: `1px solid ${theme.palette.divider}`,
           backdropFilter: "blur(16px)",
-          bgcolor:
-            theme.palette.custom?.appBar ??
-            alpha(theme.palette.background.paper, 0.92),
+          bgcolor: theme.palette.custom.appBar,
           position: "sticky",
           top: 0,
           zIndex: 100
@@ -505,11 +503,8 @@ export default function PaymentPage() {
                 variant="outlined"
                 sx={{
                   borderRadius: 2,
-                  border: `1px solid ${theme.palette.custom?.cardBorder ??
-                    theme.palette.divider}`,
-                  boxShadow:
-                    theme.palette.custom?.glassShadow ??
-                    theme.palette.custom?.cardShadow,
+                  border: `1px solid ${theme.palette.custom.cardBorder}`,
+                  boxShadow: theme.palette.custom.glassShadow,
                   position: { md: "sticky" },
                   top: { md: 80 },
                   overflow: "visible"
