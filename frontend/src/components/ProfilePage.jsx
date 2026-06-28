@@ -57,7 +57,7 @@ function getErrorMessage(error, fallback) {
 // ── Sub-components ─────────────────────────────────────────────────────────
 
 function TabPanel({ value, index, children }) {
-  return value === index ? <Box sx={{ pt: 3 }}>{children}</Box> : null;
+  return value === index ? <Box sx={{ pt: 3 }} role="tabpanel" id={`tabpanel-${index}`} aria-labelledby={`tab-${index}`}>{children}</Box> : null;
 }
 
 function FieldRow({ icon, label, children }) {
@@ -131,7 +131,7 @@ function ProfileHero({ profile, loading }) {
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'flex-end' }}>
           <Avatar
             sx={{
-              width: 80, height: 64, fontSize: 28, fontWeight: 800,
+              width: 64, height: 64, fontSize: 28, fontWeight: 800,
               bgcolor: 'primary.main', color: 'primary.contrastText',
               border: 4, borderColor: 'background.paper',
               boxShadow: 3, flexShrink: 0, mt: { xs: 1, sm: 0 }
@@ -485,13 +485,13 @@ function PasswordStrengthBar({ password }) {
             key={i}
             sx={{
               height: 4, flexGrow: 1, borderRadius: 2,
-              bgcolor: i < score ? `${colors[score - 1]}.main` : 'action.disabledBackground',
+              bgcolor: i < score ? (score > 0 ? `${colors[score - 1]}.main` : 'transparent') : 'action.disabledBackground',
               transition: 'background-color 0.2s'
             }}
           />
         ))}
       </Stack>
-      <Typography variant="caption" color={`${colors[score - 1] || 'text'}.main`} fontWeight={600}>
+      <Typography variant="caption" color={score > 0 ? `${colors[score - 1]}.main` : 'text.disabled'} fontWeight={600}>
         {score > 0 ? labels[score - 1] : ''}
       </Typography>
     </Stack>
@@ -596,6 +596,15 @@ function NotificationsTab() {
                     <Typography variant="caption" color="text.secondary">{item.desc}</Typography>
                   </Box>
                   <Box
+                    role="switch"
+                    aria-checked={prefs[item.key]}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggle(item.key);
+                      }
+                    }}
                     sx={{
                       width: 42, height: 24, borderRadius: 12,
                       bgcolor: prefs[item.key] ? 'primary.main' : 'action.disabledBackground',
@@ -719,9 +728,9 @@ setDeleteError(
                 '& .MuiTab-root': { fontWeight: 700, textTransform: 'none', minHeight: 44 }
               }}
             >
-              <Tab icon={<BadgeIcon fontSize="small" />} iconPosition="start" label="Personal info" />
-              <Tab icon={<LockIcon fontSize="small" />} iconPosition="start" label="Security" />
-              <Tab icon={<NotificationsIcon fontSize="small" />} iconPosition="start" label="Notifications" />
+              <Tab id="tab-0" aria-controls="tabpanel-0" icon={<BadgeIcon fontSize="small" />} iconPosition="start" label="Personal info" />
+              <Tab id="tab-1" aria-controls="tabpanel-1" icon={<LockIcon fontSize="small" />} iconPosition="start" label="Security" />
+              <Tab id="tab-2" aria-controls="tabpanel-2" icon={<NotificationsIcon fontSize="small" />} iconPosition="start" label="Notifications" />
             </Tabs>
             <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
               <TabPanel value={tab} index={0}>

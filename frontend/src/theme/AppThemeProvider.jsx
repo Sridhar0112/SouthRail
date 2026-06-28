@@ -21,10 +21,10 @@ function getPalette(mode) {
       dark: isLight ? '#9A6B18' : '#C78D2E',
       contrastText: isLight ? '#FFFFFF' : '#1A2E28'
     },
-    success: { main: isLight ? '#0D6B4B' : '#2DD4A0' },
-    warning: { main: isLight ? '#C78D2E' : '#F0C75E' },
-    error: { main: isLight ? '#DC2626' : '#F87171' },
-    info: { main: isLight ? '#3B82F6' : '#60A5FA' },
+    success: { main: isLight ? '#0D6B4B' : '#2DD4A0', light: isLight ? '#D1FAE5' : '#064E3B' },
+    warning: { main: isLight ? '#C78D2E' : '#F0C75E', light: isLight ? '#FEF3C7' : '#78350F' },
+    error: { main: isLight ? '#DC2626' : '#F87171', light: isLight ? '#FEE2E2' : '#7F1D1D' },
+    info: { main: isLight ? '#3B82F6' : '#60A5FA', light: isLight ? '#DBEAFE' : '#1E3A5F' },
     background: {
       default: isLight ? '#F0F5F3' : '#071713',
       paper: isLight ? SURFACE_LIGHT : SURFACE_DARK
@@ -148,7 +148,8 @@ export function AppThemeProvider({ children }) {
                   transitionDuration: '0.01ms !important'
                 }
               },
-              '&:focus-visible': { outline: `2.5px solid ${palette.primary.main}`, outlineOffset: '3px', borderRadius: 4 }
+              '&:focus-visible': { outline: `2.5px solid ${palette.primary.main}`, outlineOffset: '3px', borderRadius: 4 },
+              '& :focus-visible': { outline: `2.5px solid ${palette.primary.main}`, outlineOffset: '2px', borderRadius: 4 }
             }
           }
         },

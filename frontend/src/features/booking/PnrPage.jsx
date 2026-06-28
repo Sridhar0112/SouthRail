@@ -45,6 +45,7 @@ export default function PnrPage() {
   const [loading, setLoading] = useState(false);
   const [cancellationOpen, setCancellationOpen] = useState(false);
   const searchedQueryRef = useRef("");
+  const inputRef = useRef(null);
   const user = useSelector((state) => state.auth.user);
 
   const validationMessage = useMemo(() => validatePnr(pnr), [pnr]);
@@ -72,7 +73,7 @@ export default function PnrPage() {
     if (queryPnr && queryPnr !== searchedQueryRef.current) { setPnr(queryPnr); search(queryPnr, { updateUrl: false }); }
   }, [searchParams, search]);
 
-  const clearSearch = () => { setPnr(""); setTouched(false); setResult(null); setError(""); setCancellationOpen(false); searchedQueryRef.current = ""; setSearchParams({}); };
+  const clearSearch = () => { setPnr(""); setTouched(false); setResult(null); setError(""); setCancellationOpen(false); searchedQueryRef.current = ""; setSearchParams({}); setTimeout(() => inputRef.current?.focus(), 100); };
   const refreshCurrentPnr = () => { const currentPnr = result?.pnr || searchedQueryRef.current || pnr; if (currentPnr) search(currentPnr, { updateUrl: false }); };
 
   return (
@@ -104,14 +105,15 @@ export default function PnrPage() {
                 </Box>
               </Stack>
               <Stack component="form" direction={{ xs: "column", sm: "row" }} spacing={1.5} onSubmit={(event) => { event.preventDefault(); search(pnr); }}>
-                <TextField
-                  fullWidth
-                  label="10-digit PNR"
-                  value={pnr}
-                  onChange={(event) => { setPnr(event.target.value); setTouched(true); }}
-                  inputProps={{ inputMode: "numeric", maxLength: 10 }}
+                  <TextField
+                    fullWidth
+                    label="10-digit PNR"
+                    value={pnr}
+                    onChange={(event) => { setPnr(event.target.value); setTouched(true); }}
+                    inputRef={inputRef}
+                    inputProps={{ inputMode: "numeric", maxLength: 10 }}
                   error={touched && Boolean(validationMessage)}
-                  helperText={(touched && validationMessage) || "PNR must contain digits only."}
+                  helperText={touched ? (validationMessage || "Enter 10-digit PNR number.") : " "}
                 />
                 <Button type="submit" variant="contained" startIcon={<SearchIcon />} disabled={!canTrack} sx={{ minWidth: { xs: "100%", sm: 120 }, borderRadius: 2, py: 1.2 }}>
                   {loading ? "Tracking..." : "Track"}

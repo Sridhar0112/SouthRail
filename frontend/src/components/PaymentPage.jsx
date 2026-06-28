@@ -335,13 +335,12 @@ export default function PaymentPage() {
                   </Box>
 
                   <Box flex={1} textAlign="center" px={1}>
-                    <TrainIcon sx={{ color: primaryColor, fontSize: 20 }} />
+                    <TrainIcon sx={{ color: primaryColor, fontSize: 20, mb: 0.5 }} />
                     <Divider
                       sx={{
                         borderStyle: "dashed",
                         borderColor: primaryColor,
-                        opacity: 0.4,
-                        mt: "-10px"
+                        opacity: 0.4
                       }}
                     />
                   </Box>
@@ -506,11 +505,10 @@ export default function PaymentPage() {
                   border: `1px solid ${theme.palette.custom.cardBorder}`,
                   boxShadow: theme.palette.custom.glassShadow,
                   position: { md: "sticky" },
-                  top: { md: 80 },
-                  overflow: "visible"
+                  top: { md: 80 }
                 }}
               >
-                <CardContent sx={{ p: "20px !important" }}>
+                <CardContent sx={{ p: { xs: 1.5, sm: 2.5 } }}>
                   <Typography variant="h6" fontWeight={800} mb={2}>
                     Choose payment method
                   </Typography>
@@ -531,18 +529,28 @@ export default function PaymentPage() {
                     onChange={(_, v) => setPaymentMethod(v)}
                   >
                     <Stack spacing={0.75} mb={1.5}>
-                      {UPI_OPTIONS.map(opt => (
-                        <PaymentMethodOption
-                          key={opt.id}
-                          value="upi"
-                          selected={paymentMethod === "upi"}
-                          icon={
-                            <span style={{ fontSize: 16 }}>{opt.icon}</span>
-                          }
-                          label={opt.label}
-                          onChange={() => setPaymentMethod("upi")}
-                        />
-                      ))}
+                      <PaymentMethodOption
+                        value="upi"
+                        selected={paymentMethod === "upi"}
+                        icon={<PhoneAndroidIcon sx={{ fontSize: 18 }} />}
+                        label="UPI"
+                        sublabel="Google Pay, PhonePe, Paytm & more"
+                        onChange={setPaymentMethod}
+                      />
+                      {paymentMethod === "upi" && (
+                        <Stack direction="row" spacing={0.75} px={0.5}>
+                          {UPI_OPTIONS.map(opt => (
+                            <Chip
+                              key={opt.id}
+                              icon={<span style={{ fontSize: 14, fontWeight: 700 }}>{opt.icon}</span>}
+                              label={opt.label}
+                              size="small"
+                              variant="outlined"
+                              sx={{ fontWeight: 600 }}
+                            />
+                          ))}
+                        </Stack>
+                      )}
                     </Stack>
 
                     {/* Cards */}

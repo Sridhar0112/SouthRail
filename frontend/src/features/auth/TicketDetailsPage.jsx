@@ -171,6 +171,7 @@ export default function TicketDetailsPage() {
   const [sendError, setSendError] = useState(null);
 
   const scrollRef = useRef(null);
+  const replyInputRef = useRef(null);
 
   // GET /support/my-tickets/{ticketId}
   const fetchTicket = useCallback(async () => {
@@ -205,10 +206,14 @@ export default function TicketDetailsPage() {
     fetchMessages();
   }, [fetchTicket, fetchMessages]);
 
-  // Auto-scroll to newest message whenever the message list changes.
+  // Auto-scroll to newest message only if user was already near the bottom.
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      const el = scrollRef.current;
+      const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50;
+      if (isNearBottom) {
+        el.scrollTop = el.scrollHeight;
+      }
     }
   }, [messages]);
 
@@ -389,6 +394,8 @@ export default function TicketDetailsPage() {
                     alignItems="center"
                     justifyContent="space-between"
                     mb={1.5}
+                    aria-live="polite"
+                    aria-atomic="false"
                   >
                     <Stack direction="row" alignItems="center" spacing={1}>
                       <ForumOutlinedIcon color="primary" sx={{ fontSize: 20 }} />
@@ -475,6 +482,14 @@ export default function TicketDetailsPage() {
                         <Typography variant="caption" color="text.secondary" maxWidth={280}>
                           Send a message below and our support team will get back to you here.
                         </Typography>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => replyInputRef.current?.focus()}
+                          sx={{ borderRadius: 2, fontWeight: 600 }}
+                        >
+                          Send a message
+                        </Button>
                       </Stack>
                     ) : (
                       messages.map((m, idx) => (
@@ -489,6 +504,16 @@ export default function TicketDetailsPage() {
                       icon={<LockOutlinedIcon fontSize="small" />}
                       severity="info"
                       sx={{ borderRadius: 2 }}
+                      action={
+                        <Button
+                          color="inherit"
+                          size="small"
+                          onClick={() => navigate('/support')}
+                          sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}
+                        >
+                          New Ticket
+                        </Button>
+                      }
                     >
                       This ticket is closed, so it's no longer accepting replies. If you need
                       further help, please raise a new support ticket.
@@ -504,6 +529,7 @@ export default function TicketDetailsPage() {
   Reply to Support Team
 </Typography>
                       <TextField
+                        inputRef={replyInputRef}
                         placeholder="Reply to Support Team"
                         value={draft}
                         onChange={(e) => setDraft(e.target.value)}

@@ -16,9 +16,9 @@ const statePanelSx = {
 
 export function LoadingState({ message = 'Loading...' }) {
   return (
-    <Box sx={statePanelSx}>
+    <Box sx={statePanelSx} role="status" aria-live="polite">
       <Stack direction="row" spacing={1.5} alignItems="center">
-        <CircularProgress size={20} />
+        <CircularProgress size={20} aria-hidden="true" />
         <Typography variant="body2" color="text.secondary">{message}</Typography>
       </Stack>
     </Box>
@@ -44,11 +44,11 @@ export function ErrorState({ title = 'Something needs attention', message, actio
   );
 }
 
-export function EmptyState({ title = 'No data found', message, actionLabel, onAction }) {
+export function EmptyState({ title = 'No data found', message, actionLabel, onAction, icon }) {
   return (
-    <Box sx={statePanelSx}>
+    <Box sx={statePanelSx} role="status">
       <Stack spacing={1.5} alignItems="center" textAlign="center" py={1}>
-        <SearchOffIcon color="disabled" sx={{ fontSize: 40 }} />
+        {icon || <SearchOffIcon color="disabled" sx={{ fontSize: 40 }} />}
         <Typography variant="subtitle1" fontWeight={800}>{title}</Typography>
         {message && <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 480 }}>{message}</Typography>}
         {actionLabel && onAction && (

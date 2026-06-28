@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -10,6 +10,7 @@ import {
   LinearProgress,
   Divider,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
@@ -22,34 +23,35 @@ const STATUS_CONFIG = {
   loading: {
     icon: null,
     color: 'info.main',
-    bg: 'info.50',
+    bg: (theme) => alpha(theme.palette.info.main, 0.1),
     title: 'Verifying your email…',
     body: 'Hold tight — this only takes a moment.',
   },
   missing: {
     icon: WarningAmberIcon,
     color: 'warning.main',
-    bg: 'warning.50',
+    bg: (theme) => alpha(theme.palette.warning.main, 0.1),
     title: 'No verification token found',
     body: 'The link you followed appears to be incomplete. Check your inbox for the original verification email and try again.',
   },
   failed: {
     icon: ErrorOutlineIcon,
     color: 'error.main',
-    bg: 'error.50',
+    bg: (theme) => alpha(theme.palette.error.main, 0.1),
     title: 'Verification failed',
     body: null, // dynamic
   },
   verified: {
     icon: CheckCircleOutlineIcon,
     color: 'success.main',
-    bg: 'success.50',
+    bg: (theme) => alpha(theme.palette.success.main, 0.1),
     title: 'Email verified!',
     body: 'Your SouthRail account is now active. You\'re being redirected to the login page in a few seconds.',
   },
 };
 
 export default function VerifyEmailPage() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
@@ -69,7 +71,7 @@ export default function VerifyEmailPage() {
         if (!active) return;
         setStatus('verified');
         redirectTimer = setTimeout(() => {
-          if (active) window.location.href = '/login';
+          if (active) navigate('/login');
         }, 3000);
       } catch (apiError) {
         if (!active) return;
@@ -129,11 +131,12 @@ export default function VerifyEmailPage() {
           <Stack spacing={0}>
             {/* Status banner */}
             <Box
+              role="alert"
               sx={{
                 px: { xs: 2, sm: 5 },
                 pt: { xs: 4, sm: 5 },
                 pb: 3,
-                bgcolor: cfg.bg,
+                bgcolor: (theme) => cfg.bg(theme),
                 borderBottom: '1px solid',
                 borderColor: 'divider',
               }}

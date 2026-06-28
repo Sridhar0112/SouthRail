@@ -189,21 +189,6 @@ const POLICIES = [
 // Inline `sx` objects are new references every render. Hoisting stable,
 // non-dynamic ones prevents MUI's `sx` prop resolver from rerunning needlessly.
 // Impact: Low (accumulates across many elements).
-const sxPolicyPaper = {
-  border: '1px solid',
-  borderColor: 'divider',
-  borderRadius: 2,
-  p: 2,
-  display: 'flex',
-  alignItems: 'flex-start',
-  gap: 1.5,
-  textDecoration: 'none',
-  color: 'inherit',
-  transition: 'border-color 0.15s, background-color 0.15s',
-};
-
-const sxInfoIcon = { fontSize: 20, color: 'primary.main', mt: 0.2, flexShrink: 0 };
-
 const sxFaqPaperOpen = {
   border: '1px solid',
   borderColor: 'primary.main',
@@ -389,6 +374,7 @@ export default function SupportPage() {
   // Impact: Low-medium.
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [descriptionTouched, setDescriptionTouched] = useState(false);
   const validateTicket = useCallback(() => {
   const topic = ticket.topic.trim();
   const description = ticket.description.trim();
@@ -476,9 +462,10 @@ const submitTicket = useCallback(async () => {
     [],
   );
   const handleDescriptionChange = useCallback(
-    (e) => setTicket((prev) => ({ ...prev, description: e.target.value })),
+    (e) => { setTicket((prev) => ({ ...prev, description: e.target.value })); setDescriptionTouched(true); },
     [],
   );
+  const handleDescriptionBlur = useCallback(() => { setDescriptionTouched(true); }, []);
 
   // OPTIMIZATION 9: useCallback for category chip click handler ─────────────
   // The Chip onClick previously received a new closure per category per render.
@@ -659,6 +646,8 @@ useEffect(() => {
                   >
                     <Stack direction="row" alignItems="center" spacing={1.5}>
                       <Box
+                        role="status"
+                        aria-label={`${s.label}: ${s.ok ? 'Operational' : 'Degraded'}`}
                         sx={{
                           width: 8,
                           height: 8,
@@ -710,13 +699,24 @@ useEffect(() => {
               {/* OPTIMIZATION 1 applied here — iterating module-scope POLICIES array */}
               {POLICIES.map((policy) => (
                 <Grid item xs={12} sm={6} key={policy.title}>
-                  <Paper
-                    elevation={0}
+                  <Button
                     component={Link}
                     to={policy.to}
-                    sx={sxPolicyPaper}
+                    variant="outlined"
+                    sx={{
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      py: 1.5,
+                      px: 2,
+                      justifyContent: 'flex-start',
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 1.5,
+                      textAlign: 'left',
+                    }}
                   >
-                    <InfoOutlinedIcon sx={sxInfoIcon} />
+                    <InfoOutlinedIcon sx={{ fontSize: 20, mt: 0.2, flexShrink: 0 }} />
                     <Box>
                       <Typography variant="body2" fontWeight={700} gutterBottom>
                         {policy.title}
@@ -725,7 +725,7 @@ useEffect(() => {
                         {policy.description}
                       </Typography>
                     </Box>
-                  </Paper>
+                  </Button>
                 </Grid>
               ))}
             </Grid>
@@ -798,6 +798,7 @@ useEffect(() => {
   minRows={3}
   value={ticket.description}
   onChange={handleDescriptionChange}
+  onBlur={handleDescriptionBlur}
   error={
     submitted &&
     (
@@ -813,7 +814,7 @@ useEffect(() => {
       ? 'Description must contain at least 10 characters'
       : submitted && ticket.description.trim().length > 1000
       ? 'Description cannot exceed 1000 characters'
-      : `${ticket.description.length}/1000`
+      : descriptionTouched ? `${ticket.description.length}/1000` : ''
   }
 />
                 </Grid>
@@ -857,6 +858,7 @@ useEffect(() => {
   <Alert
     severity={snackbar.severity}
     variant="filled"
+    aria-live="polite"
     sx={{
       width: { xs: 'calc(100vw - 32px)', sm: 'auto' },
       minWidth: { xs: 0, sm: 320 },

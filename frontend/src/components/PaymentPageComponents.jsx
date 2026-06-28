@@ -45,7 +45,9 @@ export function loadRazorpayScript() {
 }
 
 export function formatRupees(rupees) {
-  return rupees.toLocaleString("en-IN", { maximumFractionDigits: 0 })
+  const amount = Number(rupees)
+  if (!Number.isFinite(amount)) return '0'
+  return Math.round(amount).toLocaleString("en-IN")
 }
 
 export function SectionCard({ icon, title, children }) {
@@ -58,11 +60,10 @@ export function SectionCard({ icon, title, children }) {
         border: `1px solid ${theme.palette.custom?.cardBorder ??
           theme.palette.divider}`,
         boxShadow: theme.palette.custom?.cardShadow,
-        mb: 2,
-        overflow: "visible"
+        mb: 2
       }}
     >
-      <CardContent sx={{ p: "16px !important" }}>
+      <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
         <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
           <Box
             sx={{

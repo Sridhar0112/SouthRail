@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  alpha,
   Avatar,
   Box,
   Button,
@@ -16,6 +17,7 @@ import {
   Stack,
   TextField,
   Typography,
+  useTheme,
 } from '@mui/material';
 import ConfirmationNumberOutlinedIcon from '@mui/icons-material/ConfirmationNumberOutlined';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
@@ -47,15 +49,22 @@ const STATUS_META = {
   CLOSED:      { label: 'Closed',      color: 'default' },
 };
 
-// Accent identity per status — used for the timeline indicator, the status
-// icon tinting on each ticket card, and the left rail on each card. These
-// are read through theme.palette where possible so dark mode stays correct.
-const STATUS_ACCENT = {
-  OPEN:        { bar: '#1976d2', soft: 'rgba(25,118,210,0.08)', solid: '#1976d2' },
-  IN_PROGRESS: { bar: '#ed6c02', soft: 'rgba(237,108,2,0.09)',  solid: '#ed6c02' },
-  RESOLVED:    { bar: '#2e7d32', soft: 'rgba(46,125,50,0.08)',  solid: '#2e7d32' },
-  CLOSED:      { bar: '#757575', soft: 'rgba(117,117,117,0.09)', solid: '#9e9e9e' },
-};
+// Accent per status — computed from theme.palette via useTheme in TicketCard
+// so dark mode stays correct without hardcoded hex values.
+function useStatusAccent(status) {
+  const theme = useTheme();
+  const { palette } = theme;
+  switch (status) {
+    case 'OPEN':
+      return { bar: palette.primary.main, soft: alpha(palette.primary.main, 0.08), solid: palette.primary.main };
+    case 'IN_PROGRESS':
+      return { bar: palette.warning.main, soft: alpha(palette.warning.main, 0.09), solid: palette.warning.main };
+    case 'RESOLVED':
+      return { bar: palette.success.main, soft: alpha(palette.success.main, 0.08), solid: palette.success.main };
+    default:
+      return { bar: palette.text.disabled, soft: alpha(palette.text.disabled, 0.09), solid: palette.text.disabled };
+  }
+}
 
 const TOPIC_LABELS = {
   account:   'Account',
@@ -321,11 +330,11 @@ function StatsDashboard({ tickets, loading }) {
     },
   ];
 
-  if (loading) {
-    return (
-      <Grid container spacing={2} mb={3.5}>
-        {[1, 2, 3, 4].map((n) => (
-          <Grid item xs={12} sm={6} md={3} key={n}>
+  return (
+    <Grid container spacing={2} mb={3.5}>
+      {cards.map((c, i) => (
+        <Grid item xs={12} sm={6} md={3} key={c.key}>
+          {loading ? (
             <Card variant="outlined" sx={{ borderRadius: 3 }}>
               <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
                 <Stack direction="row" alignItems="center" spacing={1.5}>
@@ -337,23 +346,15 @@ function StatsDashboard({ tickets, loading }) {
                 </Stack>
               </CardContent>
             </Card>
-          </Grid>
-        ))}
-      </Grid>
-    );
-  }
-
-  return (
-    <Grid container spacing={2} mb={3.5}>
-      {cards.map((c, i) => (
-        <Grid item xs={12} sm={6} md={3} key={c.key}>
-          <StatCard
-            icon={c.icon}
-            label={c.label}
-            value={c.value}
-            color={c.color}
-            delay={i * 80}
-          />
+          ) : (
+            <StatCard
+              icon={c.icon}
+              label={c.label}
+              value={c.value}
+              color={c.color}
+              delay={i * 80}
+            />
+          )}
         </Grid>
       ))}
     </Grid>
@@ -363,7 +364,7 @@ function StatsDashboard({ tickets, loading }) {
 // ── Ticket card (timeline style) ──
 
 function TicketCard({ ticket, onViewDetails, isLast }) {
-  const accent = STATUS_ACCENT[ticket.status] ?? STATUS_ACCENT.CLOSED;
+  const accent = useStatusAccent(ticket.status);
   const shortId = ticket.id?.slice(0, 8).toUpperCase();
   return (
     <Box sx={{ position: 'relative', display: 'flex', minWidth: 0, width: '100%' }}>
@@ -778,6 +779,12 @@ export default function MyTicketsPage() {
     setQuickFilter((prev) => (prev === key ? null : key));
   }, []);
 
+  const handleClearFilters = useCallback(() => {
+    setSearch('');
+    setStatusFilter('All');
+    setQuickFilter(null);
+  }, []);
+
   return (
     <Box sx={{ py: { xs: 1.5, sm: 2.25 }, minHeight: '80vh' }}>
       <Container maxWidth="md">
@@ -874,6 +881,7 @@ export default function MyTicketsPage() {
                           variant={active ? 'filled' : 'outlined'}
                           color={active ? 'secondary' : 'default'}
                           aria-pressed={active}
+                          aria-current={active ? 'true' : undefined}
                           sx={{
                             fontWeight: active ? 700 : 500,
                             cursor: 'pointer',
@@ -920,9 +928,17 @@ export default function MyTicketsPage() {
                   <Typography variant="h6" fontWeight={700} gutterBottom>
                     No matching tickets
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary" mb={2}>
                     Try adjusting your search, status, or quick filter criteria.
                   </Typography>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={handleClearFilters}
+                    sx={{ borderRadius: 2, fontWeight: 600 }}
+                  >
+                    Clear filters
+                  </Button>
                 </Card>
               )
             ) : (

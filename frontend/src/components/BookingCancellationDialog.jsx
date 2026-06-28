@@ -79,27 +79,28 @@ export default function BookingCancellationDialog({ pnr, open, onClose, onCancel
   };
 
   const cancellable = Boolean(review?.cancellable) && !success;
+  const titlePnr = success?.pnr || review?.pnr || pnr || '';
 
   return (
     <Dialog open={open} onClose={cancelling ? undefined : onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Cancel booking</DialogTitle>
+      <DialogTitle>Cancel booking{titlePnr ? ` — PNR ${titlePnr}` : ''}</DialogTitle>
       <DialogContent dividers>
         {reviewLoading && (
-          <Stack direction="row" spacing={2} alignItems="center" sx={{ py: 2 }}>
-            <CircularProgress size={24} />
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ py: 2 }} role="status" aria-live="polite">
+            <CircularProgress size={24} aria-hidden="true" />
             <Typography>Loading cancellation review...</Typography>
           </Stack>
         )}
 
-        {!reviewLoading && error && (
-          <Alert severity="error" sx={{ mb: review || success ? 2 : 0 }}>
+        {!reviewLoading && error && !success && (
+          <Alert severity="error" sx={{ mb: 2 }} role="alert">
             {error}
           </Alert>
         )}
 
         {!reviewLoading && success && (
           <Stack spacing={2}>
-            <Alert severity="success">
+            <Alert severity="success" role="alert">
               <Typography fontWeight={900}>Booking cancelled successfully.</Typography>
               <Typography>{success.message || 'Cancellation completed.'}</Typography>
             </Alert>
@@ -233,7 +234,7 @@ function formatMoney(value) {
   if (!Number.isFinite(amount)) {
     return 'Not available';
   }
-  return `₹ ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `₹ ${Math.round(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatPercentage(value) {

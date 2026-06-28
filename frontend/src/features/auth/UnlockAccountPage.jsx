@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -10,6 +10,7 @@ import {
   LinearProgress,
   Divider,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import LockOpenOutlinedIcon from '@mui/icons-material/LockOpenOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
@@ -19,36 +20,37 @@ import { getApiErrorMessage } from '../../utils/apiErrors.js';
 import TrainIcon from '@mui/icons-material/Train';
 const STATUS_CONFIG = {
   loading: {
-    icon: null,
+    icon: LockOpenOutlinedIcon,
     color: 'info.main',
-    bg:'action.hover',
+    bg: (theme) => alpha(theme.palette.info.main, 0.1),
     title: 'Unlocking your account…',
     body: 'Please wait while we verify your unlock link.',
   },
   missing: {
     icon: WarningAmberIcon,
     color: 'warning.main',
-    bg: 'action.hover',
+    bg: (theme) => alpha(theme.palette.warning.main, 0.1),
     title: 'No unlock token found',
     body: 'The link you followed appears to be incomplete. Check your inbox for the original unlock email and try again.',
   },
   failed: {
     icon: ErrorOutlineIcon,
     color: 'error.main',
-    bg: 'action.hover',
+    bg: (theme) => alpha(theme.palette.error.main, 0.1),
     title: 'Unable to unlock account',
     body: null, // dynamic
   },
   success: {
     icon: CheckCircleOutlineIcon,
     color: 'success.main',
-    bg: 'action.hover',
+    bg: (theme) => alpha(theme.palette.success.main, 0.1),
     title: 'Account unlocked!',
     body: 'Your SouthRail account is active again. You\'re being redirected to the login page in a few seconds.',
   },
 };
 
 export default function UnlockAccountPage() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
@@ -73,7 +75,7 @@ export default function UnlockAccountPage() {
         if (!active) return;
         setStatus('success');
         redirectTimer = setTimeout(() => {
-          if (active) window.location.href = '/login';
+          if (active) navigate('/login');
         }, 5000);
       } catch (apiError) {
         if (!active) return;
@@ -130,11 +132,12 @@ export default function UnlockAccountPage() {
           <Stack spacing={0}>
             {/* Status banner */}
             <Box
+              aria-live="polite"
               sx={{
                 px: { xs: 2, sm: 5 },
                 pt: { xs: 4, sm: 5 },
                 pb: 3,
-                bgcolor: cfg.bg,
+                bgcolor: (theme) => cfg.bg(theme),
                 borderBottom: '1px solid',
                 borderColor: 'divider',
               }}
@@ -142,9 +145,6 @@ export default function UnlockAccountPage() {
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ xs: 'center', sm: 'flex-start' }} textAlign={{ xs: 'center', sm: 'left' }}>
                 {Icon && (
                   <Icon sx={{ fontSize: 28, color: cfg.color, mt: 0.3, flexShrink: 0 }} />
-                )}
-                {!Icon && status === 'loading' && (
-                  <LockOpenOutlinedIcon sx={{ fontSize: 28, color: cfg.color, mt: 0.3, flexShrink: 0 }} />
                 )}
                 <Box sx={{ minWidth: 0 }}>
                   <Typography variant="h5" fontWeight={700} color={cfg.color} gutterBottom>

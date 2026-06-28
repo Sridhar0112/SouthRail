@@ -16,6 +16,7 @@ import {
   Grid,
   MenuItem,
   Paper,
+  Skeleton,
   Stack,
   TextField,
   Tooltip,
@@ -234,7 +235,7 @@ export default function HomePage() {
                 <Paper
                   elevation={0}
                   sx={{
-                    p: { xs: 2.5, sm: compactSearch ? 2.5 : 3.5 },
+                    p: { xs: 2.5, sm: 3.5 },
                     borderRadius: 4,
                     color: 'text.primary',
                     width: '100%',
@@ -249,8 +250,8 @@ export default function HomePage() {
                   }}
                 >
                   {compactSearch && (
-                    <Typography variant="h5" fontWeight={800} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <SearchIcon color="primary" /> Search trains
+                    <Typography variant="h6" fontWeight={800} sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                      <SearchIcon color="primary" sx={{ fontSize: 20 }} /> Search trains
                     </Typography>
                   )}
                   <Box component="form" onSubmit={handleSubmit(onSubmit, onInvalid)}>
@@ -277,20 +278,21 @@ export default function HomePage() {
                         />
                       </Grid>
                       <Grid item xs={12} sm={compactSearch ? 1 : 2} sx={{ display: 'grid', placeItems: 'center' }}>
-                        <Button
-                          type="button"
-                          onClick={swap}
-                          aria-label="Swap stations"
-                          sx={{
-                            minWidth: 36,
-                            width: 36,
-                            height: 36,
-                            borderRadius: 2,
-                            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-                            color: 'primary.main',
-                            '&:hover': { bgcolor: (theme) => alpha(theme.palette.primary.main, 0.16) }
-                          }}
-                        >
+                          <Button
+                            type="button"
+                            onClick={swap}
+                            aria-label="Swap stations"
+                            sx={{
+                              minWidth: 36,
+                              width: 36,
+                              height: 36,
+                              borderRadius: 2,
+                              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                              color: 'primary.main',
+                              '&:hover': { bgcolor: (theme) => alpha(theme.palette.primary.main, 0.16) },
+                              '&:focus-visible': { outline: 2, outlineColor: 'primary.main', outlineOffset: 2 }
+                            }}
+                          >
                           <SwapHorizIcon sx={{ fontSize: 20 }} />
                         </Button>
                       </Grid>
@@ -387,7 +389,42 @@ export default function HomePage() {
             <ErrorState title="Search could not be completed" message={trains.error} actionLabel="Retry" onAction={handleSubmit(onSubmit, onInvalid)} />
           )}
 
-          {trains.loading && <LoadingState message="Searching trains..." />}
+          {trains.loading && (
+            <Box role="status" aria-live="polite">
+              <Stack spacing={2}>
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} variant="outlined" sx={{ borderRadius: 3 }}>
+                    <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
+                      <Grid container spacing={2} alignItems="center">
+                        <Grid item xs={12} md={2.5}>
+                          <Skeleton width="70%" height={22} />
+                          <Skeleton width="40%" height={16} sx={{ mt: 0.5 }} />
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                          <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+                            <Skeleton variant="rounded" width={72} height={64} sx={{ borderRadius: 2 }} />
+                            <Skeleton variant="rounded" width={60} height={28} />
+                            <Skeleton variant="rounded" width={72} height={64} sx={{ borderRadius: 2 }} />
+                          </Stack>
+                        </Grid>
+                        <Grid item xs={6} md={1.5}>
+                          <Skeleton width="80%" height={14} />
+                          <Skeleton width="60%" height={24} sx={{ mt: 0.5 }} />
+                        </Grid>
+                        <Grid item xs={6} md={1.5}>
+                          <Skeleton width="60%" height={14} />
+                          <Skeleton width="70%" height={24} sx={{ mt: 0.5 }} />
+                        </Grid>
+                        <Grid item xs={12} md={2.5}>
+                          <Skeleton variant="rounded" width="100%" height={40} sx={{ borderRadius: 2 }} />
+                        </Grid>
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Stack>
+            </Box>
+          )}
 
           {!trains.loading && !searchIssue && !trains.error && trains.hasSearched && !hasResults && (
             <EmptyState
@@ -397,7 +434,7 @@ export default function HomePage() {
           )}
 
           {!trains.loading && !searchIssue && !trains.error && hasResults && (
-            <>
+            <Box role="region" aria-live="polite" aria-label="Train search results">
               <Box>
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                   <Typography variant="h4" fontWeight={800} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -418,7 +455,7 @@ export default function HomePage() {
                   </Grid>
                 ))}
               </Grid>
-            </>
+            </Box>
           )}
         </Stack>
       </Container>
@@ -453,10 +490,12 @@ function RecentSearches({ searches, onSelect }) {
       {searches.slice(0, 4).map((item) => (
         <Chip
           key={`${item.source}-${item.destination}-${item.journeyDate}-${item.travelClass}`}
-          label={`${item.source} → ${item.destination} · ${item.journeyDate} · ${item.travelClass}`}
+          label={`${item.source} → ${item.destination}`}
+          title={`${item.source} → ${item.destination} · ${item.journeyDate} · ${item.travelClass}`}
           onClick={() => onSelect(item)}
           variant="outlined"
           size="small"
+          sx={{ maxWidth: 180, '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' } }}
         />
       ))}
     </Stack>
@@ -528,15 +567,15 @@ const TrainResultCard = memo(function TrainResultCard({ train, search }) {
           </Grid>
 
           <Grid item xs={6} md={1.5}>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, display: 'block', mb: 0.3 }}>Availability</Typography>
-            <Chip size="small" color={availability.color} label={availability.label} sx={{ fontWeight: 700, fontSize: '0.68rem' }} />
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', mb: 0.3, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: 0.04 }}>Availability</Typography>
+            <Chip size="small" color={availability.color} label={availability.label} sx={{ fontWeight: 700 }} />
             <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.3 }}>
               {availability.detail}
             </Typography>
           </Grid>
 
           <Grid item xs={6} md={1.5}>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, display: 'block', mb: 0.3 }}>Fare</Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', mb: 0.3, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: 0.04 }}>Fare</Typography>
             <Typography fontWeight={800} sx={{ fontSize: '1rem' }}>{formatFare(train.fare)}</Typography>
             <Typography variant="caption" color="text.secondary">
               {search?.travelClass || '3A'} / {search?.quota || 'GENERAL'}
@@ -553,7 +592,7 @@ const TrainResultCard = memo(function TrainResultCard({ train, search }) {
                   variant="contained"
                   disabled={!canBook}
                   type="button"
-                  sx={{ borderRadius: 2, py: 1.2 }}
+                  sx={{ borderRadius: 2, py: 0.9, fontSize: '0.82rem' }}
                 >
                   Book now
                 </Button>
@@ -728,6 +767,6 @@ function formatDuration(minutes) {
 
 function formatFare(value) {
   const amount = Number(value);
-  if (!Number.isFinite(amount)) return 'Rs -';
-  return `Rs ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (!Number.isFinite(amount)) return '₹ -';
+  return `₹ ${Math.round(amount).toLocaleString('en-IN')}`;
 }

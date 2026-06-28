@@ -145,9 +145,9 @@ export default function BookingPage() {
         {submitError && <BookingFailure message={submitError} retry={form.handleSubmit(submit)} />}
         {loadingReview && <LoadingState message="Preparing booking review..." />}
         {submitting && (
-          <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid', borderColor: 'var(--southrail-card-border)' }}>
+          <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid', borderColor: 'var(--southrail-card-border)' }} role="status" aria-live="polite">
             <Stack spacing={1.5}>
-              <LinearProgress sx={{ borderRadius: 999 }} />
+              <LinearProgress sx={{ borderRadius: 999 }} aria-hidden="true" />
               <Typography fontWeight={800}>Processing your booking...</Typography>
               <Typography color="text.secondary" variant="body2">Please wait. Do not refresh or submit again.</Typography>
             </Stack>
@@ -446,13 +446,13 @@ function BookingSuccess({ response, fallbackValues }) {
         </CardContent>
       </Card>
       {downloadError && <Alert severity="error" sx={{ width: '100%', borderRadius: 2 }}>{downloadError}</Alert>}
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
-        <Button component={Link} to={hasPnr ? `/pnr?pnr=${response.pnr}` : '/pnr'} variant="contained" sx={{ borderRadius: 2 }}>View PNR</Button>
-        <Button component={Link} to="/dashboard" variant="outlined" sx={{ borderRadius: 2 }}>View My Bookings</Button>
-        <Button startIcon={<PrintIcon />} onClick={() => window.print()} variant="outlined" sx={{ borderRadius: 2 }}>Print Ticket</Button>
-        <Button component={Link} to="/" startIcon={<SearchIcon />} variant="outlined" sx={{ borderRadius: 2 }}>Back to Search</Button>
-        <Button variant="contained" startIcon={<PictureAsPdfIcon />} onClick={handleDownloadTicket} disabled={!hasPnr || downloading} sx={{ borderRadius: 2 }}>
-          {downloading ? 'Downloading...' : 'Download Ticket'}
+      <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+        <Button component={Link} to={hasPnr ? `/pnr?pnr=${response.pnr}` : '/pnr'} variant="contained" size="small" sx={{ borderRadius: 2 }}>View PNR</Button>
+        <Button component={Link} to="/dashboard" variant="outlined" size="small" sx={{ borderRadius: 2 }}>My Bookings</Button>
+        <Button startIcon={<PrintIcon />} onClick={() => window.print()} variant="outlined" size="small" sx={{ borderRadius: 2 }}>Print</Button>
+        <Button component={Link} to="/" startIcon={<SearchIcon />} variant="outlined" size="small" sx={{ borderRadius: 2 }}>New Search</Button>
+        <Button variant="contained" startIcon={<PictureAsPdfIcon />} onClick={handleDownloadTicket} disabled={!hasPnr || downloading} size="small" sx={{ borderRadius: 2 }}>
+          {downloading ? 'Downloading...' : 'Download PDF'}
         </Button>
       </Stack>
     </SuccessState>
