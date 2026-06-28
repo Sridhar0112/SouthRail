@@ -247,12 +247,13 @@ export default function TicketDetailsPage() {
 
   const shortId = useMemo(() => ticketId?.slice(0, 8).toUpperCase(), [ticketId]);
   useEffect(() => {
+    if (isClosed) return;
     const interval = setInterval(() => {
       fetchMessages({ silent: true });
     }, 15000);
   
     return () => clearInterval(interval);
-  }, [fetchMessages]);
+  }, [fetchMessages, isClosed]);
 
   return (
     <Box sx={{ py: { xs: 1.5, sm: 2.25 }, minHeight: '80vh' }}>

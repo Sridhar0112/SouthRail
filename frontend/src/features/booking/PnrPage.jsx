@@ -57,7 +57,7 @@ export default function PnrPage() {
   const validationMessage = useMemo(() => validatePnr(pnr), [pnr]);
   const canTrack = !validationMessage && !loading;
 
-  const search = useCallback(async (value = pnr, options = {}) => {
+  const search = useCallback(async (value, options = {}) => {
     const trimmedPnr = String(value || "").trim();
     const issue = validatePnr(trimmedPnr);
     setTouched(true);
@@ -88,7 +88,7 @@ export default function PnrPage() {
     } finally {
       setLoading(false);
     }
-  }, [pnr, setSearchParams]);
+  }, [setSearchParams]);
 
   useEffect(() => {
     const queryPnr = searchParams.get("pnr");
@@ -160,7 +160,7 @@ export default function PnrPage() {
                 spacing={1.5}
                 onSubmit={(event) => {
                   event.preventDefault();
-                  search();
+                  search(pnr);
                 }}
               >
                 <TextField
@@ -672,7 +672,7 @@ function formatDate(value) {
 function formatFare(value) {
   const amount = Number(value);
   if (!Number.isFinite(amount)) {
-    return "Rs -";
+    return "₹ -";
   }
-  return `Rs ${amount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `₹ ${amount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }

@@ -357,12 +357,12 @@ function ReviewPanel({ review, isCurrent, passengerCount }) {
           {review.fareBreakdown?.map((line) => (
             <Stack key={line.label} direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between">
               <Typography color="text.secondary">{line.label}</Typography>
-              <Typography>Rs {line.amount}</Typography>
+              <Typography>₹ {line.amount}</Typography>
             </Stack>
           ))}
           <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" sx={{ mt: 1 }}>
             <Typography fontWeight={800}>Total</Typography>
-            <Typography fontWeight={800}>Rs {review.totalFare}</Typography>
+            <Typography fontWeight={800}>₹ {review.totalFare}</Typography>
           </Stack>
         </Grid>
         <Grid item xs={12} md={3}>

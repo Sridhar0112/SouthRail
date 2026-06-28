@@ -28,9 +28,7 @@ export default function BookingCancellationDialog({ pnr, open, onClose, onCancel
   const [success, setSuccess] = useState(null);
 
   useEffect(() => {
-    if (!open) {
-      return undefined;
-    }
+    if (!open) return;
 
     let active = true;
     setReviewLoading(true);
@@ -43,29 +41,21 @@ export default function BookingCancellationDialog({ pnr, open, onClose, onCancel
     if (!trimmedPnr) {
       setReviewLoading(false);
       setError('Booking was not found.');
-      return undefined;
+      return;
     }
 
-    api.get(`/bookings/${encodeURIComponent(trimmedPnr)}/cancellation-review`)
-      .then(({ data }) => {
-        if (active) {
-          setReview(data);
-        }
-      })
-      .catch((apiError) => {
-        if (active) {
-          setError(getCancellationErrorMessage(apiError));
-        }
-      })
-      .finally(() => {
-        if (active) {
-          setReviewLoading(false);
-        }
-      });
+    (async () => {
+      try {
+        const { data } = await api.get(`/bookings/${encodeURIComponent(trimmedPnr)}/cancellation-review`);
+        if (active) setReview(data);
+      } catch (apiError) {
+        if (active) setError(getCancellationErrorMessage(apiError));
+      } finally {
+        if (active) setReviewLoading(false);
+      }
+    })();
 
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [open, pnr]);
 
   const confirmCancellation = async () => {
@@ -243,7 +233,7 @@ function formatMoney(value) {
   if (!Number.isFinite(amount)) {
     return 'Not available';
   }
-  return `Rs ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `₹ ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatPercentage(value) {
