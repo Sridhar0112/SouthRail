@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -20,6 +20,11 @@ export default function RegisterPage() {
   const [passwordStrength, setPasswordStrength] = useState('');
   const [showPassword, setShowPassword] =
   useState(false);
+  const password = form.watch('password');
+
+  useEffect(() => {
+    setPasswordStrength(checkPasswordStrength(password));
+  }, [password]);
 const checkPasswordStrength = (password) => {
 
   if (!password) {
@@ -147,11 +152,6 @@ const checkPasswordStrength = (password) => {
       message: 'Use at least 8 characters'
     }
   })}
-  onChange={(e) => {
-    setPasswordStrength(
-      checkPasswordStrength(e.target.value)
-    );
-  }}
   InputProps={{
     endAdornment: (
       <InputAdornment position="end">

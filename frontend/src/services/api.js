@@ -49,7 +49,7 @@ function isAuthRequest(url = '') {
   return url.includes('/auth/login') || url.includes('/auth/register') || url.includes('/auth/refresh');
 }
 
-function clearAuthStorage() {
+export function clearAuthStorage() {
   localStorage.removeItem('southrail_access_token');
   localStorage.removeItem('southrail_refresh_token');
   localStorage.removeItem('southrail_user');

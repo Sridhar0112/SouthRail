@@ -2,8 +2,8 @@
  * PaymentPage.tsx
  * South Rail — Complete Razorpay Payment Flow
  *
- * Stack: React + TypeScript + MUI (AppThemeProvider already applied by parent)
- * Place this file at: src/pages/PaymentPage.tsx
+ * Stack: React + MUI (AppThemeProvider already applied by parent)
+ * Place this file at: src/pages/PaymentPage.jsx
  *
  * Route example: /payment/:bookingId
  *
@@ -50,15 +50,16 @@ import WalletIcon from "@mui/icons-material/Wallet"
 import RefreshIcon from "@mui/icons-material/Refresh"
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong"
 import ScheduleIcon from "@mui/icons-material/Schedule"
+import api from "../services/api.js"
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PAYMENT_TIMEOUT_MS = 10 * 60 * 1000 // 10 minutes
 
 const UPI_OPTIONS = [
-  { id: "gpay", label: "Google Pay", icon: "🟦" },
-  { id: "phonepe", label: "PhonePe", icon: "🟪" },
-  { id: "paytm", label: "Paytm", icon: "🟦" }
+  { id: "gpay", label: "Google Pay", icon: "G" },
+  { id: "phonepe", label: "PhonePe", icon: "P" },
+  { id: "paytm", label: "Paytm", icon: "T" }
 ]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -79,45 +80,6 @@ function loadRazorpayScript() {
 
 function formatRupees(rupees) {
   return rupees.toLocaleString("en-IN", { maximumFractionDigits: 0 })
-}
-
-// ─── API Service ──────────────────────────────────────────────────────────────
-
-/* global fetch */
-const api = {
-  async createOrder(bookingId, amount) {
-    const res = await fetch("/api/payment/create-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bookingId, amount })
-    })
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err.message ?? `Order creation failed (${res.status})`)
-    }
-    return res.json()
-  },
-
-  async verifyPayment(payload) {
-    const res = await fetch("/api/payment/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    })
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(
-        err.message ?? `Payment verification failed (${res.status})`
-      )
-    }
-    return res.json()
-  },
-
-  async getBookingDetails(bookingId) {
-    const res = await fetch(`/api/bookings/${bookingId}`)
-    if (!res.ok) throw new Error("Booking not found")
-    return res.json()
-  }
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -364,41 +326,6 @@ function PaymentSkeleton() {
   )
 }
 
-// ─── Mock booking data (remove when API is live) ──────────────────────────────
-
-function getMockBooking(bookingId) {
-  return {
-    bookingId,
-    trainNumber: "12637",
-    trainName: "Pandian Express",
-    sourceStation: "Chennai Egmore",
-    destinationStation: "Madurai Junction",
-    sourceCode: "MS",
-    destinationCode: "MDU",
-    journeyDate: "2026-06-27",
-    departureTime: "21:40",
-    arrivalTime: "05:30",
-    travelClass: "3A",
-    quota: "General",
-    passengers: [
-      {
-        name: "Sridhar S",
-        age: 30,
-        gender: "Male",
-        seatPreference: "Lower",
-        coachType: "3A — AC 3 Tier"
-      }
-    ],
-    fare: {
-      baseFare: 1260,
-      reservationCharge: 40,
-      convenienceFee: 24,
-      gst: 63,
-      totalAmount: 1387
-    }
-  }
-}
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function PaymentPage() {
@@ -427,20 +354,12 @@ export default function PaymentPage() {
     }
 
     setLoadingBooking(true)
-    // Use mock data in dev; swap for api.getBookingDetails(bookingId) when ready.
-    const timeout = setTimeout(() => {
-      try {
-        setBooking(getMockBooking(bookingId))
-      } catch {
-        setBookingError(
-          "Unable to load booking details. Please go back and try again."
-        )
-      } finally {
-        setLoadingBooking(false)
-      }
-    }, 800)
-
-    return () => clearTimeout(timeout)
+    api.get(`/api/bookings/${bookingId}`)
+      .then(({ data }) => setBooking(data))
+      .catch(() => setBookingError(
+        "Unable to load booking details. Please go back and try again."
+      ))
+      .finally(() => setLoadingBooking(false))
   }, [bookingId, navigate])
 
   // ── Cleanup on unmount ─────────────────────────────────────────────────────
@@ -473,15 +392,15 @@ export default function PaymentPage() {
     try {
       // 2. Create order on backend
       // Amount in paise (backend expects paise)
-      orderData = await api.createOrder(
-        booking.bookingId,
-        booking.fare.totalAmount * 100
-      )
+      const { data: createdOrder } = await api.post("/api/payment/create-order", {
+        bookingId: booking.bookingId,
+        amount: booking.fare.totalAmount * 100
+      })
+      orderData = createdOrder
     } catch (err) {
       setErrorMessage(
-        err instanceof Error
-          ? err.message
-          : "Could not initiate payment. Try again."
+        err.response?.data?.message ??
+          (err instanceof Error ? err.message : "Could not initiate payment. Try again.")
       )
       setPaymentState("failed")
       return
@@ -522,7 +441,7 @@ export default function PaymentPage() {
 
         try {
           // 5. Verify signature on backend
-          const result = await api.verifyPayment({
+          const { data: result } = await api.post("/api/payment/verify", {
             razorpayPaymentId: response.razorpay_payment_id,
             razorpayOrderId: response.razorpay_order_id,
             razorpaySignature: response.razorpay_signature,
@@ -539,9 +458,8 @@ export default function PaymentPage() {
           }
         } catch (err) {
           setErrorMessage(
-            err instanceof Error
-              ? err.message
-              : "Verification failed. Contact support."
+            err.response?.data?.message ??
+              (err instanceof Error ? err.message : "Verification failed. Contact support.")
           )
           setPaymentState("failed")
         }

@@ -36,11 +36,9 @@ export function Shell() {
   const [isPageSettling, setIsPageSettling] = useState(true);
   const avatarButtonRef = useRef(null);
   const pageSettleTimerRef = useRef(null);
-  const authClearedListenerRef = useRef(null);
 
   useEffect(() => {
     const clearAuth = () => dispatch(logout());
-    authClearedListenerRef.current = clearAuth;
     window.addEventListener('southrail-auth-cleared', clearAuth);
     return () => {
       window.removeEventListener('southrail-auth-cleared', clearAuth);

@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import api from '../../services/api.js';
+import api, { clearAuthStorage } from '../../services/api.js';
 import { getApiErrorMessage } from '../../utils/apiErrors.js';
 
 const savedUser = readSavedUser();
@@ -98,12 +98,6 @@ function readSavedUser() {
     clearAuthStorage();
     return null;
   }
-}
-
-function clearAuthStorage() {
-  localStorage.removeItem('southrail_access_token');
-  localStorage.removeItem('southrail_refresh_token');
-  localStorage.removeItem('southrail_user');
 }
 
 export const { logout, clearRegistrationResult, updateUser } = authSlice.actions;

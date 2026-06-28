@@ -29,7 +29,7 @@ export default function ForgotPasswordPage() {
       <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
         <Paper sx={{ p: { xs: 1.5, sm: 2.25 }, textAlign: 'center', width: '100%', minWidth: 0 }}>
           <Typography variant="h5" fontWeight={800} gutterBottom>
-            📧 Check Your Email
+            Check Your Email
           </Typography>
 
           <Typography color="text.secondary" sx={{ mb: 1.5, overflowWrap: 'anywhere' }}>

@@ -20,6 +20,7 @@ import {
   Paper,
   Select,
   Skeleton,
+  Snackbar,
   Stack,
   Table,
   TableBody,
@@ -872,6 +873,7 @@ export default function AdminSupportTicketsPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [statusTicket, setStatusTicket] = useState(null);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [messages, setMessages] = useState([]);
@@ -897,6 +899,8 @@ export default function AdminSupportTicketsPage() {
       setMessageLoading(true);
       const { data } = await api.get(`/support/admin/tickets/${ticketId}/messages`);
       setMessages(data || []);
+    } catch {
+      setMessages([]);
     } finally {
       setMessageLoading(false);
     }
@@ -952,6 +956,8 @@ export default function AdminSupportTicketsPage() {
       });
       setReplyMessage('');
       await loadMessages(selectedTicket.id);
+    } catch {
+      setSnackbar({ open: true, message: 'Failed to send reply', severity: 'error' });
     } finally {
       setSendingReply(false);
     }
@@ -973,7 +979,7 @@ export default function AdminSupportTicketsPage() {
         setSelectedTicket((prev) => ({ ...prev, status }));
       }
     } catch {
-      alert('Failed to update ticket status');
+      setSnackbar({ open: true, message: 'Failed to update ticket status', severity: 'error' });
     } finally {
       setStatusLoading(false);
     }
@@ -1407,6 +1413,21 @@ export default function AdminSupportTicketsPage() {
         onSubmit={handleStatusUpdate}
         loading={statusLoading}
       />
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          severity={snackbar.severity}
+          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+          variant="filled"
+          sx={{ borderRadius: 2 }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
