@@ -1,357 +1,184 @@
 # SouthRail Reservation Platform
 
-SouthRail is a modern railway reservation platform inspired by Indian railway booking systems and tailored for South Indian railway routes. The platform provides secure user authentication, train discovery, booking management, PNR tracking, dashboard analytics, administrative operations, and responsive user experiences across desktop and mobile devices.
+**A modern, secure, and scalable railway reservation system** designed for South Indian railway routes.
 
-The application follows enterprise-grade software engineering practices with a layered backend architecture, secure JWT authentication, role-based authorization, PostgreSQL persistence, email workflows, monitoring support, and modern React-based frontend development.
+![Java](https://img.shields.io/badge/Java-21-007396?style=for-the-badge&logo=openjdk)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-6DB33F?style=for-the-badge&logo=springboot)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql)
+![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker)
+
+---
+
+## Overview
+
+SouthRail is a full-stack enterprise-grade railway reservation platform that delivers a seamless booking experience with robust security, real-time features, and comprehensive administrative capabilities.
+
+Built with industry best practices, the system supports user authentication, train search, multi-passenger bookings, PNR management, cancellations with refunds, AI-assisted support, and admin operations.
+
+---
+
+## Features
+
+### 🔐 Authentication & Security
+- Secure user registration and login with JWT (Access + Refresh tokens)
+- Email verification and password management flows
+- Account lockout protection and self-service unlock
+- Role-Based Access Control (RBAC) – User & Admin roles
+- Secure account deletion with token revocation
+
+### 🚄 Core Railway Operations
+- Advanced train search (source, destination, date, class, quota)
+- Real-time seat availability and berth preference selection
+- Multi-passenger booking with automatic PNR generation
+- Booking history, upcoming journeys, and PNR tracking
+- Cancellation workflow with refund estimation
+
+### 👤 User Experience
+- Responsive, modern UI with light/dark mode support
+- Personalized dashboard with booking analytics
+- PDF ticket generation and download
+- AI-powered chat assistance (Gemini integration)
+
+### 🛠️ Administrative Dashboard
+- Complete CRUD operations for Trains, Stations, Routes, and Users
+- Booking oversight and management
+- Support ticket system with messaging
+- Audit logging for operational transparency
 
 ---
 
 ## Technology Stack
 
 ### Backend
-
-* Java 21
-* Spring Boot 3
-* Spring Security
-* Spring Data JPA
-* PostgreSQL
-* JWT Authentication & Refresh Tokens
-* Maven
-* Jakarta Validation
-* Spring Cache
+- **Java 21** + **Spring Boot 3.3.5**
+- Spring Security, Spring Data JPA, Spring Validation
+- JWT Authentication (JJWT)
+- PostgreSQL with JPA repositories
+- OpenPDF for ticket generation
+- Spring Mail + WebFlux (Gemini AI)
+- OpenAPI (Swagger) documentation
 
 ### Frontend
+- **React 18** + **Vite**
+- Material-UI (MUI v6) with custom theming
+- Redux Toolkit for state management
+- Axios with interceptors for API communication
+- React Router, React Hook Form + Zod validation
 
-* React
-* Material UI (MUI)
-* Redux Toolkit
-* Axios Interceptors
-* React Router
-* Responsive Design
-* Light & Dark Theme Support
-
-### Operations & DevOps
-
-* Docker & Docker Compose
-* Nginx Reverse Proxy
-* Spring Boot Actuator
-* Logback Logging
-* Health Monitoring
-
-### Documentation
-
-* Swagger / OpenAPI
-* Postman Collection
+### Infrastructure
+- **Docker** + **Docker Compose**
+- Nginx reverse proxy (deployment ready)
+- PostgreSQL 16
+- Maven build system
 
 ---
 
-## Key Features
+## Project Structure
 
-### Authentication & Account Security
-
-* User Registration
-* Secure Login with JWT Authentication
-* Refresh Token Management
-* Email Verification
-* Resend Verification Email
-* Forgot Password
-* Reset Password
-* Change Password
-* Account Locking After Multiple Failed Login Attempts
-* Account Unlock via Email Verification Link
-* Account Deletion with Password Confirmation
-* Automatic Refresh Token Revocation During Account Deletion
+```bash
+SouthRail/
+├── backend/                 # Spring Boot application
+├── frontend/                # React frontend
+├── database/                # SQL schema, seed & migration scripts
+├── deploy/nginx/            # Production Nginx configuration
+├── docs/                    # Postman collection & deployment guide
+├── docker-compose.yml
+└── README.md
+```
 
 ---
 
-### User Profile Management
+## Quick Start
 
-* View Profile
-* Update Personal Information
-* Change Password
-* Delete Account
-* Role-Based Access Display
-* Email Verification Status
+### Prerequisites
+- Docker and Docker Compose (recommended)
+- Git
 
----
+### Local Deployment
 
-### Train Search & Discovery
+```bash
+git clone https://github.com/Sridhar0112/SouthRail.git
+cd SouthRail
 
-* Search Trains by:
+# Start the full stack
+docker-compose up --build -d
+```
 
-  * Source Station
-  * Destination Station
-  * Travel Date
-  * Class Type
-  * Quota
+**Access Points:**
+- **Frontend**: http://localhost:8088
+- **Backend API**: http://localhost:8080
+- **Swagger UI**: http://localhost:8080/swagger-ui.html
 
-* Station Auto Suggestions
-
-* Route Discovery
-
-* Train Details
-
-* Route Stops Information
-
-* Platform Information
-
-* Distance Information
-
-* Travel Timing Information
+Database is automatically initialized with schema and seed data.
 
 ---
 
-### Reservation & Booking
+## Production Deployment
 
-* Multi-Passenger Booking
-* Berth Preference Selection
-* Fare Calculation
-* Seat Availability Check
-* Booking Confirmation
-* Automatic PNR Generation
-* Booking History
-* Upcoming Journey Tracking
-* Booking Cancellation
-* Refund Estimation
+Refer to [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for detailed production setup instructions, including:
 
----
+- Environment variable configuration
+- HTTPS setup with Nginx
+- Secret management (JWT, database, Gemini API key)
+- Monitoring recommendations
 
-### PNR Management
-
-* PNR Tracking
-* Booking Status Lookup
-* Journey Details View
-* Cancellation Status
-* Passenger Details Retrieval
+**Important Production Steps:**
+- Replace default `JWT_SECRET` with a strong, randomly generated value
+- Configure production SMTP credentials
+- Enable proper logging and monitoring
+- Secure management endpoints
 
 ---
 
-### User Dashboard
+## API Documentation
 
-* Personalized Dashboard
-* Booking Statistics
-* Upcoming Journey Overview
-* Travel Insights
-* Recent Activity Timeline
-* Notification Center
-* Booking History Management
-* Search & Filter Support
-* Pagination Support
-* Responsive Dashboard Experience
-* Light & Dark Mode Support
+- Interactive Swagger UI available at `/swagger-ui.html`
+- Full Postman collection: `docs/SouthRail.postman_collection.json`
 
 ---
 
-### Administrative Features
+## Security Considerations
 
-Admin users can manage:
-
-* Users
-* Trains
-* Stations
-* Routes
-* Bookings
-
-Administrative capabilities include:
-
-* Create
-* Update
-* View
-* Manage Operational Data
-
-Role-based access control protects all administrative endpoints.
+- JWT token rotation and revocation
+- BCrypt password hashing
+- Input validation and sanitization
+- Global exception handling
+- CORS configured for frontend
+- Audit logging for sensitive operations
 
 ---
 
-## Security Features
+## Database
 
-* JWT Access Tokens
-* Refresh Token Rotation
-* Refresh Token Revocation
-* BCrypt Password Encryption
-* Role-Based Access Control (RBAC)
-* Protected API Endpoints
-* Account Lock Protection
-* Email Verification Workflow
-* Secure Password Reset Flow
-* Secure Account Deletion Flow
+- PostgreSQL 16
+- Well-normalized schema with proper constraints and indexes
+- Seed data for stations, trains, and test users
 
 ---
 
-## Backend Architecture
 
-The backend follows a layered architecture:
+## Future Roadmap
 
-### Controller Layer
-
-Handles:
-
-* REST APIs
-* Request Validation
-* Response Management
-
-### Service Layer
-
-Handles:
-
-* Business Rules
-* Booking Logic
-* Fare Calculation
-* Security Workflows
-* Account Management
-
-### Repository Layer
-
-Handles:
-
-* Database Operations
-* Query Execution
-* Persistence Logic
-
-### Entity Layer
-
-Contains:
-
-* Domain Models
-* Database Mappings
-
-### DTO Layer
-
-Contains:
-
-* Request Contracts
-* Response Contracts
-
-### Security Layer
-
-Handles:
-
-* JWT Authentication
-* Refresh Tokens
-* Authorization Rules
-* Security Filters
-
-### Exception Layer
-
-Handles:
-
-* Global Error Responses
-* Validation Errors
-* Business Exceptions
+- Payment gateway integration
+- Real-time seat locking and notifications
+- SMS integration
+- Advanced analytics dashboard
+- Multi-language support
+- Mobile application
 
 ---
 
-## Frontend Architecture
+## Contributing
 
-The frontend follows feature-based organization:
-
-### Authentication
-
-* Login
-* Registration
-* Password Management
-* Email Verification
-
-### Dashboard
-
-* User Dashboard
-* Admin Dashboard
-* Analytics
-* Notifications
-
-### Train Management
-
-* Search
-* Availability
-* Route Discovery
-
-### Booking Management
-
-* Reservations
-* PNR Tracking
-* Cancellation
-
-### Shared Components
-
-* Layout
-* Navigation
-* Protected Routes
-* Error Boundaries
-* Theme Management
+Contributions are welcome. Please follow standard Git workflow and ensure code adheres to existing architecture and security standards.
 
 ---
 
-## User Experience Features
+## License
 
-* Responsive Design
-* Mobile-Friendly Interface
-* Skeleton Loaders
-* Loading Indicators
-* Error Handling
-* Empty States
-* Accessibility-Friendly Controls
-* Light Mode
-* Dark Mode
-* Consistent SouthRail Design System
+This project is developed for demonstration and portfolio purposes. All rights reserved by the author.
 
 ---
 
-## Production Considerations
-
-Before production deployment:
-
-* Replace JWT secrets with strong production-grade secrets.
-* Configure SMTP provider credentials.
-* Configure frontend URL.
-* Enable database migrations using Flyway or Liquibase.
-* Protect management endpoints appropriately.
-* Configure secure HTTPS termination via reverse proxy.
-* Integrate payment gateway for real ticket payments.
-
----
-
-## Monitoring & Observability
-
-* Spring Boot Actuator
-* Health Checks
-* Metrics Endpoints
-* Structured Logging
-* Operational Monitoring Support
-
----
-
-## Testing Strategy
-
-### Backend Testing
-
-* Unit Testing
-* Service Layer Testing
-* Repository Testing
-* Security Testing
-* Integration Testing
-* Testcontainers PostgreSQL
-
-### Frontend Testing
-
-* Authentication Flows
-* Protected Routes
-* Train Search
-* Booking Submission
-* Dashboard Features
-* PNR Tracking
-* Responsive UI Validation
-
----
-
-## Future Enhancements
-
-* Online Payment Gateway Integration
-* Real-Time Seat Availability
-* Email Ticket Generation (PDF)
-* SMS Notifications
-* Waitlist Prediction
-* Journey Recommendations
-* Redis-Based Distributed Caching
-* Railway Analytics Dashboard
-* Multi-Language Support
-* Mobile Application
+**SouthRail – Streamlining Railway Reservations with Modern Technology**
