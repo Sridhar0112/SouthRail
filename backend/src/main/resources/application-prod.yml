@@ -6,6 +6,9 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+  mail:
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
 
 app:
   frontend-url: ${APP_FRONTEND_URL}
@@ -21,3 +24,6 @@ springdoc:
     enabled: false
 
 management.endpoint.health.show-details: never
+
+gemini:
+  api-key: ${GEMINI_API_KEY}

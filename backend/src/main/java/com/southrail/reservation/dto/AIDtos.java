@@ -8,6 +8,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class AIDtos {
@@ -30,6 +31,7 @@ public class AIDtos {
         private String message;
 
         @Size(max = 100)
+        @Pattern(regexp = "[A-Za-z0-9._-]+", message = "model contains unsupported characters")
         private String model;
 
         @Builder.Default

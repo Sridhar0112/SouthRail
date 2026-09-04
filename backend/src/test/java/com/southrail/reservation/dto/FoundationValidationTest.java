@@ -13,14 +13,13 @@ class FoundationValidationTest {
   private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
   @Test
-  void rejectsOversizedBookingParty() {
+  void preservesFrontendCompatibilityForLargerBookingParty() {
     BookingDtos.PassengerRequest passenger = new BookingDtos.PassengerRequest("Passenger", 30, "other", null);
     BookingDtos.BookingRequest request = new BookingDtos.BookingRequest(
         "8ddad0c4-0000-4000-9000-000000000001", "MAS", "SBC", LocalDate.now(), "3A", "GENERAL",
         Arrays.asList(passenger, passenger, passenger, passenger, passenger, passenger, passenger));
 
-    assertThat(validator.validate(request)).anyMatch(violation ->
-        "passengers".equals(violation.getPropertyPath().toString()));
+    assertThat(validator.validate(request)).isEmpty();
   }
 
   @Test

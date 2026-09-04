@@ -55,7 +55,7 @@ Each disposition describes the repository-specific action rather than prescribin
 |---|---|---|---|---|---|
 | HIGH | `AIDtos.ChatRequest`, `AIController` | Public chat accepts an unvalidated body/message. | Large/empty input can consume an optional paid dependency. | Apply `@Valid`, nonblank and bounded message/model constraints; authentication decision is separate. | REQUIRED |
 | HIGH | `SupportDtos.SupportTicketRequest` | Fields have no request validation; validation annotations incorrectly live on the entity. | Oversized or invalid user content reaches persistence. | Put size/nonblank constraints on the request contract and DB-aligned constraints on columns. | REQUIRED |
-| MEDIUM | `BookingDtos.BookingRequest` | Passenger list has no maximum; codes/classes have no bounds. | A single request can create excessive rows/work and inconsistent values. | Enforce the business maximum (six passengers) and bounded fields while preserving JSON names. | REQUIRED |
+| MEDIUM | `BookingDtos.BookingRequest` | Passenger list has no maximum; codes/classes have no bounds. | A single request can create excessive rows/work and inconsistent values. | Bound codes/classes now. Define and enforce a passenger maximum only after aligning the currently unbounded frontend workflow and product rule. | RECOMMENDED (passenger limit deferred) |
 
 ### 7. Exception handling
 

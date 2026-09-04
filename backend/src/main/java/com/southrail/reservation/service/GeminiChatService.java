@@ -10,6 +10,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
+import org.springframework.http.HttpStatus;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -41,7 +43,7 @@ public class GeminiChatService {
                         .body(String.class);
             return parseResponse(response, model);
         } catch (RestClientException ex) {
-            throw new AIException("Gemini service is temporarily unavailable", ex);
+            throw translateFailure(ex);
         }
     }
 
@@ -129,8 +131,27 @@ public class GeminiChatService {
                     .body(String.class);
             return parseModels(response);
         } catch (RestClientException ex) {
-            throw new AIException("Gemini service is temporarily unavailable", ex);
+            throw translateFailure(ex);
         }
+    }
+
+    private AIException translateFailure(RestClientException exception) {
+        if (exception instanceof RestClientResponseException) {
+            RestClientResponseException responseException = (RestClientResponseException) exception;
+            if (responseException.getStatusCode().is4xxClientError()
+                    && responseException.getStatusCode().value() != 429) {
+                return new AIException(
+                        HttpStatus.BAD_GATEWAY,
+                        "AI_UPSTREAM_REJECTED_REQUEST",
+                        "Gemini rejected the upstream request",
+                        exception);
+            }
+        }
+        return new AIException(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "AI_SERVICE_UNAVAILABLE",
+                "Gemini service is temporarily unavailable",
+                exception);
     }
 
     private List<AIDtos.ModelResponse> parseModels(String json) {
