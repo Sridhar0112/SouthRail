@@ -1,0 +1,12 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/southrail_new}
+    username: ${DB_USERNAME:southrail}
+    password: ${DB_PASSWORD:southrail}
+
+logging.level.com.southrail.reservation: DEBUG
+
+management.endpoint.health.show-details: always

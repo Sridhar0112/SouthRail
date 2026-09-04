@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/chat")
@@ -16,7 +17,7 @@ public class AIController {
 
     @PostMapping
     public AIDtos.ChatResponse chat(
-            @RequestBody AIDtos.ChatRequest request) {
+            @Valid @RequestBody AIDtos.ChatRequest request) {
 
         return geminiService.chat(request);
     }

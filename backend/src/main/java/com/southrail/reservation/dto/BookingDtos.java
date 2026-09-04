@@ -7,6 +7,8 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -24,6 +26,7 @@ public final class BookingDtos {
   @AllArgsConstructor
   public static class PassengerRequest {
     @NotBlank
+    @Size(max = 100)
     private String fullName;
 
     @Min(1)
@@ -31,8 +34,10 @@ public final class BookingDtos {
     private int age;
 
     @NotBlank
+    @Pattern(regexp = "(?i)male|female|other", message = "gender must be male, female, or other")
     private String gender;
 
+    @Size(max = 20)
     private String berthPreference;
   }
 
@@ -42,12 +47,15 @@ public final class BookingDtos {
   @AllArgsConstructor
   public static class BookingRequest {
     @NotBlank
+    @Size(max = 36)
     private String trainId;
 
     @NotBlank
+    @Pattern(regexp = "[A-Za-z0-9]{2,10}", message = "source station code is invalid")
     private String sourceStationCode;
 
     @NotBlank
+    @Pattern(regexp = "[A-Za-z0-9]{2,10}", message = "destination station code is invalid")
     private String destinationStationCode;
 
     @FutureOrPresent
@@ -55,12 +63,15 @@ public final class BookingDtos {
     private LocalDate journeyDate;
 
     @NotBlank
+    @Pattern(regexp = "(?i)1A|2A|3A|CC|SL|2S", message = "travel class is invalid")
     private String travelClass;
 
     @NotBlank
+    @Size(max = 20)
     private String quota;
 
     @NotEmpty
+    @Size(max = 6, message = "A booking can contain at most 6 passengers")
     private List<@Valid PassengerRequest> passengers;
   }
 

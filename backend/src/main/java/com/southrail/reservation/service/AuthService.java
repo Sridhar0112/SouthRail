@@ -312,7 +312,7 @@ public class AuthService {
     try {
       accountEmailService.sendPasswordReset(user, token);
     } catch (RuntimeException ex) {
-      log.warn("Password reset email could not be sent to {}", user.getEmail(), ex);
+      log.warn("password_reset_email_failed userId={}", user.getId(), ex);
     }
   }
 
@@ -320,7 +320,7 @@ public class AuthService {
     try {
       accountEmailService.sendEmailVerification(user, token);
     } catch (RuntimeException ex) {
-      log.warn("Email verification message could not be sent to {}", user.getEmail(), ex);
+      log.warn("verification_email_failed userId={}", user.getId(), ex);
     }
   }
 
@@ -405,10 +405,7 @@ public class AuthService {
         try {
             accountEmailService.sendAccountUnlock(user, token);
         } catch (RuntimeException ex) {
-            log.warn(
-                    "Unlock email could not be sent to {}",
-                    user.getEmail(),
-                    ex);
+            log.warn("unlock_email_failed userId={}", user.getId(), ex);
         }
     }
     @Transactional

@@ -1,7 +1,8 @@
 package com.southrail.reservation.dto;
 
-import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -17,10 +18,18 @@ public class SupportDtos {
     @AllArgsConstructor
     public static class SupportTicketRequest {
 
+        @Size(max = 120)
         private String fullName;
+        @Email
+        @Size(max = 120)
         private String email;
+        @Size(max = 20)
         private String bookingReference;
+        @NotBlank
+        @Size(max = 120)
         private String topic;
+        @NotBlank
+        @Size(max = 5000)
         private String description;
     }
     @Getter
@@ -37,6 +46,7 @@ public class SupportDtos {
     @AllArgsConstructor
     public static class TicketMessageRequest {
         @NotBlank
+        @Size(max = 4000)
         private String message;
     }
 

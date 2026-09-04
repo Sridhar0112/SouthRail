@@ -1,10 +1,8 @@
 spring:
   application:
     name: southrail-reservation
-  datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/southrail_new}
-    username: ${DB_USERNAME:southrail}
-    password: ${DB_PASSWORD:southrail}
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
   jpa:
     hibernate:
       ddl-auto: validate
@@ -15,60 +13,72 @@ spring:
         jdbc:
           time_zone: UTC
   flyway:
-    enabled: false
+    enabled: false # Existing SQL is not yet a safe Flyway history; see backend audit.
   cache:
     type: simple
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
-          auth: true
-          starttls:
-            enable: true
+          auth: ${MAIL_SMTP_AUTH:true}
+          starttls.enable: ${MAIL_STARTTLS_ENABLED:true}
+          connectiontimeout: ${MAIL_CONNECT_TIMEOUT_MS:5000}
+          timeout: ${MAIL_READ_TIMEOUT_MS:10000}
+          writetimeout: ${MAIL_WRITE_TIMEOUT_MS:10000}
 
 server:
   port: ${SERVER_PORT:8080}
   servlet:
     context-path: /api
+  shutdown: graceful
+  forward-headers-strategy: native
+  error:
+    include-message: never
+    include-stacktrace: never
 
 app:
   frontend-url: ${APP_FRONTEND_URL:http://localhost:5173}
   jwt:
-    issuer: southrail
+    issuer: ${JWT_ISSUER:southrail}
     secret: ${JWT_SECRET}
     access-token-minutes: ${JWT_ACCESS_MINUTES:20}
     refresh-token-days: ${JWT_REFRESH_DAYS:14}
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:8088}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
   mail:
-    from: ${MAIL_FROM}
+    from: ${MAIL_FROM:noreply@localhost}
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus,loggers
+        include: health,info,metrics
   endpoint:
     health:
       probes:
         enabled: true
+      show-details: when_authorized
 
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+spring.data.web.pageable.max-page-size: 100
+
 logging:
   level:
-    com.southrail.reservation: DEBUG
-    org.springframework.web: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE
-    org.springframework.security: DEBUG
+    root: INFO
+    com.southrail.reservation: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+
 gemini:
-  api-key: ${GEMINI_API_KEY}
-  base-url: https://generativelanguage.googleapis.com/v1beta
-  default-model: gemini-2.5-flash
+  api-key: ${GEMINI_API_KEY:}
+  base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com/v1beta}
+  default-model: ${GEMINI_DEFAULT_MODEL:gemini-2.5-flash}
+  connect-timeout-millis: ${GEMINI_CONNECT_TIMEOUT_MS:3000}
+  read-timeout-millis: ${GEMINI_READ_TIMEOUT_MS:10000}
