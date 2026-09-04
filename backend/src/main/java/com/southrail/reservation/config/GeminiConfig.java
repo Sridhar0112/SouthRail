@@ -1,21 +1,30 @@
 package com.southrail.reservation.config;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
+import org.springframework.validation.annotation.Validated;
 
 @Configuration
 @ConfigurationProperties(prefix = "gemini")
+@Validated
 public class GeminiConfig {
 
+    @NotBlank
     private String apiKey;
 
+    @NotBlank
     private String baseUrl;
 
+    @NotBlank
     private String defaultModel;
+    @Positive
     private int connectTimeoutMillis = 3000;
+    @Positive
     private int readTimeoutMillis = 10000;
 
     @Bean("geminiRestClient")

@@ -71,7 +71,6 @@ public final class BookingDtos {
     private String quota;
 
     @NotEmpty
-    @Size(max = 6, message = "A booking can contain at most 6 passengers")
     private List<@Valid PassengerRequest> passengers;
   }
 

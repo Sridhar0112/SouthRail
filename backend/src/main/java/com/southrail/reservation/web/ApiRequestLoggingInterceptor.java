@@ -10,6 +10,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
 public class ApiRequestLoggingInterceptor implements HandlerInterceptor {
+  public static final String ERROR_CODE_ATTRIBUTE = ApiRequestLoggingInterceptor.class.getName() + ".errorCode";
   private static final Logger log = LoggerFactory.getLogger(ApiRequestLoggingInterceptor.class);
   private static final String START_TIME_ATTRIBUTE = ApiRequestLoggingInterceptor.class.getName() + ".startTime";
 
@@ -26,18 +27,22 @@ public class ApiRequestLoggingInterceptor implements HandlerInterceptor {
         ? (System.nanoTime() - ((Long) start).longValue()) / 1_000_000L
         : -1L;
     boolean authenticated = request.getUserPrincipal() != null;
+    Object errorCode = request.getAttribute(ERROR_CODE_ATTRIBUTE);
     String handlerName = handler instanceof HandlerMethod
         ? ((HandlerMethod) handler).getBeanType().getSimpleName() + "#" + ((HandlerMethod) handler).getMethod().getName()
-        : handler.getClass().getSimpleName();
+        : handler == null ? "unknown" : handler.getClass().getSimpleName();
 
-    if (ex == null) {
-      log.info("request_completed method={} path={} status={} durationMs={} authenticated={} handler={}",
+    if (ex == null && response.getStatus() < 500) {
+      log.info("request_completed method={} path={} status={} durationMs={} authenticated={} handler={} errorCode={}",
           request.getMethod(), request.getRequestURI(), Integer.valueOf(response.getStatus()),
-          Long.valueOf(durationMillis), Boolean.valueOf(authenticated), handlerName);
+          Long.valueOf(durationMillis), Boolean.valueOf(authenticated), handlerName,
+          errorCode == null ? "none" : errorCode);
     } else {
-      log.warn("request_failed method={} path={} status={} durationMs={} authenticated={} handler={} exception={}",
+      log.warn("request_failed method={} path={} status={} durationMs={} authenticated={} handler={} errorCode={} exception={}",
           request.getMethod(), request.getRequestURI(), Integer.valueOf(response.getStatus()),
-          Long.valueOf(durationMillis), Boolean.valueOf(authenticated), handlerName, ex.getClass().getSimpleName());
+          Long.valueOf(durationMillis), Boolean.valueOf(authenticated), handlerName,
+          errorCode == null ? "INTERNAL_ERROR" : errorCode,
+          ex == null ? "handled" : ex.getClass().getSimpleName());
     }
   }
 }

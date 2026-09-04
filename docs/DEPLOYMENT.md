@@ -6,7 +6,9 @@ SouthRail keeps shared safe behavior in `application.yml` and uses explicit `loc
 
 For Compose, copy `.env.example` to `.env` and replace every placeholder. The populated file is ignored by Git. Multiple CORS origins can be supplied as a comma-separated list; wildcard origins are intentionally unsupported because browser credentials are enabled.
 
-Health probes are available at `/api/actuator/health/liveness` and `/api/actuator/health/readiness`. Only health is anonymous, health details are hidden in production, and graceful shutdown allows 30 seconds for in-flight work.
+Health probes are available at `/api/actuator/health/liveness` and `/api/actuator/health/readiness`. Only health is anonymous, metrics and info require an administrator, health details are hidden in production, and graceful shutdown allows 30 seconds for in-flight work.
+
+The current database lifecycle still uses ordered SQL scripts rather than Flyway. Fresh Compose databases apply `database/001_schema.sql` through `database/004_foundation_schema.sql` automatically. Existing databases must apply `database/004_foundation_schema.sql` during a controlled maintenance step before starting this backend version; Hibernate remains on `ddl-auto=validate` and will not mutate production tables.
 
 Every API response carries `X-Correlation-ID`. Clients may supply a safe value in that header or let the backend generate one. Include it in incident reports, but never include JWTs, passwords, reset links, API keys, or request bodies.
 
