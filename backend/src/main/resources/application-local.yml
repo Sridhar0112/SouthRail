@@ -1,0 +1,19 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/southrail_new}
+    username: ${DB_USERNAME:southrail}
+    password: ${DB_PASSWORD:southrail}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:local-development-secret-change-before-use}
+
+gemini:
+  api-key: ${GEMINI_API_KEY:local-gemini-key-not-configured}
+
+logging.level.com.southrail.reservation: DEBUG
+
+management.endpoint.health.show-details: always

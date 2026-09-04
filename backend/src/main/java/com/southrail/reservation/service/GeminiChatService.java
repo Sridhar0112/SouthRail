@@ -9,6 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
+import org.springframework.http.HttpStatus;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -27,22 +30,21 @@ public class GeminiChatService {
         if (model == null || model.isBlank()) {
             model = config.getDefaultModel();
         }
-        String endpoint = String.format(
-                "%s/models/%s:generateContent?key=%s",
-                config.getBaseUrl(),
-                model,
-                config.getApiKey()
-        );
+        String endpoint = String.format("/models/%s:generateContent", model);
         AIDtos.GenerateContentRequest body =
                 buildRequest(request.getMessage());
-        String response =
-                restClient.post()
+        try {
+            String response = restClient.post()
                         .uri(endpoint)
+                        .header("x-goog-api-key", config.getApiKey())
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(body)
                         .retrieve()
                         .body(String.class);
-        return parseResponse(response, model);
+            return parseResponse(response, model);
+        } catch (RestClientException ex) {
+            throw translateFailure(ex);
+        }
     }
 
     private AIDtos.GenerateContentRequest buildRequest(String message) {
@@ -120,20 +122,36 @@ public class GeminiChatService {
     }
 
     public List<AIDtos.ModelResponse> getModels() {
-        String response = restClient.get()
-                .uri(modelsEndpoint())
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .body(String.class);
-        return parseModels(response);
+        try {
+            String response = restClient.get()
+                    .uri("/models")
+                    .header("x-goog-api-key", config.getApiKey())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .body(String.class);
+            return parseModels(response);
+        } catch (RestClientException ex) {
+            throw translateFailure(ex);
+        }
     }
 
-    private String modelsEndpoint() {
-        return String.format(
-                "%s/models?key=%s",
-                config.getBaseUrl(),
-                config.getApiKey()
-        );
+    private AIException translateFailure(RestClientException exception) {
+        if (exception instanceof RestClientResponseException) {
+            RestClientResponseException responseException = (RestClientResponseException) exception;
+            if (responseException.getStatusCode().is4xxClientError()
+                    && responseException.getStatusCode().value() != 429) {
+                return new AIException(
+                        HttpStatus.BAD_GATEWAY,
+                        "AI_UPSTREAM_REJECTED_REQUEST",
+                        "Gemini rejected the upstream request",
+                        exception);
+            }
+        }
+        return new AIException(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "AI_SERVICE_UNAVAILABLE",
+                "Gemini service is temporarily unavailable",
+                exception);
     }
 
     private List<AIDtos.ModelResponse> parseModels(String json) {

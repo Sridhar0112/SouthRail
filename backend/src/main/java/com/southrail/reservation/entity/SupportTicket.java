@@ -5,15 +5,16 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 
 @Entity
-@Data
+@Getter
+@Setter
 @Table(name = "support_tickets")
 public class SupportTicket {
 
@@ -21,19 +22,24 @@ public class SupportTicket {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(nullable = false, length = 120)
     private String fullName;
 
+    @Column(nullable = false, length = 120)
     private String email;
 
+    @Column(length = 20)
     private String bookingReference;
-    @NotBlank(message = "Topic is required")
+
+    @Column(nullable = false, length = 120)
     private String topic;
 
-    @Column(length = 5000)
-    @NotBlank(message = "Description is required")
+    @Column(nullable = false, length = 5000)
     private String description;
 
+    @Column(nullable = false, length = 20)
     private String status; // OPEN, IN_PROGRESS, CLOSED
 
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 }

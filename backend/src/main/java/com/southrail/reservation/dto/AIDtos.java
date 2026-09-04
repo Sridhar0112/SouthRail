@@ -3,6 +3,13 @@ package com.southrail.reservation.dto;
 import lombok.*;
 
 import java.util.List;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public class AIDtos {
 
@@ -19,14 +26,22 @@ public class AIDtos {
     @AllArgsConstructor
     public static class ChatRequest {
 
+        @NotBlank
+        @Size(max = 4000)
         private String message;
 
+        @Size(max = 100)
+        @Pattern(regexp = "[A-Za-z0-9._-]+", message = "model contains unsupported characters")
         private String model;
 
         @Builder.Default
+        @DecimalMin("0.0")
+        @DecimalMax("2.0")
         private Double temperature = 0.7;
 
         @Builder.Default
+        @Min(1)
+        @Max(8192)
         private Integer maxTokens = 2048;
 
     }

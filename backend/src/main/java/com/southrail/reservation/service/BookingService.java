@@ -29,7 +29,7 @@ public class BookingService {
   private final StationRepository stations;
   private final SeatAllocationService seatAllocationService;
   private final SecureRandom random = new SecureRandom();
-  private AccountEmailService accountEmailService;
+  private final AccountEmailService accountEmailService;
   private final AuditLogService auditLogService;
   private static final Logger log = LoggerFactory.getLogger(BookingService.class);
   private static final int RAC_LIMIT = 10;
@@ -136,8 +136,9 @@ public class BookingService {
                 savedPassengers,
                 allocatedSeats);
       }
-    } catch (Exception ignored) {
-      log.error("Unable to send mail for " + allocatedSeats + " " + ignored.getMessage());
+    } catch (RuntimeException ex) {
+      log.warn("booking_confirmation_deferred_failure pnr={} passengerCount={}",
+          booking.getPnr(), Integer.valueOf(savedPassengers.size()), ex);
     }
     return new BookingDtos.BookingResponse(booking.getId().toString(), booking.getPnr(), booking.getStatus().name(),
         train.getNumber(), train.getName(),

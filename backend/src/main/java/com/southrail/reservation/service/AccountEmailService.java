@@ -10,11 +10,14 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 @Service
 public class AccountEmailService {
+  private static final Logger log = LoggerFactory.getLogger(AccountEmailService.class);
   private final JavaMailSender mailSender;
   private final String from;
   private final String frontendUrl;
@@ -33,8 +36,6 @@ public class AccountEmailService {
   }
 
   public void sendEmailVerification(User user, String token) {
-    System.out.println("Verification email triggered");
-
     send(
             user.getEmail(),
             "Verify your SouthRail email",
@@ -321,17 +322,11 @@ public class AccountEmailService {
 
       helper.setText(html, true);
 
-      System.out.println("Before mail send");
-      System.out.println("Subject: " + subject);
-      System.out.println("To: " + to);
-
       mailSender.send(message);
-
-      System.out.println("After mail send");
+      log.info("account_email_sent type={}", emailType(subject));
 
     } catch (Exception e) {
-      e.printStackTrace();
-      throw new RuntimeException(e);
+      throw new IllegalStateException("Unable to send account email", e);
     }
   }
 
@@ -523,11 +518,22 @@ public class AccountEmailService {
       helper.setText(html, true);
 
       mailSender.send(message);
+      log.info("booking_confirmation_email_sent pnr={}", booking.getPnr());
 
     } catch (Exception e) {
-      System.err.println("Booking confirmation email failed: " + e.getMessage());
-      throw new RuntimeException(e);
+      throw new IllegalStateException("Unable to send booking confirmation email", e);
     }
+  }
+
+  private String emailType(String subject) {
+    if (subject == null) {
+      return "unknown";
+    }
+    String normalized = subject.toLowerCase(java.util.Locale.ROOT);
+    if (normalized.contains("verify")) { return "verification"; }
+    if (normalized.contains("unlock")) { return "unlock"; }
+    if (normalized.contains("password")) { return "password_reset"; }
+    return "account_notification";
   }
 
 }

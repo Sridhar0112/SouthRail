@@ -44,6 +44,12 @@ public class JwtService {
   }
 
   public String subject(String token) {
-    return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload().getSubject();
+    return Jwts.parser()
+        .verifyWith(key)
+        .requireIssuer(issuer)
+        .build()
+        .parseSignedClaims(token)
+        .getPayload()
+        .getSubject();
   }
 }

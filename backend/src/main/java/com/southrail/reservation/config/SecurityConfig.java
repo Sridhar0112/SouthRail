@@ -1,8 +1,12 @@
 package com.southrail.reservation.config;
 
 import com.southrail.reservation.security.JwtAuthenticationFilter;
+import com.southrail.reservation.security.ApiAccessDeniedHandler;
+import com.southrail.reservation.security.ApiAuthenticationEntryPoint;
+import com.southrail.reservation.web.CorrelationIdFilter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,19 +25,34 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
   @Bean
-  SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter) throws Exception {
+  FilterRegistrationBean<JwtAuthenticationFilter> disableJwtServletRegistration(
+      JwtAuthenticationFilter jwtAuthenticationFilter) {
+    FilterRegistrationBean<JwtAuthenticationFilter> registration =
+        new FilterRegistrationBean<>(jwtAuthenticationFilter);
+    registration.setEnabled(false);
+    return registration;
+  }
+
+  @Bean
+  SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter,
+      ApiAuthenticationEntryPoint authenticationEntryPoint, ApiAccessDeniedHandler accessDeniedHandler) throws Exception {
     return http
         .csrf(csrf -> csrf.disable())
         .cors(cors -> {})
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .exceptionHandling(exceptions -> exceptions
+            .authenticationEntryPoint(authenticationEntryPoint)
+            .accessDeniedHandler(accessDeniedHandler))
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/auth/**", "/swagger-ui/**", "/swagger-ui.html",
                             "/v3/api-docs/**", "/actuator/health/**").permitAll()
+                    .requestMatchers("/actuator/**").hasRole("ADMIN")
                     .requestMatchers("/trains/**").permitAll()
                     .requestMatchers("/chat").permitAll()
                     .requestMatchers("/chat/**").permitAll()
@@ -72,11 +91,17 @@ public class SecurityConfig {
 
   @Bean
   CorsConfigurationSource corsConfigurationSource(@Value("${app.cors.allowed-origins}") List<String> origins) {
+    if (origins.isEmpty() || origins.stream().anyMatch(origin -> origin == null || origin.trim().isEmpty())) {
+      throw new IllegalStateException("At least one explicit CORS origin must be configured");
+    }
     CorsConfiguration config = new CorsConfiguration();
-    config.setAllowedOrigins(origins);
+    config.setAllowedOrigins(origins.stream().map(String::trim).collect(Collectors.toList()));
     config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-    config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+    config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", CorrelationIdFilter.HEADER_NAME));
+    config.setExposedHeaders(Arrays.asList(CorrelationIdFilter.HEADER_NAME));
     config.setAllowCredentials(true);
+    config.setMaxAge(3600L);
+    config.validateAllowCredentials();
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", config);
     return source;
