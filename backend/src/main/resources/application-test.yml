@@ -1,0 +1,13 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+  jpa:
+    hibernate:
+      ddl-auto: none
+  mail:
+    test-connection: false
+
+management.endpoints.enabled-by-default: false
+
+logging.level.com.southrail.reservation: WARN

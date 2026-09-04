@@ -1,7 +1,6 @@
 package com.southrail.reservation.security;
 
 import com.southrail.reservation.repository.UserRepository;
-import com.southrail.reservation.service.AuthService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -45,7 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           SecurityContextHolder.getContext().setAuthentication(auth);
         });
       } catch (RuntimeException ex) {
-        log.debug("JWT validation failed", ex);
+        log.debug("jwt_validation_failed reason={}", ex.getClass().getSimpleName());
         SecurityContextHolder.clearContext();
       }
     }

@@ -16,9 +16,12 @@ import java.time.Instant;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class BookingCancellationService {
+  private static final Logger log = LoggerFactory.getLogger(BookingCancellationService.class);
   private final BookingRepository bookings;
   private final UserRepository users;
   private final RefundCalculationService refundCalculationService;
@@ -70,7 +73,8 @@ public class BookingCancellationService {
     );
     try {
       notificationService.notifyBookingCancelled(booking.getUser(), booking, quote);
-    } catch (RuntimeException ignored) {
+    } catch (RuntimeException ex) {
+      log.warn("cancellation_notification_failed pnr={}", booking.getPnr(), ex);
     }
 
     return new CancellationResponse(

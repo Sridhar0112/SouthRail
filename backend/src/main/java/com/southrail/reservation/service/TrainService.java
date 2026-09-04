@@ -80,7 +80,7 @@ public class TrainService {
     Train train = source.getTrain();
     long minutes = calculateDurationMinutes(source, destination);
     BigDecimal fare = calculateFare(source, destination, travelClass);
-    int availableSeats = calculateAvailableSeats(train.getId(), journeyDate, travelClass);
+    int availableSeats = calculateAvailableSeats(train, journeyDate, travelClass);
 
     return new TrainDtos.TrainSearchResult(
         train.getId().toString(),
@@ -109,9 +109,7 @@ public class TrainService {
     return BigDecimal.valueOf(distance).multiply(classRate(travelClass));
   }
 
-  private int calculateAvailableSeats(UUID trainId, LocalDate journeyDate, String travelClass) {
-    Train train = trains.findById(trainId)
-        .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Train not found"));
+  private int calculateAvailableSeats(Train train, LocalDate journeyDate, String travelClass) {
     return seatAllocationService.getAvailableSeatCount(train, journeyDate, travelClass);
   }
 

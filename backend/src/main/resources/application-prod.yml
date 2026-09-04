@@ -1,0 +1,23 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+app:
+  frontend-url: ${APP_FRONTEND_URL}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
+  mail:
+    from: ${MAIL_FROM}
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+management.endpoint.health.show-details: never
