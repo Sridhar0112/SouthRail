@@ -1,0 +1,32 @@
+name: Bug report
+description: Report a reproducible SouthRail problem
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem
+      description: Describe what happened and what you expected. Remove credentials and personal data.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      placeholder: "1. Start with...\n2. Request...\n3. Observe..."
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include commit, browser/client, Java/Node versions, active Spring profile and deployment method as relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Include the correlation ID where available. Redact secrets, tokens and personal data.
+      render: shell
