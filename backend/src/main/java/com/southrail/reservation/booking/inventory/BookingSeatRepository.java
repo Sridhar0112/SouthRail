@@ -24,15 +24,13 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeat, UUID> 
   boolean existsByTrainAndJourneyDateAndCoachAndSeatNumberAndStatus(
       Train train, LocalDate journeyDate, Coach coach, int seatNumber, BookingSeatStatus status);
 
-  @Query("""
-      select count(bs)
-      from BookingSeat bs
-      where bs.train.id = :trainId
-        and bs.journeyDate = :journeyDate
-        and upper(bs.travelClass) = upper(:travelClass)
-        and bs.status = :seatStatus
-        and bs.booking.status in :activeBookingStatuses
-      """)
+  @Query("select count(bs)\n" +
+                "from BookingSeat bs\n" +
+                "where bs.train.id = :trainId\n" +
+                "  and bs.journeyDate = :journeyDate\n" +
+                "  and upper(bs.travelClass) = upper(:travelClass)\n" +
+                "  and bs.status = :seatStatus\n" +
+                "  and bs.booking.status in :activeBookingStatuses\n")
   long countActiveBookedSeats(
       @Param("trainId") UUID trainId,
       @Param("journeyDate") LocalDate journeyDate,
@@ -40,16 +38,14 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeat, UUID> 
       @Param("seatStatus") BookingSeatStatus seatStatus,
       @Param("activeBookingStatuses") Collection<BookingStatus> activeBookingStatuses);
 
-  @Query("""
-      select bs
-      from BookingSeat bs
-      where bs.train.id = :trainId
-        and bs.journeyDate = :journeyDate
-        and upper(bs.travelClass) = upper(:travelClass)
-        and bs.status = :seatStatus
-        and bs.booking.status in :activeBookingStatuses
-      order by bs.coachCode asc, bs.seatNumber asc
-      """)
+  @Query("select bs\n" +
+                "from BookingSeat bs\n" +
+                "where bs.train.id = :trainId\n" +
+                "  and bs.journeyDate = :journeyDate\n" +
+                "  and upper(bs.travelClass) = upper(:travelClass)\n" +
+                "  and bs.status = :seatStatus\n" +
+                "  and bs.booking.status in :activeBookingStatuses\n" +
+                "order by bs.coachCode asc, bs.seatNumber asc\n")
   List<BookingSeat> findActiveBookedSeats(
       @Param("trainId") UUID trainId,
       @Param("journeyDate") LocalDate journeyDate,

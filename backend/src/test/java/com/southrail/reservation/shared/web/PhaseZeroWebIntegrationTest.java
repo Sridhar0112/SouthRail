@@ -9,8 +9,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.southrail.reservation.ai.dto.AIDtos;
-import com.southrail.reservation.ai.AIException;
+import com.southrail.reservation.ai.dto.AiDtos;
+import com.southrail.reservation.ai.AiException;
 import com.southrail.reservation.shared.web.error.ApiException;
 import com.southrail.reservation.shared.web.filter.CorrelationIdFilter;
 import jakarta.validation.Valid;
@@ -140,7 +140,7 @@ class PhaseZeroWebIntegrationTest {
     }
 
     @PostMapping("/validate")
-    AIDtos.ChatRequest validate(@Valid @RequestBody AIDtos.ChatRequest request) {
+    AiDtos.ChatRequest validate(@Valid @RequestBody AiDtos.ChatRequest request) {
       return request;
     }
 
@@ -161,7 +161,7 @@ class PhaseZeroWebIntegrationTest {
 
     @GetMapping("/gemini")
     String gemini() {
-      throw new AIException("Gemini is unavailable");
+      throw new AiException("Gemini is unavailable");
     }
   }
 }

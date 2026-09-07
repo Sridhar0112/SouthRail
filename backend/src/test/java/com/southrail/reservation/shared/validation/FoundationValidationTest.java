@@ -2,7 +2,7 @@ package com.southrail.reservation.shared.validation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.southrail.reservation.ai.dto.AIDtos;
+import com.southrail.reservation.ai.dto.AiDtos;
 import com.southrail.reservation.booking.dto.BookingDtos;
 
 import jakarta.validation.Validation;
@@ -27,7 +27,7 @@ class FoundationValidationTest {
 
   @Test
   void rejectsBlankAiMessage() {
-    AIDtos.ChatRequest request = new AIDtos.ChatRequest(" ", null, Double.valueOf(0.7), Integer.valueOf(100));
+    AiDtos.ChatRequest request = new AiDtos.ChatRequest(" ", null, Double.valueOf(0.7), Integer.valueOf(100));
 
     assertThat(validator.validate(request)).anyMatch(violation ->
         "message".equals(violation.getPropertyPath().toString()));

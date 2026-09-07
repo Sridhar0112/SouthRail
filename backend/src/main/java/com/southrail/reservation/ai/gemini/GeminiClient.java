@@ -3,8 +3,8 @@ package com.southrail.reservation.ai.gemini;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.southrail.reservation.ai.gemini.GeminiConfiguration;
-import com.southrail.reservation.ai.dto.AIDtos;
-import com.southrail.reservation.ai.AIException;
+import com.southrail.reservation.ai.dto.AiDtos;
+import com.southrail.reservation.ai.AiException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -15,23 +15,24 @@ import org.springframework.http.HttpStatus;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class GeminiChatService {
+public class GeminiClient {
 
     private final GeminiConfiguration config;
     private final RestClient restClient;
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
 
-    public AIDtos.ChatResponse chat(AIDtos.ChatRequest request) {
+    public AiDtos.ChatResponse chat(AiDtos.ChatRequest request) {
         String model = request.getModel();
-        if (model == null || model.isBlank()) {
+        if (model == null || model.trim().isEmpty()) {
             model = config.getDefaultModel();
         }
         String endpoint = String.format("/models/%s:generateContent", model);
-        AIDtos.GenerateContentRequest body =
+        AiDtos.GenerateContentRequest body =
                 buildRequest(request.getMessage());
         try {
             String response = restClient.post()
@@ -49,27 +50,22 @@ public class GeminiChatService {
                         "AI_REQUEST_INVALID",
                         "Request to the AI service was rejected");
             }
-            throw new AIException("Gemini service is temporarily unavailable", ex);
+            throw new AiException("Gemini service is temporarily unavailable", ex);
         } catch (RestClientException ex) {
             throw translateFailure(ex);
         }
     }
 
-    private AIDtos.GenerateContentRequest buildRequest(String message) {
-        String prompt = """
-                You are an AI Assistant.
-                
-                Current Date : %s
-                
-                Answer accurately.
-                """
-                .formatted(LocalDate.now());
-        return AIDtos.GenerateContentRequest.builder()
+    private AiDtos.GenerateContentRequest buildRequest(String message) {
+        String prompt = String.format(
+                "You are an AI Assistant.\n\nCurrent Date : %s\n\nAnswer accurately.\n",
+                LocalDate.now());
+        return AiDtos.GenerateContentRequest.builder()
                 .systemInstruction(
-                        AIDtos.SystemInstruction.builder()
+                        AiDtos.SystemInstruction.builder()
                                 .parts(
-                                        List.of(
-                                                AIDtos.Part.builder()
+                                        Collections.singletonList(
+                                                AiDtos.Part.builder()
                                                         .text(prompt)
                                                         .build()
                                         )
@@ -77,11 +73,11 @@ public class GeminiChatService {
                                 .build()
                 )
                 .contents(
-                        List.of(
-                                AIDtos.Content.builder()
+                        Collections.singletonList(
+                                AiDtos.Content.builder()
                                         .parts(
-                                                List.of(
-                                                        AIDtos.Part.builder()
+                                                Collections.singletonList(
+                                                        AiDtos.Part.builder()
                                                                 .text(message)
                                                                 .build()
                                                 )
@@ -92,7 +88,7 @@ public class GeminiChatService {
                 .build();
     }
 
-    private AIDtos.ChatResponse parseResponse(String json,
+    private AiDtos.ChatResponse parseResponse(String json,
                                               String model) {
         try {
             JsonNode root = mapper.readTree(json);
@@ -107,11 +103,11 @@ public class GeminiChatService {
                             .asText();
             JsonNode usage =
                     root.path("usageMetadata");
-            return AIDtos.ChatResponse.builder()
+            return AiDtos.ChatResponse.builder()
                     .model(model)
                     .response(answer)
                     .usage(
-                            AIDtos.Usage.builder()
+                            AiDtos.Usage.builder()
                                     .promptTokens(
                                             usage.path("promptTokenCount").asInt())
                                     .completionTokens(
@@ -122,14 +118,14 @@ public class GeminiChatService {
                     )
                     .build();
         } catch (Exception ex) {
-            throw new AIException(
+            throw new AiException(
                     "Unable to parse Gemini response",
                     ex
             );
         }
     }
 
-    public List<AIDtos.ModelResponse> getModels() {
+    public List<AiDtos.ModelResponse> getModels() {
         try {
             String response = restClient.get()
                     .uri("/models")
@@ -143,29 +139,29 @@ public class GeminiChatService {
         }
     }
 
-    private AIException translateFailure(RestClientException exception) {
+    private AiException translateFailure(RestClientException exception) {
         if (exception instanceof RestClientResponseException) {
             RestClientResponseException responseException = (RestClientResponseException) exception;
             if (responseException.getStatusCode().is4xxClientError()
                     && responseException.getStatusCode().value() != 429) {
-                return new AIException(
+                return new AiException(
                         HttpStatus.BAD_GATEWAY,
                         "AI_UPSTREAM_REJECTED_REQUEST",
                         "Gemini rejected the upstream request",
                         exception);
             }
         }
-        return new AIException(
+        return new AiException(
                 HttpStatus.SERVICE_UNAVAILABLE,
                 "AI_SERVICE_UNAVAILABLE",
                 "Gemini service is temporarily unavailable",
                 exception);
     }
 
-    private List<AIDtos.ModelResponse> parseModels(String json) {
+    private List<AiDtos.ModelResponse> parseModels(String json) {
         try {
             JsonNode root = mapper.readTree(json);
-            List<AIDtos.ModelResponse> models = new ArrayList<>();
+            List<AiDtos.ModelResponse> models = new ArrayList<>();
             JsonNode modelArray = root.path("models");
             if (!modelArray.isArray()) {
                 return models;
@@ -180,7 +176,7 @@ public class GeminiChatService {
                     }
                 }
                 models.add(
-                        AIDtos.ModelResponse.builder()
+                        AiDtos.ModelResponse.builder()
                                 .name(model.path("name").asText())
                                 .displayName(model.path("displayName").asText())
                                 .description(model.path("description").asText())
@@ -194,7 +190,7 @@ public class GeminiChatService {
             }
             return models;
         } catch (Exception ex) {
-            throw new AIException(
+            throw new AiException(
                     "Unable to parse Gemini models",
                     ex
             );

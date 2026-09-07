@@ -16,6 +16,7 @@ import com.southrail.reservation.train.TrainRepository;
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -122,7 +123,7 @@ public class BookingService {
       passenger.setStatus(bookingStatus);
       return passengers.save(passenger);
     }).collect(Collectors.toList());
-    List<BookingSeat> allocatedSeats = List.of();
+    List<BookingSeat> allocatedSeats = Collections.emptyList();
 
     if (bookingStatus == BookingStatus.CONFIRMED) {
       allocatedSeats = seatAllocationService.allocateSeats(

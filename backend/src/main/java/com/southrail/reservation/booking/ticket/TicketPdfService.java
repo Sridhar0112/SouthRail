@@ -1,5 +1,6 @@
 package com.southrail.reservation.booking.ticket;
 
+import java.util.stream.Collectors;
 import com.southrail.reservation.audit.AuditLogService;
 
 import com.lowagie.text.Document;
@@ -101,7 +102,7 @@ public class TicketPdfService {
                 .sorted(Comparator.comparing(
                         Passenger::getCreatedAt,
                         Comparator.nullsLast(Comparator.naturalOrder())))
-                .toList();
+                .collect(Collectors.toList());
 
         byte[] pdfBytes = buildPdf(booking, passengers);
 
@@ -783,7 +784,7 @@ public class TicketPdfService {
                 && booking.getStatus() == BookingStatus.CONFIRMED
                 && passenger != null
                 && passenger.getBerthPreference() != null
-                && !passenger.getBerthPreference().isBlank()) {
+                && !passenger.getBerthPreference().trim().isEmpty()) {
             return allotment + " / " + passenger.getBerthPreference();
         }
 
@@ -806,7 +807,7 @@ public class TicketPdfService {
     }
 
     private String safe(String value) {
-        return value == null || value.isBlank() ? "-" : value;
+        return value == null || value.trim().isEmpty() ? "-" : value;
     }
 
     private String safeEnum(Enum<?> value) {

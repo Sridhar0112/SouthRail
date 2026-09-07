@@ -9,20 +9,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface CoachRepository extends JpaRepository<Coach, UUID> {
-  @Query("""
-      select c
-      from Coach c
-      where c.train = :train and upper(c.travelClass) = upper(:travelClass)
-      order by c.coachCode asc
-      """)
+  @Query("select c\n" +
+                "from Coach c\n" +
+                "where c.train = :train and upper(c.travelClass) = upper(:travelClass)\n" +
+                "order by c.coachCode asc\n")
   List<Coach> findByTrainAndTravelClassOrderByCoachCode(
       @Param("train") Train train,
       @Param("travelClass") String travelClass);
 
-  @Query("""
-      select coalesce(sum(c.capacity), 0)
-      from Coach c
-      where c.train.id = :trainId and upper(c.travelClass) = upper(:travelClass)
-      """)
+  @Query("select coalesce(sum(c.capacity), 0)\n" +
+                "from Coach c\n" +
+                "where c.train.id = :trainId and upper(c.travelClass) = upper(:travelClass)\n")
   int totalCapacity(@Param("trainId") UUID trainId, @Param("travelClass") String travelClass);
 }

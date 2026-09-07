@@ -2,7 +2,7 @@ package com.southrail.reservation.shared.security.jwt;
 
 import com.southrail.reservation.shared.security.handler.SecurityErrorResponseWriter;
 
-import com.southrail.reservation.account.UserRepository;
+import com.southrail.reservation.account.AuthenticationAccountLookupService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,15 +25,15 @@ import org.springframework.http.HttpStatus;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private final JwtService jwtService;
-  private final UserRepository users;
+  private final AuthenticationAccountLookupService accounts;
   private final SecurityErrorResponseWriter errorResponseWriter;
   private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
 
-  public JwtAuthenticationFilter(JwtService jwtService, UserRepository users,
+  public JwtAuthenticationFilter(JwtService jwtService, AuthenticationAccountLookupService accounts,
       SecurityErrorResponseWriter errorResponseWriter) {
     this.jwtService = jwtService;
-    this.users = users;
+    this.accounts = accounts;
     this.errorResponseWriter = errorResponseWriter;
   }
 
@@ -44,8 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     if (header != null && header.startsWith("Bearer ")) {
       try {
         String email = jwtService.subject(header.substring(7));
-        users.findByEmailIgnoreCase(email)
-            .filter(user -> user.isEnabled() && !user.isDeleted())
+        accounts.findEnabledAccount(email)
             .ifPresent(user -> {
               List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
                   .map(role -> new SimpleGrantedAuthority(role.name()))
