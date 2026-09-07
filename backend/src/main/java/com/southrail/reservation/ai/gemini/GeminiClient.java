@@ -43,14 +43,6 @@ public class GeminiClient {
                         .retrieve()
                         .body(String.class);
             return parseResponse(response, model);
-        } catch (org.springframework.web.client.RestClientResponseException ex) {
-            if (ex.getStatusCode().is4xxClientError()) {
-                throw new com.southrail.reservation.shared.web.error.ApiException(
-                        org.springframework.http.HttpStatus.BAD_REQUEST,
-                        "AI_REQUEST_INVALID",
-                        "Request to the AI service was rejected");
-            }
-            throw new AiException("Gemini service is temporarily unavailable", ex);
         } catch (RestClientException ex) {
             throw translateFailure(ex);
         }

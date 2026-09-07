@@ -83,6 +83,34 @@ class GeminiClientTest {
         });
   }
 
+  @Test
+  void translatesRateLimitToServiceUnavailable() throws Exception {
+    server = server(exchange -> respond(exchange, 429, "{\"error\":\"rate limited\"}"));
+
+    GeminiClient service = service(1000);
+
+    assertThatThrownBy(() -> service.chat(
+        new AiDtos.ChatRequest("hello", "gemini-test", Double.valueOf(0.7), Integer.valueOf(100))))
+        .isInstanceOfSatisfying(AiException.class, exception -> {
+          assertThat(exception.getStatus()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+          assertThat(exception.getErrorCode()).isEqualTo("AI_SERVICE_UNAVAILABLE");
+        });
+  }
+
+  @Test
+  void translatesUpstreamServerErrorToServiceUnavailable() throws Exception {
+    server = server(exchange -> respond(exchange, 500, "{\"error\":\"unavailable\"}"));
+
+    GeminiClient service = service(1000);
+
+    assertThatThrownBy(() -> service.chat(
+        new AiDtos.ChatRequest("hello", "gemini-test", Double.valueOf(0.7), Integer.valueOf(100))))
+        .isInstanceOfSatisfying(AiException.class, exception -> {
+          assertThat(exception.getStatus()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+          assertThat(exception.getErrorCode()).isEqualTo("AI_SERVICE_UNAVAILABLE");
+        });
+  }
+
   private GeminiClient service(int readTimeoutMillis) throws IOException {
     GeminiConfiguration config = new GeminiConfiguration();
     config.setApiKey("test-api-key");

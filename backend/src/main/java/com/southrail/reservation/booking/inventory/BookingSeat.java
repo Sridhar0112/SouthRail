@@ -1,6 +1,7 @@
 package com.southrail.reservation.booking.inventory;
 
 import com.southrail.reservation.shared.persistence.BaseEntity;
+import com.southrail.reservation.booking.Booking;
 import com.southrail.reservation.booking.Passenger;
 import com.southrail.reservation.train.Train;
 
