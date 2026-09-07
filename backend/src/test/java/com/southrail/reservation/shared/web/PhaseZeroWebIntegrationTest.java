@@ -123,6 +123,24 @@ class PhaseZeroWebIntegrationTest {
         .andExpect(header().string("Access-Control-Expose-Headers", CorrelationIdFilter.HEADER_NAME));
   }
 
+  @Test
+  void permitsOnlyAnonymousInfrastructureProbes() throws Exception {
+    mockMvc.perform(get("/actuator/health/liveness"))
+        .andExpect(status().isOk());
+    mockMvc.perform(get("/actuator/health/readiness"))
+        .andExpect(status().isOk());
+    mockMvc.perform(get("/actuator/health"))
+        .andExpect(status().isUnauthorized());
+    mockMvc.perform(get("/actuator/info"))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void doesNotExposeSensitiveActuatorEndpoints() throws Exception {
+    mockMvc.perform(get("/actuator/env").with(user("operator").roles("ADMIN")))
+        .andExpect(status().isNotFound());
+  }
+
   @TestConfiguration
   static class ControllerConfiguration {
     @Bean

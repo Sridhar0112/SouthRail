@@ -1,49 +1,83 @@
 package com.southrail.reservation.shared.config;
 
+import com.southrail.reservation.ai.gemini.GeminiConfiguration;
+import com.southrail.reservation.shared.config.properties.SouthRailCorsProperties;
+import com.southrail.reservation.shared.config.properties.SouthRailFeatureProperties;
+import com.southrail.reservation.shared.config.properties.SouthRailSecurityProperties;
 import jakarta.annotation.PostConstruct;
-import java.util.Arrays;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 @Component
 @Profile("prod")
 public class ProductionConfigurationValidator {
-  private final List<RequiredSetting> requiredSettings;
+  private final String databaseUrl;
+  private final String databaseUsername;
+  private final String databasePassword;
+  private final String mailUsername;
+  private final String mailPassword;
+  private final SouthRailSecurityProperties security;
+  private final SouthRailCorsProperties cors;
+  private final SouthRailFeatureProperties features;
+  private final GeminiConfiguration gemini;
 
-  public ProductionConfigurationValidator(
-      @Value("${spring.mail.username}") String mailUsername,
-      @Value("${spring.mail.password}") String mailPassword,
-      @Value("${app.jwt.secret}") String jwtSecret) {
-    this.requiredSettings = Arrays.asList(
-        new RequiredSetting("MAIL_USERNAME", mailUsername),
-        new RequiredSetting("MAIL_PASSWORD", mailPassword),
-        new RequiredSetting("JWT_SECRET", jwtSecret));
+  public ProductionConfigurationValidator(Environment environment, SouthRailSecurityProperties security,
+      SouthRailCorsProperties cors, SouthRailFeatureProperties features, GeminiConfiguration gemini) {
+    this(environment.getProperty("spring.datasource.url"), environment.getProperty("spring.datasource.username"),
+        environment.getProperty("spring.datasource.password"), environment.getProperty("spring.mail.username"),
+        environment.getProperty("spring.mail.password"), security, cors, features, gemini);
+  }
+
+  ProductionConfigurationValidator(String databaseUrl, String databaseUsername, String databasePassword,
+      String mailUsername, String mailPassword, SouthRailSecurityProperties security,
+      SouthRailCorsProperties cors, SouthRailFeatureProperties features, GeminiConfiguration gemini) {
+    this.databaseUrl = databaseUrl;
+    this.databaseUsername = databaseUsername;
+    this.databasePassword = databasePassword;
+    this.mailUsername = mailUsername;
+    this.mailPassword = mailPassword;
+    this.security = security;
+    this.cors = cors;
+    this.features = features;
+    this.gemini = gemini;
   }
 
   @PostConstruct
   public void validate() {
-    requiredSettings.stream()
-        .filter(setting -> setting.value == null || setting.value.trim().isEmpty())
-        .findFirst()
-        .ifPresent(setting -> {
-          throw new IllegalStateException(setting.name + " must be configured for the prod profile");
-        });
-
-    String jwtSecret = requiredSettings.get(2).value;
-    if (jwtSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8).length < 32) {
-      throw new IllegalStateException("JWT_SECRET must contain at least 32 bytes for the prod profile");
+    require("DB_URL", databaseUrl);
+    require("DB_USERNAME", databaseUsername);
+    require("DB_PASSWORD", databasePassword);
+    require("JWT_ISSUER", security.getIssuer());
+    require("JWT_SECRET", security.getSecret());
+    if (security.getSecret().getBytes(StandardCharsets.UTF_8).length < 32
+        || security.getSecret().toLowerCase(java.util.Locale.ROOT).contains("change-before-use")) {
+      throw new IllegalStateException("JWT_SECRET does not meet production strength requirements");
+    }
+    List<String> origins = cors.getAllowedOrigins();
+    if (origins == null || origins.isEmpty()) {
+      throw new IllegalStateException("CORS_ALLOWED_ORIGINS must contain an explicit production origin");
+    }
+    for (String origin : origins) {
+      require("CORS_ALLOWED_ORIGINS", origin);
+      if ("*".equals(origin.trim())) {
+        throw new IllegalStateException("CORS wildcard is forbidden when credentials are enabled");
+      }
+    }
+    if (features.isAiEnabled()) {
+      require("GEMINI_API_KEY", gemini.getApiKey());
+    }
+    if (features.isEmailEnabled()) {
+      require("SMTP_USERNAME", mailUsername);
+      require("SMTP_PASSWORD", mailPassword);
     }
   }
 
-  private static class RequiredSetting {
-    private final String name;
-    private final String value;
-
-    private RequiredSetting(String name, String value) {
-      this.name = name;
-      this.value = value;
+  private void require(String name, String value) {
+    if (value == null || value.trim().isEmpty()) {
+      throw new IllegalStateException(name + " must be configured for the prod profile");
     }
   }
 }

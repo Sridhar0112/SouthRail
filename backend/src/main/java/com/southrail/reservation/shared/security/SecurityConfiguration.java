@@ -4,10 +4,10 @@ import com.southrail.reservation.shared.security.jwt.JwtAuthenticationFilter;
 import com.southrail.reservation.shared.security.handler.ApiAccessDeniedHandler;
 import com.southrail.reservation.shared.security.handler.ApiAuthenticationEntryPoint;
 import com.southrail.reservation.shared.web.filter.CorrelationIdFilter;
+import com.southrail.reservation.shared.config.properties.SouthRailCorsProperties;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -50,8 +50,8 @@ public class SecurityConfiguration {
             .authenticationEntryPoint(authenticationEntryPoint)
             .accessDeniedHandler(accessDeniedHandler))
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/auth/**", "/swagger-ui/**", "/swagger-ui.html",
-                            "/v3/api-docs/**", "/actuator/health/**").permitAll()
+                    .requestMatchers("/auth/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                    .requestMatchers("/actuator/health/liveness", "/actuator/health/readiness").permitAll()
                     .requestMatchers("/actuator/**").hasRole("ADMIN")
                     .requestMatchers("/trains/**").permitAll()
                     .requestMatchers("/chat").permitAll()
@@ -90,7 +90,8 @@ public class SecurityConfiguration {
   }
 
   @Bean
-  CorsConfigurationSource corsConfigurationSource(@Value("${app.cors.allowed-origins}") List<String> origins) {
+  CorsConfigurationSource corsConfigurationSource(SouthRailCorsProperties properties) {
+    List<String> origins = properties.getAllowedOrigins();
     if (origins.isEmpty() || origins.stream().anyMatch(origin -> origin == null || origin.trim().isEmpty())) {
       throw new IllegalStateException("At least one explicit CORS origin must be configured");
     }
