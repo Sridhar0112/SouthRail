@@ -1,6 +1,6 @@
 package com.southrail.reservation.shared.web.error;
 
-import com.southrail.reservation.ai.AIException;
+import com.southrail.reservation.ai.AiException;
 
 import com.southrail.reservation.shared.web.filter.CorrelationIdFilter;
 import com.southrail.reservation.shared.web.interceptor.ApiRequestLoggingInterceptor;
@@ -34,8 +34,8 @@ public class GlobalExceptionHandler {
     return error(ex.status(), ex.errorCode(), ex.getMessage(), request, ex.instant(), null);
   }
 
-  @ExceptionHandler(AIException.class)
-  ResponseEntity<ApiErrorResponse> ai(AIException ex, HttpServletRequest request) {
+  @ExceptionHandler(AiException.class)
+  ResponseEntity<ApiErrorResponse> ai(AiException ex, HttpServletRequest request) {
     log.error("optional_dependency_failure dependency=gemini method={} path={}",
         request.getMethod(), request.getRequestURI(), ex);
     return error(ex.getStatus(), ex.getErrorCode(),

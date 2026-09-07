@@ -15,14 +15,12 @@ public interface RouteStopRepository extends JpaRepository<RouteStop, UUID> {
 
   Optional<RouteStop> findFirstByTrainAndStationOrderByStopOrderAsc(Train train, Station station);
 
-  @Query("""
-      select source, dest from RouteStop source
-      join RouteStop dest on dest.train = source.train
-      where upper(source.station.code) = upper(:source)
-        and upper(dest.station.code) = upper(:destination)
-        and source.stopOrder < dest.stopOrder
-        and source.train.active = true
-      order by source.departureTime asc
-      """)
+  @Query("select source, dest from RouteStop source\n" +
+                "join RouteStop dest on dest.train = source.train\n" +
+                "where upper(source.station.code) = upper(:source)\n" +
+                "  and upper(dest.station.code) = upper(:destination)\n" +
+                "  and source.stopOrder < dest.stopOrder\n" +
+                "  and source.train.active = true\n" +
+                "order by source.departureTime asc\n")
   List<Object[]> searchRoutes(@Param("source") String source, @Param("destination") String destination);
 }

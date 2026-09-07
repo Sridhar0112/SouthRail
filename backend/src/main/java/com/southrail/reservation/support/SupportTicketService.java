@@ -1,5 +1,7 @@
 package com.southrail.reservation.support;
 
+import java.util.stream.Collectors;
+import java.util.Arrays;
 import com.southrail.reservation.support.dto.SupportDtos;
 import com.southrail.reservation.support.SupportTicket;
 import com.southrail.reservation.support.SupportTicketMessage;
@@ -94,7 +96,7 @@ public class SupportTicketService {
 
         String status = request.getStatus();
 
-        if (!List.of("OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED").contains(status)) {
+        if (!Arrays.asList("OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED").contains(status)) {
             throw new ApiException(
                     HttpStatus.BAD_REQUEST,
                     "Invalid ticket status");
@@ -120,7 +122,7 @@ public class SupportTicketService {
                                 message.getCreatedAt()
                         )
                 )
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Transactional
@@ -239,6 +241,6 @@ public class SupportTicketService {
                                 message.getCreatedAt()
                         )
                 )
-                .toList();
+                .collect(Collectors.toList());
     }
 }

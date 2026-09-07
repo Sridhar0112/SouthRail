@@ -19,34 +19,30 @@ public interface PassengerRepository extends JpaRepository<Passenger, UUID> {
     return countBookedPassengersExcludingStatus(trainId, journeyDate, travelClass, BookingStatus.CANCELLED);
   }
 
-  @Query("""
-      select count(p)
-      from Passenger p
-      where p.booking.train.id = :trainId
-        and p.booking.journeyDate = :journeyDate
-        and upper(p.booking.travelClass) = upper(:travelClass)
-        and p.booking.status <> :excludedStatus
-      """)
+  @Query("select count(p)\n" +
+                "from Passenger p\n" +
+                "where p.booking.train.id = :trainId\n" +
+                "  and p.booking.journeyDate = :journeyDate\n" +
+                "  and upper(p.booking.travelClass) = upper(:travelClass)\n" +
+                "  and p.booking.status <> :excludedStatus\n")
   long countBookedPassengersExcludingStatus(
       @Param("trainId") UUID trainId,
       @Param("journeyDate") LocalDate journeyDate,
       @Param("travelClass") String travelClass,
       @Param("excludedStatus") BookingStatus excludedStatus);
 
-  @Query("""
-      select count(p)
-      from Passenger p
-      where p.booking.train.id = :trainId
-        and p.booking.journeyDate = :journeyDate
-        and upper(p.booking.travelClass) = upper(:travelClass)
-        and p.booking.status in :activeBookingStatuses
-        and not exists (
-          select bs.id
-          from BookingSeat bs
-          where bs.passenger = p
-            and bs.status = :bookedSeatStatus
-        )
-      """)
+  @Query("select count(p)\n" +
+                "from Passenger p\n" +
+                "where p.booking.train.id = :trainId\n" +
+                "  and p.booking.journeyDate = :journeyDate\n" +
+                "  and upper(p.booking.travelClass) = upper(:travelClass)\n" +
+                "  and p.booking.status in :activeBookingStatuses\n" +
+                "  and not exists (\n" +
+                "    select bs.id\n" +
+                "    from BookingSeat bs\n" +
+                "    where bs.passenger = p\n" +
+                "      and bs.status = :bookedSeatStatus\n" +
+                "  )\n")
   long countActivePassengersWithoutBookedSeat(
       @Param("trainId") UUID trainId,
       @Param("journeyDate") LocalDate journeyDate,

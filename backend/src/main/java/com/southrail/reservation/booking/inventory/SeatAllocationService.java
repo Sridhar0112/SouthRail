@@ -13,6 +13,7 @@ import com.southrail.reservation.booking.inventory.CoachRepository;
 import com.southrail.reservation.booking.PassengerRepository;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -85,7 +86,7 @@ public class SeatAllocationService {
   @Transactional
   public List<BookingSeat> allocateSeats(Booking booking, List<Passenger> passengerList) {
     if (passengerList.isEmpty()) {
-      return List.of();
+      return Collections.emptyList();
     }
 
     List<SeatCandidate> availableSeats = findAvailableSeats(
@@ -161,21 +162,17 @@ public class SeatAllocationService {
   private String berthTypeForSeat(String travelClass, int seatNumber) {
     String normalizedClass = travelClass == null ? "" : travelClass.trim().toUpperCase(Locale.ROOT);
     if ("SL".equals(normalizedClass) || "3A".equals(normalizedClass)) {
-      return switch ((seatNumber - 1) % 8) {
-        case 0, 3 -> "LB";
-        case 1, 4 -> "MB";
-        case 2, 5 -> "UB";
-        case 6 -> "SL";
-        default -> "SU";
-      };
+      int position = (seatNumber - 1) % 8;
+      if (position == 0 || position == 3) return "LB";
+      if (position == 1 || position == 4) return "MB";
+      if (position == 2 || position == 5) return "UB";
+      return position == 6 ? "SL" : "SU";
     }
     if ("2A".equals(normalizedClass)) {
-      return switch ((seatNumber - 1) % 6) {
-        case 0, 2 -> "LB";
-        case 1, 3 -> "UB";
-        case 4 -> "SL";
-        default -> "SU";
-      };
+      int position = (seatNumber - 1) % 6;
+      if (position == 0 || position == 2) return "LB";
+      if (position == 1 || position == 3) return "UB";
+      return position == 4 ? "SL" : "SU";
     }
     if ("1A".equals(normalizedClass)) {
       return seatNumber % 2 == 0 ? "COUPE" : "CABIN";
@@ -187,23 +184,61 @@ public class SeatAllocationService {
     if (berthPreference == null || berthPreference.trim().isEmpty()) {
       return null;
     }
-    return switch (berthPreference.trim().toUpperCase(Locale.ROOT).replace(' ', '_')) {
-      case "LOWER", "LOWER_BERTH", "LB" -> "LB";
-      case "MIDDLE", "MIDDLE_BERTH", "MB" -> "MB";
-      case "UPPER", "UPPER_BERTH", "UB" -> "UB";
-      case "SIDE_LOWER", "SIDE_LOWER_BERTH", "SL" -> "SL";
-      case "SIDE_UPPER", "SIDE_UPPER_BERTH", "SU" -> "SU";
-      default -> null;
-    };
+    String preference = berthPreference.trim().toUpperCase(Locale.ROOT).replace(' ', '_');
+    switch (preference) {
+      case "LOWER":
+      case "LOWER_BERTH":
+      case "LB":
+        return "LB";
+      case "MIDDLE":
+      case "MIDDLE_BERTH":
+      case "MB":
+        return "MB";
+      case "UPPER":
+      case "UPPER_BERTH":
+      case "UB":
+        return "UB";
+      case "SIDE_LOWER":
+      case "SIDE_LOWER_BERTH":
+      case "SL":
+        return "SL";
+      case "SIDE_UPPER":
+      case "SIDE_UPPER_BERTH":
+      case "SU":
+        return "SU";
+      default:
+        return null;
+    }
   }
 
   private String seatKey(UUID coachId, int seatNumber) {
     return coachId + ":" + seatNumber;
   }
 
-  public record SeatCandidate(Coach coach, UUID coachId, String coachCode, int seatNumber, String berthType) {
+  public static final class SeatCandidate {
+    private final Coach coach;
+    private final UUID coachId;
+    private final String coachCode;
+    private final int seatNumber;
+    private final String berthType;
+
+    public SeatCandidate(Coach coach, UUID coachId, String coachCode, int seatNumber, String berthType) {
+      this.coach = coach;
+      this.coachId = coachId;
+      this.coachCode = coachCode;
+      this.seatNumber = seatNumber;
+      this.berthType = berthType;
+    }
+
+    public Coach coach() { return coach; }
+    public UUID coachId() { return coachId; }
+    public String coachCode() { return coachCode; }
+    public int seatNumber() { return seatNumber; }
+    public String berthType() { return berthType; }
+
     String key() {
       return coachId + ":" + seatNumber;
     }
   }
+
 }

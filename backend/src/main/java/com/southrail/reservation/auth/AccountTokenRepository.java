@@ -18,12 +18,10 @@ public interface AccountTokenRepository extends JpaRepository<AccountToken, UUID
           String tokenType
   );
   @Modifying
-  @Query("""
-      update AccountToken t
-      set t.usedAt = :usedAt
-      where t.user = :user
-        and t.tokenType = :tokenType
-        and t.usedAt is null
-      """)
+  @Query("update AccountToken t\n" +
+                "set t.usedAt = :usedAt\n" +
+                "where t.user = :user\n" +
+                "  and t.tokenType = :tokenType\n" +
+                "  and t.usedAt is null\n")
   void markOpenTokensUsed(@Param("user") User user, @Param("tokenType") String tokenType, @Param("usedAt") Instant usedAt);
 }
