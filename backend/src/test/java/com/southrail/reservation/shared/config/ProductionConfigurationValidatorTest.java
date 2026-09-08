@@ -30,6 +30,9 @@ class ProductionConfigurationValidatorTest {
         .hasMessage("JWT_SECRET does not meet production strength requirements");
     assertThatThrownBy(() -> validator(false, false, strongSecret(), " ", "https://app.example", "", "").validate())
         .hasMessage("JWT_ISSUER must be configured for the prod profile");
+    assertThatThrownBy(() -> validator(false, false,
+        "local-development-secret-change-before-use", "issuer", "https://app.example", "", "").validate())
+        .hasMessage("JWT_SECRET does not meet production strength requirements");
   }
 
   @Test
@@ -44,6 +47,12 @@ class ProductionConfigurationValidatorTest {
         .hasMessage("GEMINI_API_KEY must be configured for the prod profile");
     assertThatThrownBy(() -> validator(false, true, strongSecret(), "issuer", "https://app.example", "", "").validate())
         .hasMessage("SMTP_USERNAME must be configured for the prod profile");
+  }
+
+  @Test
+  void acceptsEnabledOptionalIntegrationsWithCredentials() {
+    assertThatCode(() -> validator(true, true, strongSecret(), "issuer", "https://app.example",
+        "gemini-key", "smtp-user").validate()).doesNotThrowAnyException();
   }
 
   private ProductionConfigurationValidator validator(boolean ai, boolean email, String secret, String issuer,

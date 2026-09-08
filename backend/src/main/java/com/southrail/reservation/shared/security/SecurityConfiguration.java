@@ -105,6 +105,13 @@ public class SecurityConfiguration {
     config.validateAllowCredentials();
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", config);
-    return source;
+    return request -> isManagementRequest(request.getRequestURI(), request.getContextPath())
+        ? null
+        : source.getCorsConfiguration(request);
+  }
+
+  private boolean isManagementRequest(String requestUri, String contextPath) {
+    String applicationPath = requestUri.substring(contextPath.length());
+    return "/actuator".equals(applicationPath) || applicationPath.startsWith("/actuator/");
   }
 }

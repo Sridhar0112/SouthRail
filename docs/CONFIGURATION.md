@@ -21,19 +21,19 @@ Production configuration is immutable per process. Do not use machine-local file
 | `JWT_REFRESH_TOKEN_TTL` | No | No | Positive refresh-token lifetime in days; default 14; legacy `JWT_REFRESH_DAYS` remains a fallback. |
 | `CORS_ALLOWED_ORIGINS` | Yes | No | Comma-separated explicit browser origins; `*` is forbidden with credentials. |
 | `APP_FRONTEND_URL` | Yes | No | Public frontend base URL used in action links. |
-| `AI_ENABLED` | No | No | Whether Gemini credentials are mandatory; default false. |
+| `AI_ENABLED` | No | No | Credential-enforcement switch: when true, prod requires a Gemini key. It does not remove `/chat` or disable Gemini beans; default false. |
 | `GEMINI_API_KEY` | Conditional | Yes | Required when `AI_ENABLED=true`. |
 | `GEMINI_BASE_URL` | No | No | Gemini endpoint; HTTPS vendor default. |
 | `GEMINI_DEFAULT_MODEL` | No | No | Default model. |
 | `GEMINI_CONNECT_TIMEOUT` | No | No | Positive milliseconds; default 3000. |
 | `GEMINI_READ_TIMEOUT` | No | No | Positive milliseconds; default 10000. |
-| `EMAIL_ENABLED` | No | No | Whether SMTP credentials are mandatory; default false. |
+| `EMAIL_ENABLED` | No | No | Credential-enforcement switch: when true, prod requires SMTP credentials. It does not suppress existing email calls; default false. |
 | `SMTP_HOST` / `SMTP_PORT` | Conditional | No | SMTP endpoint; localhost:1025 default is safe while disabled. Legacy `MAIL_HOST` / `MAIL_PORT` remain fallbacks. |
 | `SMTP_USERNAME` | Conditional | Sensitive | Required when `EMAIL_ENABLED=true`. |
 | `SMTP_PASSWORD` | Conditional | Yes | Required when `EMAIL_ENABLED=true`. |
 | `MAIL_FROM` | Yes | No | Sender identity. |
 | `SLOW_REQUEST_THRESHOLD` | No | No | Spring duration, default `2s`. |
 
-Production fails before accepting traffic when PostgreSQL values are blank, JWT issuer/secret is blank, the key is weak/default, CORS is empty/wildcard, or an enabled optional integration lacks credentials. Disabled Gemini and mail do not require credentials and are excluded from readiness.
+Production fails before accepting traffic when PostgreSQL values are blank, JWT issuer/secret is blank, the key is weak/default, CORS is empty/wildcard, or an optional integration's credential-enforcement switch is enabled without its credentials. The `AI_ENABLED` and `EMAIL_ENABLED` names are retained for deployment compatibility, but they control validation only: existing `/chat` and email execution paths still run when called. Gemini and mail are excluded from readiness regardless of these switches.
 
 Never commit populated `.env` files. Local defaults are explicitly non-production conveniences. Secrets should be injected by the deployment platform and rotated outside the application.

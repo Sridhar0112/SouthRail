@@ -124,6 +124,15 @@ class PhaseZeroWebIntegrationTest {
   }
 
   @Test
+  void doesNotApplyCustomerCorsPolicyToManagementEndpoints() throws Exception {
+    mockMvc.perform(options("/actuator/health")
+            .header("Origin", "http://localhost:5173")
+            .header("Access-Control-Request-Method", "GET"))
+        .andExpect(status().isUnauthorized())
+        .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
+  }
+
+  @Test
   void permitsOnlyAnonymousInfrastructureProbes() throws Exception {
     mockMvc.perform(get("/actuator/health/liveness"))
         .andExpect(status().isOk());
@@ -138,7 +147,19 @@ class PhaseZeroWebIntegrationTest {
   @Test
   void doesNotExposeSensitiveActuatorEndpoints() throws Exception {
     mockMvc.perform(get("/actuator/env").with(user("operator").roles("ADMIN")))
-        .andExpect(status().isNotFound());
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.errorCode").value("RESOURCE_NOT_FOUND"))
+        .andExpect(jsonPath("$.message").value("Requested resource was not found"))
+        .andExpect(jsonPath("$.correlationId").isNotEmpty());
+  }
+
+  @Test
+  void returnsSafeNotFoundEnvelopeForUnknownRoutes() throws Exception {
+    mockMvc.perform(get("/does-not-exist").with(user("operator").roles("ADMIN")))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.errorCode").value("RESOURCE_NOT_FOUND"))
+        .andExpect(jsonPath("$.message").value("Requested resource was not found"))
+        .andExpect(jsonPath("$.correlationId").isNotEmpty());
   }
 
   @TestConfiguration

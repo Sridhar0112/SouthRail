@@ -14,6 +14,8 @@ import com.southrail.reservation.shared.config.properties.SouthRailLoggingProper
 @Component
 public class ApiRequestLoggingInterceptor implements HandlerInterceptor {
   public static final String ERROR_CODE_ATTRIBUTE = ApiRequestLoggingInterceptor.class.getName() + ".errorCode";
+  public static final String EXCEPTION_LOGGED_ATTRIBUTE = ApiRequestLoggingInterceptor.class.getName()
+      + ".exceptionLogged";
   private static final Logger log = LoggerFactory.getLogger(ApiRequestLoggingInterceptor.class);
   private static final String START_TIME_ATTRIBUTE = ApiRequestLoggingInterceptor.class.getName() + ".startTime";
   private final long slowRequestThresholdMillis;
@@ -47,15 +49,20 @@ public class ApiRequestLoggingInterceptor implements HandlerInterceptor {
     MDC.put("http.status", Integer.toString(response.getStatus()));
     MDC.put("durationMs", Long.toString(durationMillis));
     try {
-      if (durationMillis >= slowRequestThresholdMillis) {
-        log.warn("event=HTTP_SLOW_REQUEST authenticated={} handler={} errorCode={}",
-            Boolean.valueOf(authenticated), handlerName, errorCode == null ? "none" : errorCode);
-      } else if (ex != null || response.getStatus() >= 500) {
-        log.warn("event=HTTP_REQUEST_FAILED authenticated={} handler={} errorCode={} exception={}",
+      boolean slow = durationMillis >= slowRequestThresholdMillis;
+      boolean failed = ex != null || response.getStatus() >= 500;
+      boolean exceptionAlreadyLogged = Boolean.TRUE.equals(request.getAttribute(EXCEPTION_LOGGED_ATTRIBUTE));
+      if (failed && !exceptionAlreadyLogged) {
+        log.warn("event=HTTP_REQUEST_FAILED slow={} authenticated={} handler={} errorCode={} exception={}",
+            Boolean.valueOf(slow),
             Boolean.valueOf(authenticated), handlerName, errorCode == null ? "INTERNAL_ERROR" : errorCode,
             ex == null ? "handled" : ex.getClass().getSimpleName());
+      } else if (slow && !exceptionAlreadyLogged) {
+        log.warn("event=HTTP_SLOW_REQUEST authenticated={} handler={} errorCode={}",
+            Boolean.valueOf(authenticated), handlerName, errorCode == null ? "none" : errorCode);
       } else {
-        log.debug("event=HTTP_REQUEST_COMPLETED authenticated={} handler={} errorCode={}",
+        log.debug("event=HTTP_REQUEST_COMPLETED slow={} authenticated={} handler={} errorCode={}",
+            Boolean.valueOf(slow),
             Boolean.valueOf(authenticated), handlerName, errorCode == null ? "none" : errorCode);
       }
     } finally {

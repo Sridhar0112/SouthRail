@@ -135,6 +135,8 @@
         </executions>
         <configuration>
           <generateGitPropertiesFile>true</generateGitPropertiesFile>
+          <failOnNoGitDirectory>false</failOnNoGitDirectory>
+          <failOnUnableToExtractRepoInfo>false</failOnUnableToExtractRepoInfo>
           <includeOnlyProperties>
             <includeOnlyProperty>^git.commit.id.abbrev$</includeOnlyProperty>
             <includeOnlyProperty>^git.commit.id.full$</includeOnlyProperty>

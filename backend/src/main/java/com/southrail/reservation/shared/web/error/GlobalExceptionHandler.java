@@ -24,6 +24,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mapping.PropertyReferenceException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -36,10 +37,14 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(AiException.class)
   ResponseEntity<ApiErrorResponse> ai(AiException ex, HttpServletRequest request) {
-    log.error("optional_dependency_failure dependency=gemini method={} path={}",
-        request.getMethod(), request.getRequestURI(), ex);
     return error(ex.getStatus(), ex.getErrorCode(),
         "AI assistant is temporarily unavailable", request, null, null);
+  }
+
+  @ExceptionHandler(NoResourceFoundException.class)
+  ResponseEntity<ApiErrorResponse> noResource(NoResourceFoundException ex, HttpServletRequest request) {
+    return error(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", "Requested resource was not found",
+        request, null, null);
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -97,6 +102,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(Exception.class)
   ResponseEntity<ApiErrorResponse> fallback(Exception ex, HttpServletRequest request) {
+    request.setAttribute(ApiRequestLoggingInterceptor.EXCEPTION_LOGGED_ATTRIBUTE, Boolean.TRUE);
     log.error("unexpected_request_failure method={} path={}", request.getMethod(), request.getRequestURI(), ex);
     return error(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR",
         "Unexpected server error", request, null, null);
