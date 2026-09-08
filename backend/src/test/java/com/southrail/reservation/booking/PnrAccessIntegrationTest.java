@@ -42,9 +42,9 @@ class PnrAccessIntegrationTest {
 
   @BeforeEach
   void createBooking() {
-    User owner = user(OWNER_EMAIL, RoleName.ROLE_USER);
-    user(OTHER_EMAIL, RoleName.ROLE_USER);
-    user(ADMIN_EMAIL, RoleName.ROLE_ADMIN);
+    User owner = createUser(OWNER_EMAIL, RoleName.ROLE_USER);
+    createUser(OTHER_EMAIL, RoleName.ROLE_USER);
+    createUser(ADMIN_EMAIL, RoleName.ROLE_ADMIN);
 
     Train train = new Train();
     train.setNumber("12658");
@@ -107,7 +107,7 @@ class PnrAccessIntegrationTest {
         .andExpect(jsonPath("$.pnr").value(PNR));
   }
 
-  private User user(String email, RoleName role) {
+  private User createUser(String email, RoleName role) {
     User user = new User();
     user.setEmail(email);
     user.setFullName(email);
