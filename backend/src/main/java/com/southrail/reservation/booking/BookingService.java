@@ -3,6 +3,7 @@ package com.southrail.reservation.booking;
 import com.southrail.reservation.booking.dto.BookingDtos;
 import com.southrail.reservation.shared.web.error.ApiException;
 import com.southrail.reservation.account.User;
+import com.southrail.reservation.account.RoleName;
 import com.southrail.reservation.account.UserRepository;
 import com.southrail.reservation.audit.AuditLogService;
 import com.southrail.reservation.booking.inventory.BookingSeat;
@@ -199,8 +200,14 @@ public class BookingService {
   }
 
   @Transactional(readOnly = true)
-  public BookingDtos.PnrStatus pnr(String pnr) {
+  public BookingDtos.PnrStatus pnr(String email, String pnr) {
+    User currentUser = users.findByEmailIgnoreCase(email)
+        .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "User not found"));
     Booking booking = bookings.findByPnr(pnr).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "PNR not found"));
+    if (!currentUser.getRoles().contains(RoleName.ROLE_ADMIN)
+        && !booking.getUser().getId().equals(currentUser.getId())) {
+      throw new ApiException(HttpStatus.FORBIDDEN, "You are not allowed to access this booking");
+    }
     return new BookingDtos.PnrStatus(
         booking.getPnr(),
         booking.getTrain().getNumber(),
