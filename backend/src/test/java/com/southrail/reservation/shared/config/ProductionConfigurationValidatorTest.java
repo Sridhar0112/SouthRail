@@ -33,6 +33,25 @@ class ProductionConfigurationValidatorTest {
     assertThatThrownBy(() -> validator(false, false,
         "local-development-secret-change-before-use", "issuer", "https://app.example", "", "").validate())
         .hasMessage("JWT_SECRET does not meet production strength requirements");
+    assertThatThrownBy(() -> validator(false, false,
+        "replace-with-at-least-32-random-characters", "issuer", "https://app.example", "", "").validate())
+        .hasMessage("JWT_SECRET does not meet production strength requirements");
+  }
+
+  @Test
+  void rejectsShippedDatabaseCredentialPlaceholders() {
+    assertThatThrownBy(() -> validatorWithDatabaseCredentials(
+        "replace-with-database-user", "db-password").validate())
+        .hasMessage("DB_USERNAME must not use the shipped example value in the prod profile");
+    assertThatThrownBy(() -> validatorWithDatabaseCredentials(
+        "db-user", "replace-with-a-strong-database-password").validate())
+        .hasMessage("DB_PASSWORD must not use the shipped example value in the prod profile");
+  }
+
+  @Test
+  void acceptsCustomDatabaseCredentials() {
+    assertThatCode(() -> validatorWithDatabaseCredentials("custom-user", "custom-password").validate())
+        .doesNotThrowAnyException();
   }
 
   @Test
@@ -80,5 +99,20 @@ class ProductionConfigurationValidatorTest {
 
   private String strongSecret() {
     return "01234567890123456789012345678901";
+  }
+
+  private ProductionConfigurationValidator validatorWithDatabaseCredentials(String databaseUsername,
+      String databasePassword) {
+    SouthRailSecurityProperties security = new SouthRailSecurityProperties();
+    security.setSecret(strongSecret());
+    security.setIssuer("issuer");
+    security.setAccessTokenMinutes(20);
+    security.setRefreshTokenDays(14);
+    SouthRailCorsProperties cors = new SouthRailCorsProperties();
+    cors.setAllowedOrigins(Collections.singletonList("https://app.example"));
+    SouthRailFeatureProperties features = new SouthRailFeatureProperties();
+    GeminiConfiguration gemini = new GeminiConfiguration();
+    return new ProductionConfigurationValidator("jdbc:postgresql://db/southrail", databaseUsername,
+        databasePassword, "", "", security, cors, features, gemini);
   }
 }
