@@ -14,6 +14,9 @@ import org.springframework.stereotype.Component;
 @Component
 @Profile("prod")
 public class ProductionConfigurationValidator {
+  private static final String EXAMPLE_DATABASE_USERNAME = "replace-with-database-user";
+  private static final String EXAMPLE_DATABASE_PASSWORD = "replace-with-a-strong-database-password";
+  private static final String EXAMPLE_JWT_SECRET = "replace-with-at-least-32-random-characters";
   private final String databaseUrl;
   private final String databaseUsername;
   private final String databasePassword;
@@ -50,10 +53,13 @@ public class ProductionConfigurationValidator {
     require("DB_URL", databaseUrl);
     require("DB_USERNAME", databaseUsername);
     require("DB_PASSWORD", databasePassword);
+    rejectExampleValue("DB_USERNAME", databaseUsername, EXAMPLE_DATABASE_USERNAME);
+    rejectExampleValue("DB_PASSWORD", databasePassword, EXAMPLE_DATABASE_PASSWORD);
     require("JWT_ISSUER", security.getIssuer());
     require("JWT_SECRET", security.getSecret());
     if (security.getSecret().getBytes(StandardCharsets.UTF_8).length < 32
-        || security.getSecret().toLowerCase(java.util.Locale.ROOT).contains("change-before-use")) {
+        || security.getSecret().toLowerCase(java.util.Locale.ROOT).contains("change-before-use")
+        || EXAMPLE_JWT_SECRET.equals(security.getSecret().trim())) {
       throw new IllegalStateException("JWT_SECRET does not meet production strength requirements");
     }
     List<String> origins = cors.getAllowedOrigins();
@@ -78,6 +84,12 @@ public class ProductionConfigurationValidator {
   private void require(String name, String value) {
     if (value == null || value.trim().isEmpty()) {
       throw new IllegalStateException(name + " must be configured for the prod profile");
+    }
+  }
+
+  private void rejectExampleValue(String name, String value, String exampleValue) {
+    if (exampleValue.equals(value.trim())) {
+      throw new IllegalStateException(name + " must not use the shipped example value in the prod profile");
     }
   }
 }
