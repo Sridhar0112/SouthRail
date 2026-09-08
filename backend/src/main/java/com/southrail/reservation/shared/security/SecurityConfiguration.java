@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -56,7 +55,6 @@ public class SecurityConfiguration {
                     .requestMatchers("/trains/**").permitAll()
                     .requestMatchers("/chat").permitAll()
                     .requestMatchers("/chat/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/pnr/**").permitAll()
                     .requestMatchers("/admin/**").hasRole("ADMIN")
                     .anyRequest().authenticated()
             )

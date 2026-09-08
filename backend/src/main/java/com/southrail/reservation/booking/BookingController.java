@@ -74,8 +74,8 @@ public class BookingController {
   }
 
   @GetMapping("/pnr/{pnr}")
-  BookingDtos.PnrStatus pnr(@PathVariable String pnr) {
-    return bookingService.pnr(pnr);
+  BookingDtos.PnrStatus pnr(Principal principal, @PathVariable String pnr) {
+    return bookingService.pnr(principal.getName(), pnr);
   }
 
   @PostMapping("/pnr/{pnr}/cancel")
