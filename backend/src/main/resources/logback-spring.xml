@@ -3,8 +3,20 @@
   <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
   <property name="CONSOLE_LOG_PATTERN"
             value="%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level [%thread] [correlationId=%X{correlationId:-none}] %logger{40} - %msg%n%wEx"/>
-  <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
-  <root level="INFO">
-    <appender-ref ref="CONSOLE"/>
-  </root>
+  <springProfile name="!prod">
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+    <root level="INFO"><appender-ref ref="CONSOLE"/></root>
+  </springProfile>
+  <springProfile name="prod">
+    <springProperty scope="context" name="service" source="spring.application.name" defaultValue="southrail-reservation"/>
+    <springProperty scope="context" name="environment" source="spring.profiles.active" defaultValue="prod"/>
+    <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+        <customFields>{"service":"${service}","environment":"${environment}"}</customFields>
+        <includeMdc>true</includeMdc>
+        <timeZone>UTC</timeZone>
+      </encoder>
+    </appender>
+    <root level="INFO"><appender-ref ref="JSON"/></root>
+  </springProfile>
 </configuration>

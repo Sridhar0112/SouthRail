@@ -5,7 +5,8 @@ import com.southrail.reservation.booking.inventory.BookingSeat;
 import com.southrail.reservation.booking.Passenger;
 import com.southrail.reservation.account.User;
 import jakarta.mail.internet.MimeMessage;
-import org.springframework.beans.factory.annotation.Value;
+import com.southrail.reservation.shared.config.properties.SouthRailApplicationProperties;
+import com.southrail.reservation.shared.config.properties.SouthRailMailProperties;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -22,12 +23,11 @@ public class EmailNotificationService {
   private final String from;
   private final String frontendUrl;
 
-  public EmailNotificationService(JavaMailSender mailSender,
-      @Value("${app.mail.from}") String from,
-      @Value("${app.frontend-url}") String frontendUrl) {
+  public EmailNotificationService(JavaMailSender mailSender, SouthRailMailProperties mailProperties,
+      SouthRailApplicationProperties applicationProperties) {
     this.mailSender = mailSender;
-    this.from = from;
-    this.frontendUrl = frontendUrl;
+    this.from = mailProperties.getFrom();
+    this.frontendUrl = applicationProperties.getFrontendUrl();
   }
 
   public void sendPasswordReset(User user, String token) {

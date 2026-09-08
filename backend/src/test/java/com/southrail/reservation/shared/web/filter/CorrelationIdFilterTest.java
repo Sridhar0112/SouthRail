@@ -13,6 +13,24 @@ class CorrelationIdFilterTest {
   private final CorrelationIdFilter filter = new CorrelationIdFilter();
 
   @Test
+  void generatesCorrelationIdWhenHeaderIsAbsent() throws Exception {
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/bookings");
+    MockHttpServletResponse response = new MockHttpServletResponse();
+    filter.doFilter(request, response, new MockFilterChain());
+    assertThat(response.getHeader(CorrelationIdFilter.HEADER_NAME)).matches("[0-9a-f-]{36}");
+  }
+
+  @Test
+  void replacesOversizedIncomingCorrelationId() throws Exception {
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/bookings");
+    request.addHeader(CorrelationIdFilter.HEADER_NAME,
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    MockHttpServletResponse response = new MockHttpServletResponse();
+    filter.doFilter(request, response, new MockFilterChain());
+    assertThat(response.getHeader(CorrelationIdFilter.HEADER_NAME)).hasSize(36);
+  }
+
+  @Test
   void reusesSafeIncomingCorrelationIdAndClearsMdc() throws Exception {
     MockHttpServletRequest request = new MockHttpServletRequest("GET", "/bookings");
     request.addHeader(CorrelationIdFilter.HEADER_NAME, "client-request-42");

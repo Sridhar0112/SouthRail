@@ -17,10 +17,10 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
 import java.time.Instant;
+import com.southrail.reservation.shared.config.properties.SouthRailSecurityProperties;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -49,7 +49,7 @@ public class AuthService {
   public AuthService(UserRepository users, RefreshTokenRepository refreshTokens, AccountTokenRepository accountTokens,
                      PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService,
                      EmailNotificationService accountEmailService,
-                     @Value("${app.jwt.refresh-token-days}") long refreshDays,AuditLogService auditLogService) {
+                     SouthRailSecurityProperties securityProperties, AuditLogService auditLogService) {
     this.users = users;
     this.refreshTokens = refreshTokens;
     this.accountTokens = accountTokens;
@@ -57,7 +57,7 @@ public class AuthService {
     this.authenticationManager = authenticationManager;
     this.jwtService = jwtService;
     this.accountEmailService = accountEmailService;
-    this.refreshDays = refreshDays;
+    this.refreshDays = securityProperties.getRefreshTokenDays();
     this.auditLogService=auditLogService;
   }
 

@@ -14,7 +14,6 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public class GeminiConfiguration {
 
-    @NotBlank
     private String apiKey;
 
     @NotBlank
