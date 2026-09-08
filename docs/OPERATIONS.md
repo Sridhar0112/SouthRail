@@ -15,7 +15,7 @@ All paths below include the configured `/api` servlet context.
 | `/actuator/prometheus` | exposed | not exposed | exposed | no | Prometheus-format scrape; no server is bundled. |
 | `env`, `configprops`, `heapdump`, `beans`, `mappings`, `loggers`, `threaddump` | not exposed | not exposed | not exposed | no | Deliberately unavailable. |
 
-The current security model has no separate infrastructure operator authority. Consequently only the two exact probe endpoints are anonymous and disclose status only; other exposed endpoints require the existing admin authority and may show health components/details. They should additionally be network-restricted. Management stays on the application port because the current Compose/frontend topology does not safely route a second port. Customer-facing CORS is not applied to `/actuator` paths.
+The current security model has no separate infrastructure operator authority. Consequently only the two exact probe endpoints are anonymous and disclose status only; other exposed endpoints require the existing admin authority and may show health components/details. They should additionally be network-restricted. Management stays on the application port because the current Compose/frontend topology does not safely route a second port. Customer-facing CORS is not applied to `/actuator` paths: a browser preflight carrying a customer origin is rejected with `403 Invalid CORS request` and no CORS allow headers before authentication is evaluated, while a direct unauthenticated request to a protected Actuator endpoint receives the normal `401` response.
 
 ```bash
 curl -fsS http://HOST:8080/api/actuator/health/liveness
