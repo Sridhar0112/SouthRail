@@ -37,6 +37,9 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       AI_ENABLED: ${AI_ENABLED:-false}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_CONNECT_TIMEOUT: ${GEMINI_CONNECT_TIMEOUT:-3000}
+      GEMINI_READ_TIMEOUT: ${GEMINI_READ_TIMEOUT:-10000}
+      SLOW_REQUEST_THRESHOLD: ${SLOW_REQUEST_THRESHOLD:-2s}
     depends_on:
       postgres:
         condition: service_healthy
