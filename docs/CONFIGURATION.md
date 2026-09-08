@@ -36,4 +36,6 @@ Production configuration is immutable per process. Do not use machine-local file
 
 Production fails before accepting traffic when PostgreSQL values are blank, JWT issuer/secret is blank, the key is weak/default, CORS is empty/wildcard, or an optional integration's credential-enforcement switch is enabled without its credentials. The `AI_ENABLED` and `EMAIL_ENABLED` names are retained for deployment compatibility, but they control validation only: existing `/chat` and email execution paths still run when called. Gemini and mail are excluded from readiness regardless of these switches.
 
+SMTP is an optional notification dependency. Spring Boot's built-in mail health indicator is disabled in every profile, so an unavailable SMTP server does not make aggregate health or readiness `DOWN`. Delivery attempts and their existing degraded-failure logs remain the source of SMTP failure visibility; this setting does not change email sending behavior.
+
 Never commit populated `.env` files. Local defaults are explicitly non-production conveniences. Secrets should be injected by the deployment platform and rotated outside the application.

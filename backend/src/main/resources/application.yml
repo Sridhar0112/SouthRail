@@ -66,6 +66,9 @@ southrail:
     slow-request-threshold: ${SLOW_REQUEST_THRESHOLD:2s}
 
 management:
+  health:
+    mail:
+      enabled: false
   endpoints:
     web:
       exposure:

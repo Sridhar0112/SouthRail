@@ -144,7 +144,8 @@ class PhaseZeroWebIntegrationTest {
     mockMvc.perform(get("/actuator/info"))
         .andExpect(status().isUnauthorized());
     mockMvc.perform(get("/actuator/health").with(user("operator").roles("ADMIN")))
-        .andExpect(status().isOk());
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.components.mail").doesNotExist());
     mockMvc.perform(get("/actuator/info").with(user("operator").roles("ADMIN")))
         .andExpect(status().isOk());
     mockMvc.perform(get("/actuator/health/dependencies").with(user("operator").roles("ADMIN")))
