@@ -124,12 +124,13 @@ class PhaseZeroWebIntegrationTest {
   }
 
   @Test
-  void doesNotApplyCustomerCorsPolicyToManagementEndpoints() throws Exception {
+  void rejectsCustomerCorsPreflightToManagementEndpoints() throws Exception {
     mockMvc.perform(options("/actuator/health")
             .header("Origin", "http://localhost:5173")
             .header("Access-Control-Request-Method", "GET"))
-        .andExpect(status().isUnauthorized())
-        .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
+        .andExpect(status().isForbidden())
+        .andExpect(header().doesNotExist("Access-Control-Allow-Origin"))
+        .andExpect(header().doesNotExist("Access-Control-Allow-Credentials"));
   }
 
   @Test
@@ -142,6 +143,12 @@ class PhaseZeroWebIntegrationTest {
         .andExpect(status().isUnauthorized());
     mockMvc.perform(get("/actuator/info"))
         .andExpect(status().isUnauthorized());
+    mockMvc.perform(get("/actuator/health").with(user("operator").roles("ADMIN")))
+        .andExpect(status().isOk());
+    mockMvc.perform(get("/actuator/info").with(user("operator").roles("ADMIN")))
+        .andExpect(status().isOk());
+    mockMvc.perform(get("/actuator/health/dependencies").with(user("operator").roles("ADMIN")))
+        .andExpect(status().isOk());
   }
 
   @Test
