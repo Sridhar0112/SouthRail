@@ -1,6 +1,7 @@
 package com.southrail.reservation.shared.security.jwt;
 
 import com.southrail.reservation.account.User;
+import com.southrail.reservation.shared.config.properties.SouthRailSecurityProperties;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
@@ -10,7 +11,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.crypto.SecretKey;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,13 +19,10 @@ public class JwtService {
   private final String issuer;
   private final long accessMinutes;
 
-  public JwtService(
-      @Value("${app.jwt.secret}") String secret,
-      @Value("${app.jwt.issuer}") String issuer,
-      @Value("${app.jwt.access-token-minutes}") long accessMinutes) {
-    this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-    this.issuer = issuer;
-    this.accessMinutes = accessMinutes;
+  public JwtService(SouthRailSecurityProperties properties) {
+    this.key = Keys.hmacShaKeyFor(properties.getSecret().getBytes(StandardCharsets.UTF_8));
+    this.issuer = properties.getIssuer();
+    this.accessMinutes = properties.getAccessTokenMinutes();
   }
 
   public String createAccessToken(User user) {

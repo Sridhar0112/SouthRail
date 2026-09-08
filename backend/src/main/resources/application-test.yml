@@ -13,7 +13,11 @@ spring:
   mail:
     test-connection: false
 
-management.endpoints.enabled-by-default: false
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
 
 logging.level.com.southrail.reservation: WARN
 
@@ -27,3 +31,10 @@ app:
 
 gemini:
   api-key: test-only-gemini-key
+
+southrail:
+  features:
+    ai-enabled: false
+    email-enabled: false
+  logging:
+    slow-request-threshold: 2s

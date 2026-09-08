@@ -16,4 +16,9 @@ gemini:
 
 logging.level.com.southrail.reservation: DEBUG
 
+southrail:
+  features:
+    ai-enabled: ${AI_ENABLED:false}
+    email-enabled: ${EMAIL_ENABLED:false}
+
 management.endpoint.health.show-details: always
