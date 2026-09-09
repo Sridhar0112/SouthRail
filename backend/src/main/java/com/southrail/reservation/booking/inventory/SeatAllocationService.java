@@ -34,8 +34,6 @@ public class SeatAllocationService {
       "Selected train/class no longer has enough available seats. Please search again.";
   private static final EnumSet<BookingStatus> ACTIVE_BOOKING_STATUSES = EnumSet.of(
       BookingStatus.CONFIRMED,
-      BookingStatus.RAC,
-      BookingStatus.WAITLISTED,
       BookingStatus.PARTIALLY_CANCELLED);
 
   private final CoachRepository coaches;
@@ -50,12 +48,17 @@ public class SeatAllocationService {
 
   @Transactional(readOnly = true)
   public int getAvailableSeatCount(Train train, LocalDate journeyDate, String travelClass) {
-    int capacity = coaches.totalCapacity(train.getId(), travelClass);
+    int capacity = getConfiguredCapacity(train, travelClass);
     long allocatedSeats = bookingSeats.countActiveBookedSeats(
         train.getId(), journeyDate, travelClass, BookingSeatStatus.BOOKED, ACTIVE_BOOKING_STATUSES);
     long legacyPassengers = countLegacyPassengersWithoutSeat(train.getId(), journeyDate, travelClass);
     long occupiedSeats = allocatedSeats + legacyPassengers;
     return Math.max(0, capacity - Math.toIntExact(Math.min(occupiedSeats, Integer.MAX_VALUE)));
+  }
+
+  @Transactional(readOnly = true)
+  public int getConfiguredCapacity(Train train, String travelClass) {
+    return coaches.totalCapacity(train.getId(), travelClass);
   }
 
   @Transactional(readOnly = true)
@@ -156,7 +159,8 @@ public class SeatAllocationService {
 
   private long countLegacyPassengersWithoutSeat(UUID trainId, LocalDate journeyDate, String travelClass) {
     return passengers.countActivePassengersWithoutBookedSeat(
-        trainId, journeyDate, travelClass, ACTIVE_BOOKING_STATUSES, BookingSeatStatus.BOOKED);
+        trainId, journeyDate, travelClass, BookingStatus.CONFIRMED,
+        ACTIVE_BOOKING_STATUSES, BookingSeatStatus.BOOKED);
   }
 
   private String berthTypeForSeat(String travelClass, int seatNumber) {

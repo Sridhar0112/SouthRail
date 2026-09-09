@@ -9,8 +9,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.southrail.reservation.booking.BookingStatus;
 import java.time.LocalDate;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 public interface BookingRepository extends JpaRepository<Booking, UUID> {
   Optional<Booking> findByPnr(String pnr);
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("select b from Booking b where b.pnr = :pnr")
+  Optional<Booking> findByPnrForUpdate(@Param("pnr") String pnr);
   Page<Booking> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
   long countByTrainIdAndJourneyDateAndTravelClassAndStatus(
           UUID trainId,

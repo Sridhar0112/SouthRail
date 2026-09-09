@@ -61,7 +61,7 @@ public class BookingCancellationService {
   @Transactional
   public CancellationResponse cancel(String email, String pnr) {
     User currentUser = findCurrentUser(email);
-    Booking booking = findBooking(pnr);
+    Booking booking = findBookingForUpdate(pnr);
     validateBookingOwnership(currentUser, booking);
     validateBookingCanBeCancelled(booking);
 
@@ -99,6 +99,11 @@ public class BookingCancellationService {
 
   private Booking findBooking(String pnr) {
     return bookings.findByPnr(pnr)
+        .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "PNR not found"));
+  }
+
+  private Booking findBookingForUpdate(String pnr) {
+    return bookings.findByPnrForUpdate(pnr)
         .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "PNR not found"));
   }
 

@@ -30,6 +30,7 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeat, UUID> 
                 "  and bs.journeyDate = :journeyDate\n" +
                 "  and upper(bs.travelClass) = upper(:travelClass)\n" +
                 "  and bs.status = :seatStatus\n" +
+                "  and bs.passenger.status = com.southrail.reservation.booking.BookingStatus.CONFIRMED\n" +
                 "  and bs.booking.status in :activeBookingStatuses\n")
   long countActiveBookedSeats(
       @Param("trainId") UUID trainId,
@@ -44,6 +45,7 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeat, UUID> 
                 "  and bs.journeyDate = :journeyDate\n" +
                 "  and upper(bs.travelClass) = upper(:travelClass)\n" +
                 "  and bs.status = :seatStatus\n" +
+                "  and bs.passenger.status = com.southrail.reservation.booking.BookingStatus.CONFIRMED\n" +
                 "  and bs.booking.status in :activeBookingStatuses\n" +
                 "order by bs.coachCode asc, bs.seatNumber asc\n")
   List<BookingSeat> findActiveBookedSeats(

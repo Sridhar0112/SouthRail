@@ -13,12 +13,15 @@ import com.southrail.reservation.train.Station;
 import com.southrail.reservation.train.StationRepository;
 import com.southrail.reservation.train.Train;
 import com.southrail.reservation.train.TrainRepository;
+import com.southrail.reservation.train.RouteStop;
+import com.southrail.reservation.train.RouteStopRepository;
 
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -37,6 +40,7 @@ public class BookingService {
   private final UserRepository users;
   private final TrainRepository trains;
   private final StationRepository stations;
+  private final RouteStopRepository routeStops;
   private final SeatAllocationService seatAllocationService;
   private final SecureRandom random = new SecureRandom();
   private final EmailNotificationService accountEmailService;
@@ -44,12 +48,14 @@ public class BookingService {
   private static final Logger log = LoggerFactory.getLogger(BookingService.class);
   private static final int RAC_LIMIT = 10;
   public BookingService(BookingRepository bookings, PassengerRepository passengers, UserRepository users,
-      TrainRepository trains, StationRepository stations, SeatAllocationService seatAllocationService,EmailNotificationService accountEmailService,AuditLogService auditLogService) {
+      TrainRepository trains, StationRepository stations, RouteStopRepository routeStops,
+      SeatAllocationService seatAllocationService, EmailNotificationService accountEmailService, AuditLogService auditLogService) {
     this.bookings = bookings;
     this.passengers = passengers;
     this.users = users;
     this.trains = trains;
     this.stations = stations;
+    this.routeStops = routeStops;
     this.seatAllocationService = seatAllocationService;
     this.accountEmailService=accountEmailService;
     this.auditLogService=auditLogService;
@@ -58,15 +64,18 @@ public class BookingService {
   @Transactional
   public BookingDtos.BookingResponse create(String email, BookingDtos.BookingRequest request) {
     User user = users.findByEmailIgnoreCase(email).orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "User not found"));
-    Train train = trains.findById(parseTrainId(request.getTrainId())).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Train not found"));
+    // Serializes inventory and queue decisions for this train only.
+    Train train = trains.findByIdForUpdate(parseTrainId(request.getTrainId())).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Train not found"));
     Station source = stations.findByCodeIgnoreCase(request.getSourceStationCode()).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Source station not found"));
     Station destination = stations.findByCodeIgnoreCase(request.getDestinationStationCode()).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Destination station not found"));
+    validateJourney(train, source, destination, request.getTravelClass());
     int passengerCount = request.getPassengers().size();
+    String travelClass = request.getTravelClass().toUpperCase(Locale.ROOT);
 
     int availableSeats = seatAllocationService.getAvailableSeatCount(
             train,
             request.getJourneyDate(),
-            request.getTravelClass());
+            travelClass);
 
     BookingStatus bookingStatus;
     Integer queuePosition = null;
@@ -79,7 +88,7 @@ public class BookingService {
       long racCount = bookings.countByTrainIdAndJourneyDateAndTravelClassAndStatus(
               train.getId(),
               request.getJourneyDate(),
-              request.getTravelClass(),
+              travelClass,
               BookingStatus.RAC);
 
       if (racCount < RAC_LIMIT) {
@@ -90,7 +99,7 @@ public class BookingService {
         long waitlistCount = bookings.countByTrainIdAndJourneyDateAndTravelClassAndStatus(
                 train.getId(),
                 request.getJourneyDate(),
-                request.getTravelClass(),
+                travelClass,
                 BookingStatus.WAITLISTED);
 
         bookingStatus = BookingStatus.WAITLISTED;
@@ -105,7 +114,7 @@ public class BookingService {
     booking.setSourceStation(source);
     booking.setDestinationStation(destination);
     booking.setJourneyDate(request.getJourneyDate());
-    booking.setTravelClass(request.getTravelClass());
+    booking.setTravelClass(travelClass);
     booking.setQuota(request.getQuota());
     booking.setPnr(generatePnr());
     booking.setStatus(bookingStatus);
@@ -165,8 +174,9 @@ public class BookingService {
   @Transactional(readOnly = true)
   public BookingDtos.BookingReview review(BookingDtos.BookingRequest request) {
     Train train = trains.findById(parseTrainId(request.getTrainId())).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Train not found"));
-    stations.findByCodeIgnoreCase(request.getSourceStationCode()).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Source station not found"));
-    stations.findByCodeIgnoreCase(request.getDestinationStationCode()).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Destination station not found"));
+    Station source = stations.findByCodeIgnoreCase(request.getSourceStationCode()).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Source station not found"));
+    Station destination = stations.findByCodeIgnoreCase(request.getDestinationStationCode()).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Destination station not found"));
+    validateJourney(train, source, destination, request.getTravelClass());
 
     FareParts fare = calculateFare(request);
     int availableSeats = seatAllocationService.getAvailableSeatCount(train, request.getJourneyDate(), request.getTravelClass());
@@ -255,6 +265,25 @@ public class BookingService {
       return UUID.fromString(trainId);
     } catch (IllegalArgumentException ex) {
       throw new ApiException(HttpStatus.BAD_REQUEST, "Train id must be a valid UUID");
+    }
+  }
+
+  private void validateJourney(Train train, Station source, Station destination, String travelClass) {
+    if (!train.isActive()) {
+      throw new ApiException(HttpStatus.BAD_REQUEST, "Train is inactive");
+    }
+    if (source.getId().equals(destination.getId())) {
+      throw new ApiException(HttpStatus.BAD_REQUEST, "Source and destination must be different");
+    }
+    RouteStop sourceStop = routeStops.findFirstByTrainAndStationOrderByStopOrderAsc(train, source)
+        .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Source station is not on the selected train route"));
+    RouteStop destinationStop = routeStops.findFirstByTrainAndStationOrderByStopOrderAsc(train, destination)
+        .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Destination station is not on the selected train route"));
+    if (sourceStop.getStopOrder() >= destinationStop.getStopOrder()) {
+      throw new ApiException(HttpStatus.BAD_REQUEST, "Source must precede destination on the selected train route");
+    }
+    if (seatAllocationService.getConfiguredCapacity(train, travelClass) <= 0) {
+      throw new ApiException(HttpStatus.BAD_REQUEST, "Travel class is not configured for the selected train");
     }
   }
 
