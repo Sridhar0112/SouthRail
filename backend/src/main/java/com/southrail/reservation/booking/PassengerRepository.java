@@ -15,27 +15,12 @@ import org.springframework.data.repository.query.Param;
 public interface PassengerRepository extends JpaRepository<Passenger, UUID> {
   List<Passenger> findByBooking(Booking booking);
 
-  default long countBookedPassengers(UUID trainId, LocalDate journeyDate, String travelClass) {
-    return countBookedPassengersExcludingStatus(trainId, journeyDate, travelClass, BookingStatus.CANCELLED);
-  }
-
   @Query("select count(p)\n" +
                 "from Passenger p\n" +
                 "where p.booking.train.id = :trainId\n" +
                 "  and p.booking.journeyDate = :journeyDate\n" +
                 "  and upper(p.booking.travelClass) = upper(:travelClass)\n" +
-                "  and p.booking.status <> :excludedStatus\n")
-  long countBookedPassengersExcludingStatus(
-      @Param("trainId") UUID trainId,
-      @Param("journeyDate") LocalDate journeyDate,
-      @Param("travelClass") String travelClass,
-      @Param("excludedStatus") BookingStatus excludedStatus);
-
-  @Query("select count(p)\n" +
-                "from Passenger p\n" +
-                "where p.booking.train.id = :trainId\n" +
-                "  and p.booking.journeyDate = :journeyDate\n" +
-                "  and upper(p.booking.travelClass) = upper(:travelClass)\n" +
+                "  and p.status = :confirmedPassengerStatus\n" +
                 "  and p.booking.status in :activeBookingStatuses\n" +
                 "  and not exists (\n" +
                 "    select bs.id\n" +
@@ -47,6 +32,7 @@ public interface PassengerRepository extends JpaRepository<Passenger, UUID> {
       @Param("trainId") UUID trainId,
       @Param("journeyDate") LocalDate journeyDate,
       @Param("travelClass") String travelClass,
+      @Param("confirmedPassengerStatus") BookingStatus confirmedPassengerStatus,
       @Param("activeBookingStatuses") Collection<BookingStatus> activeBookingStatuses,
       @Param("bookedSeatStatus") BookingSeatStatus bookedSeatStatus);
 }

@@ -209,13 +209,14 @@ public class AuthService {
         return issueTokens(user);
     }
 
-  @Transactional
+  @Transactional(noRollbackFor = ApiException.class)
   public AuthDtos.AuthResponse refresh(AuthDtos.RefreshRequest request) {
-    RefreshToken token = refreshTokens.findByTokenHashAndRevokedFalse(hash(request.getRefreshToken()))
+    RefreshToken token = refreshTokens.findActiveByTokenHashForUpdate(hash(request.getRefreshToken()))
             .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Refresh token is invalid"));
     User user= token.getUser();
-    if(user.isDeleted()){
-      throw new ApiException(HttpStatus.FORBIDDEN,"This account has been deleted");
+    if (user.isDeleted() || !user.isEnabled() || !user.isEmailVerified()) {
+      refreshTokens.revokeActiveTokens(user);
+      throw new ApiException(HttpStatus.FORBIDDEN, "Account is not eligible for authentication");
     }
     if (token.getExpiresAt().isBefore(Instant.now())) {
       token.setRevoked(true);
@@ -261,7 +262,7 @@ public class AuthService {
     });
   }
 
-  @Transactional
+  @Transactional(noRollbackFor = ApiException.class)
   public void resetPassword(AuthDtos.ResetPasswordRequest request) {
     AccountToken token = consumeAccountToken(request.getToken(), RESET_PASSWORD);
       User user = token.getUser();
@@ -282,7 +283,7 @@ public class AuthService {
 
   }
 
-  @Transactional
+  @Transactional(noRollbackFor = ApiException.class)
   public void verifyEmail(AuthDtos.VerifyEmailRequest request) {
     AccountToken token = consumeAccountToken(request.getToken(), VERIFY_EMAIL);
     token.getUser().setEmailVerified(true);
@@ -301,7 +302,7 @@ public class AuthService {
   }
 
   private AccountToken consumeAccountToken(String rawToken, String tokenType) {
-    AccountToken token = accountTokens.findByTokenHashAndTokenTypeAndUsedAtIsNull(hash(rawToken), tokenType)
+    AccountToken token = accountTokens.findOpenByHashAndTypeForUpdate(hash(rawToken), tokenType)
             .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Token is invalid or already used"));
     if (token.getExpiresAt().isBefore(Instant.now())) {
       token.setUsedAt(Instant.now());
@@ -457,7 +458,7 @@ public class AuthService {
 
         trySendUnlockEmail(user, token);
     }
-    @Transactional
+    @Transactional(noRollbackFor = ApiException.class)
     public void unlockAccount(
             AuthDtos.UnlockAccountRequest request) {
 

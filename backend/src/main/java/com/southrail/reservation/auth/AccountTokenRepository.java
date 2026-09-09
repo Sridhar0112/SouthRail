@@ -8,10 +8,15 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Lock;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.repository.query.Param;
 
 public interface AccountTokenRepository extends JpaRepository<AccountToken, UUID> {
-  Optional<AccountToken> findByTokenHashAndTokenTypeAndUsedAtIsNull(String tokenHash, String tokenType);
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("select t from AccountToken t where t.tokenHash = :tokenHash and t.tokenType = :tokenType and t.usedAt is null")
+  Optional<AccountToken> findOpenByHashAndTypeForUpdate(
+      @Param("tokenHash") String tokenHash, @Param("tokenType") String tokenType);
   Optional<AccountToken>
   findTopByUserAndTokenTypeOrderByCreatedAtDesc(
           User user,
