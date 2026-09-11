@@ -35,4 +35,6 @@ public interface PassengerRepository extends JpaRepository<Passenger, UUID> {
       @Param("confirmedPassengerStatus") BookingStatus confirmedPassengerStatus,
       @Param("activeBookingStatuses") Collection<BookingStatus> activeBookingStatuses,
       @Param("bookedSeatStatus") BookingSeatStatus bookedSeatStatus);
+
+  long countByBooking(Booking booking);
 }

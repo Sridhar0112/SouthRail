@@ -63,7 +63,7 @@ public class AuthService {
 
   @Transactional
   public AuthDtos.RegisterResponse register(AuthDtos.RegisterRequest request) {
-    User existingUser = users.findByEmailIgnoreCase(
+    User existingUser = users.findByEmailIgnoreCaseForUpdate(
                     request.getEmail().trim().toLowerCase())
             .orElse(null);
 
@@ -129,9 +129,10 @@ public class AuthService {
 
     trySendVerification(user, verificationToken);
   }
+  @Transactional(noRollbackFor = ApiException.class)
   public AuthDtos.AuthResponse login(AuthDtos.LoginRequest request) {
 
-        User user = users.findByEmailIgnoreCase(request.getEmail())
+        User user = users.findByEmailIgnoreCaseForUpdate(request.getEmail())
                 .orElseThrow(() ->
                         new ApiException(
                                 HttpStatus.UNAUTHORIZED,
@@ -237,7 +238,7 @@ public class AuthService {
 
   @Transactional
   public void forgotPassword(AuthDtos.ForgotPasswordRequest request) {
-    users.findByEmailIgnoreCase(request.getEmail()).ifPresent(user -> {
+    users.findByEmailIgnoreCaseForUpdate(request.getEmail()).ifPresent(user -> {
       if (user.isDeleted()) {
         throw new ApiException(
                 HttpStatus.FORBIDDEN,
@@ -364,7 +365,7 @@ public class AuthService {
   @Transactional
   public void resendVerificationEmail(AuthDtos.ResendVerificationRequest request) {
 
-    User user = users.findByEmailIgnoreCase(request.getEmail())
+    User user = users.findByEmailIgnoreCaseForUpdate(request.getEmail())
             .orElseThrow(() ->
                     new ApiException(
                             HttpStatus.NOT_FOUND,
@@ -416,7 +417,7 @@ public class AuthService {
     public void sendUnlockEmail(
             AuthDtos.SendUnlockEmailRequest request) {
 
-        User user = users.findByEmailIgnoreCase(
+        User user = users.findByEmailIgnoreCaseForUpdate(
                         request.getEmail())
                 .orElseThrow(() ->
                         new ApiException(

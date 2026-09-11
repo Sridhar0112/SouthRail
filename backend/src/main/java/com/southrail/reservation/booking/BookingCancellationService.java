@@ -14,6 +14,9 @@ import com.southrail.reservation.account.User;
 import com.southrail.reservation.shared.web.error.ApiException;
 import com.southrail.reservation.booking.BookingRepository;
 import com.southrail.reservation.account.UserRepository;
+import com.southrail.reservation.train.Train;
+import com.southrail.reservation.train.TrainRepository;
+import java.util.List;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
@@ -32,15 +35,20 @@ public class BookingCancellationService {
   private final NotificationService notificationService;
   private final SeatAllocationService seatAllocationService;
   private final AuditLogService auditLogService;
+  private final TrainRepository trains;
+  private final PassengerRepository passengers;
   public BookingCancellationService(BookingRepository bookings, UserRepository users,
       RefundCalculationService refundCalculationService, NotificationService notificationService,
-      SeatAllocationService seatAllocationService,AuditLogService auditLogService) {
+      SeatAllocationService seatAllocationService, AuditLogService auditLogService,
+      TrainRepository trains, PassengerRepository passengers) {
     this.bookings = bookings;
     this.users = users;
     this.refundCalculationService = refundCalculationService;
     this.notificationService = notificationService;
     this.seatAllocationService = seatAllocationService;
     this.auditLogService=auditLogService;
+    this.trains = trains;
+    this.passengers = passengers;
   }
 
   @Transactional(readOnly = true)
@@ -61,6 +69,11 @@ public class BookingCancellationService {
   @Transactional
   public CancellationResponse cancel(String email, String pnr) {
     User currentUser = findCurrentUser(email);
+    Booking observedBooking = findBooking(pnr);
+    // Booking creation serializes on the train first. Cancellation uses the same
+    // lock order before locking the booking, preventing lock-order deadlocks.
+    Train train = trains.findByIdForUpdate(observedBooking.getTrain().getId())
+        .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Train not found"));
     Booking booking = findBookingForUpdate(pnr);
     validateBookingOwnership(currentUser, booking);
     validateBookingCanBeCancelled(booking);
@@ -68,6 +81,11 @@ public class BookingCancellationService {
     RefundQuoteDto quote = refundCalculationService.calculate(booking);
     booking.setStatus(BookingStatus.CANCELLED);
     seatAllocationService.releaseSeatsForBooking(booking);
+    passengers.findByBooking(booking).forEach(passenger -> passenger.setStatus(BookingStatus.CANCELLED));
+    booking.setQueuePosition(null);
+    booking.setReservationLabel("CANCELLED");
+    bookings.flush();
+    rebalanceQueues(train, booking);
     auditLogService.log(
             booking.getUser().getId(),
             booking.getUser().getEmail(),
@@ -90,6 +108,70 @@ public class BookingCancellationService {
         quote.getTotalFare(),
         cancellationMessage(quote),
         Instant.now());
+  }
+
+  private void rebalanceQueues(Train train, Booking cancelledBooking) {
+    while (true) {
+      int availableSeats = seatAllocationService.getAvailableSeatCount(
+          train, cancelledBooking.getJourneyDate(), cancelledBooking.getTravelClass());
+      if (availableSeats == 0) {
+        break;
+      }
+      List<Booking> racQueue = bookings.findQueueForUpdate(
+          train.getId(), cancelledBooking.getJourneyDate(), cancelledBooking.getTravelClass(), BookingStatus.RAC);
+      if (racQueue.isEmpty()) {
+        break;
+      }
+      Booking next = racQueue.get(0);
+      List<Passenger> queuedPassengers = passengers.findByBooking(next);
+      if (queuedPassengers.size() > availableSeats) {
+        break; // Preserve FIFO ordering; do not let a smaller party jump the queue.
+      }
+      next.setStatus(BookingStatus.CONFIRMED);
+      next.setQueuePosition(null);
+      next.setReservationLabel("CNF");
+      queuedPassengers.forEach(passenger -> passenger.setStatus(BookingStatus.CONFIRMED));
+      seatAllocationService.allocateSeats(next, queuedPassengers);
+    }
+
+    resequence(train, cancelledBooking, BookingStatus.RAC);
+
+    long racPassengers = bookings.countQueuedPassengers(
+        train.getId(), cancelledBooking.getJourneyDate(), cancelledBooking.getTravelClass(), BookingStatus.RAC);
+    int racVacancies = Math.max(0, BookingService.RAC_LIMIT - Math.toIntExact(racPassengers));
+    List<Booking> waitlist = bookings.findQueueForUpdate(
+        train.getId(), cancelledBooking.getJourneyDate(), cancelledBooking.getTravelClass(), BookingStatus.WAITLISTED);
+    for (Booking waiting : waitlist) {
+      int partySize = Math.toIntExact(passengers.countByBooking(waiting));
+      if (partySize > racVacancies) {
+        break; // FIFO, and bookings are the indivisible queue unit in the current model.
+      }
+      waiting.setStatus(BookingStatus.RAC);
+      waiting.setQueuePosition(bookings.findMaximumQueuePosition(
+          train.getId(), cancelledBooking.getJourneyDate(), cancelledBooking.getTravelClass(), BookingStatus.RAC) + 1);
+      waiting.setReservationLabel("RAC " + waiting.getQueuePosition());
+      passengers.findByBooking(waiting).forEach(passenger -> passenger.setStatus(BookingStatus.RAC));
+      racVacancies -= partySize;
+    }
+    bookings.flush();
+    resequence(train, cancelledBooking, BookingStatus.RAC);
+    resequence(train, cancelledBooking, BookingStatus.WAITLISTED);
+  }
+
+  private void resequence(Train train, Booking scope, BookingStatus status) {
+    // Move rows out of the target range first so immediate partial-unique-index
+    // checks cannot collide while positions are compacted.
+    bookings.moveQueueToTemporaryRange(
+        train.getId(), scope.getJourneyDate(), scope.getTravelClass(), status.name());
+    List<Booking> queue = bookings.findQueueForUpdate(
+        train.getId(), scope.getJourneyDate(), scope.getTravelClass(), status);
+    int position = 1;
+    for (Booking queued : queue) {
+      queued.setQueuePosition(position);
+      queued.setReservationLabel(status == BookingStatus.RAC ? "RAC " + position : "WL " + position);
+      position++;
+    }
+    bookings.flush();
   }
 
   private User findCurrentUser(String email) {

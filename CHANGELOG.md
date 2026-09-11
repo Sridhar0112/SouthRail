@@ -6,6 +6,9 @@ Notable user-facing and engineering changes will be documented here. This projec
 
 ### Added
 
+- Transaction-safe RAC/waitlist compaction and promotion with passenger-based RAC capacity.
+- Single-active account-token database enforcement and serialized authentication state transitions.
+- After-commit email delivery and runtime enforcement for AI/email feature flags.
 - Backend GitHub Actions quality gate on Java 21.
 - Verified architecture, operations, setup, testing and roadmap documentation.
 - Contribution, issue and pull-request guidance.
