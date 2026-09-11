@@ -139,6 +139,8 @@ public class BookingCancellationService {
     long racPassengers = bookings.countQueuedPassengers(
         train.getId(), cancelledBooking.getJourneyDate(), cancelledBooking.getTravelClass(), BookingStatus.RAC);
     int racVacancies = Math.max(0, BookingService.RAC_LIMIT - Math.toIntExact(racPassengers));
+    int nextRacPosition = bookings.findMaximumQueuePosition(
+        train.getId(), cancelledBooking.getJourneyDate(), cancelledBooking.getTravelClass(), BookingStatus.RAC) + 1;
     List<Booking> waitlist = bookings.findQueueForUpdate(
         train.getId(), cancelledBooking.getJourneyDate(), cancelledBooking.getTravelClass(), BookingStatus.WAITLISTED);
     for (Booking waiting : waitlist) {
@@ -146,10 +148,12 @@ public class BookingCancellationService {
       if (partySize > racVacancies) {
         break; // FIFO, and bookings are the indivisible queue unit in the current model.
       }
-      waiting.setStatus(BookingStatus.RAC);
-      waiting.setQueuePosition(bookings.findMaximumQueuePosition(
-          train.getId(), cancelledBooking.getJourneyDate(), cancelledBooking.getTravelClass(), BookingStatus.RAC) + 1);
+      // Assign all RAC-indexed values before changing status. No query occurs
+      // between these mutations, so FlushMode.AUTO cannot expose the old WL
+      // position through the RAC partial unique index.
+      waiting.setQueuePosition(nextRacPosition++);
       waiting.setReservationLabel("RAC " + waiting.getQueuePosition());
+      waiting.setStatus(BookingStatus.RAC);
       passengers.findByBooking(waiting).forEach(passenger -> passenger.setStatus(BookingStatus.RAC));
       racVacancies -= partySize;
     }

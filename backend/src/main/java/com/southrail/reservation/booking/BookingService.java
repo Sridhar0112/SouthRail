@@ -80,17 +80,15 @@ public class BookingService {
     BookingStatus bookingStatus;
     Integer queuePosition = null;
     String reservationLabel;
+    long racPassengerCount = bookings.countQueuedPassengers(
+        train.getId(), request.getJourneyDate(), travelClass, BookingStatus.RAC);
 
-    if (availableSeats >= passengerCount) {
+    // Residual physical inventory belongs to the existing RAC head. A new
+    // booking must join the queue rather than bypass an older indivisible party.
+    if (availableSeats >= passengerCount && racPassengerCount == 0) {
       bookingStatus = BookingStatus.CONFIRMED;
       reservationLabel = "CNF";
     } else {
-      long racPassengerCount = bookings.countQueuedPassengers(
-              train.getId(),
-              request.getJourneyDate(),
-              travelClass,
-              BookingStatus.RAC);
-
       if (racPassengerCount + passengerCount <= RAC_LIMIT) {
         bookingStatus = BookingStatus.RAC;
         queuePosition = bookings.findMaximumQueuePosition(
