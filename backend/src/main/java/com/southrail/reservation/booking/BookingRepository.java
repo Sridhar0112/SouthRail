@@ -13,6 +13,8 @@ import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Modifying;
+import java.util.List;
 public interface BookingRepository extends JpaRepository<Booking, UUID> {
   Optional<Booking> findByPnr(String pnr);
   @Lock(LockModeType.PESSIMISTIC_WRITE)
@@ -25,4 +27,22 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
           String travelClass,
           BookingStatus status
   );
+
+  @Query("select coalesce(max(b.queuePosition), 0) from Booking b where b.train.id = :trainId and b.journeyDate = :journeyDate and upper(b.travelClass) = upper(:travelClass) and b.status = :status")
+  int findMaximumQueuePosition(@Param("trainId") UUID trainId, @Param("journeyDate") LocalDate journeyDate,
+      @Param("travelClass") String travelClass, @Param("status") BookingStatus status);
+
+  @Query("select count(p) from Passenger p where p.booking.train.id = :trainId and p.booking.journeyDate = :journeyDate and upper(p.booking.travelClass) = upper(:travelClass) and p.booking.status = :status and p.status = :status")
+  long countQueuedPassengers(@Param("trainId") UUID trainId, @Param("journeyDate") LocalDate journeyDate,
+      @Param("travelClass") String travelClass, @Param("status") BookingStatus status);
+
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("select b from Booking b join fetch b.user where b.train.id = :trainId and b.journeyDate = :journeyDate and upper(b.travelClass) = upper(:travelClass) and b.status = :status order by b.queuePosition asc, b.createdAt asc, b.pnr asc")
+  List<Booking> findQueueForUpdate(@Param("trainId") UUID trainId, @Param("journeyDate") LocalDate journeyDate,
+      @Param("travelClass") String travelClass, @Param("status") BookingStatus status);
+
+  @Modifying(flushAutomatically = true, clearAutomatically = true)
+  @Query(value = "update bookings set queue_position = queue_position + 1000000, updated_at = now() where train_id = :trainId and journey_date = :journeyDate and upper(travel_class) = upper(:travelClass) and status = :status", nativeQuery = true)
+  void moveQueueToTemporaryRange(@Param("trainId") UUID trainId, @Param("journeyDate") LocalDate journeyDate,
+      @Param("travelClass") String travelClass, @Param("status") String status);
 }

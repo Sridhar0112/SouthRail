@@ -46,7 +46,7 @@ public class BookingService {
   private final EmailNotificationService accountEmailService;
   private final AuditLogService auditLogService;
   private static final Logger log = LoggerFactory.getLogger(BookingService.class);
-  private static final int RAC_LIMIT = 10;
+  static final int RAC_LIMIT = 10;
   public BookingService(BookingRepository bookings, PassengerRepository passengers, UserRepository users,
       TrainRepository trains, StationRepository stations, RouteStopRepository routeStops,
       SeatAllocationService seatAllocationService, EmailNotificationService accountEmailService, AuditLogService auditLogService) {
@@ -85,25 +85,21 @@ public class BookingService {
       bookingStatus = BookingStatus.CONFIRMED;
       reservationLabel = "CNF";
     } else {
-      long racCount = bookings.countByTrainIdAndJourneyDateAndTravelClassAndStatus(
+      long racPassengerCount = bookings.countQueuedPassengers(
               train.getId(),
               request.getJourneyDate(),
               travelClass,
               BookingStatus.RAC);
 
-      if (racCount < RAC_LIMIT) {
+      if (racPassengerCount + passengerCount <= RAC_LIMIT) {
         bookingStatus = BookingStatus.RAC;
-        queuePosition = Math.toIntExact(racCount + 1);
+        queuePosition = bookings.findMaximumQueuePosition(
+            train.getId(), request.getJourneyDate(), travelClass, BookingStatus.RAC) + 1;
         reservationLabel = "RAC " + queuePosition;
       } else {
-        long waitlistCount = bookings.countByTrainIdAndJourneyDateAndTravelClassAndStatus(
-                train.getId(),
-                request.getJourneyDate(),
-                travelClass,
-                BookingStatus.WAITLISTED);
-
         bookingStatus = BookingStatus.WAITLISTED;
-        queuePosition = Math.toIntExact(waitlistCount + 1);
+        queuePosition = bookings.findMaximumQueuePosition(
+            train.getId(), request.getJourneyDate(), travelClass, BookingStatus.WAITLISTED) + 1;
         reservationLabel = "WL " + queuePosition;
       }
     }

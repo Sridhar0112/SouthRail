@@ -53,8 +53,6 @@ public class SecurityConfiguration {
                     .requestMatchers("/actuator/health/liveness", "/actuator/health/readiness").permitAll()
                     .requestMatchers("/actuator/**").hasRole("ADMIN")
                     .requestMatchers("/trains/**").permitAll()
-                    .requestMatchers("/chat").permitAll()
-                    .requestMatchers("/chat/**").permitAll()
                     .requestMatchers("/admin/**").hasRole("ADMIN")
                     .anyRequest().authenticated()
             )

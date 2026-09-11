@@ -50,9 +50,9 @@ alter table bookings
   add constraint ck_bookings_queue_position_positive
   check (status not in ('RAC', 'WAITLISTED') or (queue_position is not null and queue_position > 0));
 
+-- RAC capacity is passenger-based. A booking-level queue-position upper bound
+-- incorrectly rejects valid positions when earlier parties contain multiple
+-- passengers, so capacity is enforced transactionally while the train row is
+-- locked. The positive/non-null queue invariant remains database-enforced.
 alter table bookings
   drop constraint if exists ck_bookings_rac_capacity;
-
-alter table bookings
-  add constraint ck_bookings_rac_capacity
-  check (status <> 'RAC' or (queue_position is not null and queue_position <= 10));

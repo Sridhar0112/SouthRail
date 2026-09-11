@@ -7,6 +7,7 @@ import com.southrail.reservation.account.User;
 import jakarta.mail.internet.MimeMessage;
 import com.southrail.reservation.shared.config.properties.SouthRailApplicationProperties;
 import com.southrail.reservation.shared.config.properties.SouthRailMailProperties;
+import com.southrail.reservation.shared.config.properties.SouthRailFeatureProperties;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -15,6 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 public class EmailNotificationService {
@@ -22,12 +25,14 @@ public class EmailNotificationService {
   private final JavaMailSender mailSender;
   private final String from;
   private final String frontendUrl;
+  private final boolean enabled;
 
   public EmailNotificationService(JavaMailSender mailSender, SouthRailMailProperties mailProperties,
-      SouthRailApplicationProperties applicationProperties) {
+      SouthRailApplicationProperties applicationProperties, SouthRailFeatureProperties features) {
     this.mailSender = mailSender;
     this.from = mailProperties.getFrom();
     this.frontendUrl = applicationProperties.getFrontendUrl();
+    this.enabled = features.isEmailEnabled();
   }
 
   public void sendPasswordReset(User user, String token) {
@@ -53,6 +58,10 @@ public class EmailNotificationService {
         );
     }
   private void send(String to, String subject, String body) {
+    afterCommit(() -> sendNow(to, subject, body));
+  }
+
+  private void sendNow(String to, String subject, String body) {
     try {
 
       String actionLink = "#";
@@ -332,6 +341,13 @@ public class EmailNotificationService {
           Booking booking,
           List<Passenger> passengers,
           List<BookingSeat> seats) {
+      afterCommit(() -> sendBookingConfirmationNow(booking, passengers, seats));
+    }
+
+    private void sendBookingConfirmationNow(
+          Booking booking,
+          List<Passenger> passengers,
+          List<BookingSeat> seats) {
 
     try {
 
@@ -516,6 +532,33 @@ public class EmailNotificationService {
 
     } catch (Exception e) {
       throw new IllegalStateException("Unable to send booking confirmation email", e);
+    }
+  }
+
+  private void afterCommit(Runnable delivery) {
+    if (!enabled) {
+      return;
+    }
+    if (!TransactionSynchronizationManager.isSynchronizationActive()
+        || !TransactionSynchronizationManager.isActualTransactionActive()) {
+      deliverSafely(delivery);
+      return;
+    }
+    TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+      @Override
+      public void afterCommit() {
+        deliverSafely(delivery);
+      }
+    });
+  }
+
+  private void deliverSafely(Runnable delivery) {
+    try {
+      delivery.run();
+    } catch (RuntimeException ex) {
+      // Business state is already committed. Delivery is deliberately best-effort
+      // in v0.2.2; never turn a successful commit into an apparent API failure.
+      log.warn("email_delivery_failed_after_commit", ex);
     }
   }
 

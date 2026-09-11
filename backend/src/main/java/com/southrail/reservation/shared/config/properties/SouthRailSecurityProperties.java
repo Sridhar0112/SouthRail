@@ -2,6 +2,7 @@ package com.southrail.reservation.shared.config.properties;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Max;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -13,8 +14,10 @@ public class SouthRailSecurityProperties {
   @NotBlank
   private String secret;
   @Positive
+  @Max(1440)
   private long accessTokenMinutes;
   @Positive
+  @Max(90)
   private long refreshTokenDays;
 
   public String getIssuer() { return issuer; }
