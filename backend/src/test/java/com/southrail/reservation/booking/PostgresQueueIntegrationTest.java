@@ -15,9 +15,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import javax.sql.DataSource;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.FileSystemResource;
@@ -33,7 +32,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @SpringBootTest
 @ActiveProfiles("test")
 @Testcontainers(disabledWithoutDocker = true)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PostgresQueueIntegrationTest {
 
   @Container
@@ -56,7 +54,7 @@ class PostgresQueueIntegrationTest {
   @Autowired private BookingCancellationService cancellations;
   @Autowired private JdbcTemplate jdbc;
 
-  @BeforeAll
+  @BeforeEach
   void installProductionQueueIndexesAndMigrations() throws Exception {
     try (java.sql.Connection connection = dataSource.getConnection()) {
       ScriptUtils.executeSqlScript(connection,
