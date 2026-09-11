@@ -8,7 +8,16 @@ For Compose, copy `.env.example` to `.env` and replace every placeholder. The po
 
 Health probes are available at `/api/actuator/health/liveness` and `/api/actuator/health/readiness`. Only health is anonymous, metrics and info require an administrator, health details are hidden in production, and graceful shutdown allows 30 seconds for in-flight work.
 
-The current database lifecycle still uses ordered SQL scripts rather than Flyway. Fresh Compose databases apply `database/001_schema.sql` through `database/005_booking_concurrency.sql` automatically. Existing databases must apply `database/004_foundation_schema.sql` and `database/005_booking_concurrency.sql` in order during a controlled maintenance step before starting this backend version; Hibernate remains on `ddl-auto=validate` and will not mutate production tables.
+The current database lifecycle still uses ordered SQL scripts rather than Flyway. Fresh Compose databases apply `database/001_schema.sql` through `database/006_queue_and_token_concurrency.sql` automatically when PostgreSQL initializes an empty volume. Existing databases must apply `database/004_foundation_schema.sql`, `database/005_booking_concurrency.sql`, and `database/006_queue_and_token_concurrency.sql` in order during a controlled maintenance step before starting this backend version; Hibernate remains on `ddl-auto=validate` and will not mutate production tables.
+
+For an existing database, take a verified backup, stop backend writers, and run the repository helper from the project root with a privileged migration connection:
+
+```bash
+DATABASE_URL='postgresql://user:password@host:5432/southrail' \
+  ./deploy/upgrade_v0.2.2.sh
+```
+
+The helper uses `psql --single-transaction` and `ON_ERROR_STOP`, applying `004`, `005`, then `006` atomically. Do not rely on `docker-entrypoint-initdb.d` for an existing volume: PostgreSQL runs those initialization scripts only for a new, empty data directory.
 
 Every API response carries `X-Correlation-ID`. Clients may supply a safe value in that header or let the backend generate one. Include it in incident reports, but never include JWTs, passwords, reset links, API keys, or request bodies.
 

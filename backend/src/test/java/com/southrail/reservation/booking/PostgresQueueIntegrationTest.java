@@ -106,19 +106,60 @@ class PostgresQueueIntegrationTest {
         .allSatisfy(row -> assertThat(row.get("passenger_status")).isEqualTo(row.get("booking_status")));
   }
 
+  @Test
+  void adminCancellationKeepsLazyBookingOwnerAvailableAfterQueueClear() {
+    User admin = user("queue-admin@southrail.invalid", RoleName.ROLE_ADMIN);
+    User customer = user("queue-customer@southrail.invalid", RoleName.ROLE_USER);
+    Train train = train("PG4402");
+    Station source = station("ASRC");
+    Station destination = station("ADST");
+    LocalDate date = LocalDate.now().plusDays(31);
+    Booking cancelled = queuedBooking(
+        customer, train, source, destination, date, "ADMIN-RAC-1", BookingStatus.RAC, 1);
+    Booking waiting = queuedBooking(
+        customer, train, source, destination, date, "ADMIN-WL-1", BookingStatus.WAITLISTED, 1);
+    Passenger cancelledPassenger = passenger(cancelled, BookingStatus.RAC, "Cancelled Customer");
+    Passenger waitingPassenger = passenger(waiting, BookingStatus.WAITLISTED, "Waiting Customer");
+
+    cancellations.cancel(admin.getEmail(), cancelled.getPnr());
+
+    Map<String, Object> promoted = jdbc.queryForMap(
+        "select status, queue_position, reservation_label from bookings where id = ?", waiting.getId());
+    assertThat(promoted.get("status")).isEqualTo("RAC");
+    assertThat(((Number) promoted.get("queue_position")).intValue()).isEqualTo(1);
+    assertThat(promoted.get("reservation_label")).isEqualTo("RAC 1");
+    assertThat(jdbc.queryForObject("select status from bookings where id = ?", String.class,
+        cancelled.getId())).isEqualTo("CANCELLED");
+    assertThat(jdbc.queryForObject("select status from passengers where id = ?", String.class,
+        cancelledPassenger.getId())).isEqualTo("CANCELLED");
+    assertThat(jdbc.queryForObject("select status from passengers where id = ?", String.class,
+        waitingPassenger.getId())).isEqualTo("RAC");
+    assertThat(jdbc.queryForObject(
+        "select username from audit_logs where action = 'BOOKING_CANCELLED' and description like ?",
+        String.class, "%" + cancelled.getPnr())).isEqualTo(customer.getEmail());
+  }
+
   private User user() {
+    return user("postgres-queue@southrail.invalid", RoleName.ROLE_USER);
+  }
+
+  private User user(String email, RoleName role) {
     User user = new User();
-    user.setEmail("postgres-queue@southrail.invalid");
+    user.setEmail(email);
     user.setFullName("Queue Owner");
     user.setPasswordHash("not-used");
     user.setEmailVerified(true);
-    user.getRoles().add(RoleName.ROLE_USER);
+    user.getRoles().add(role);
     return users.saveAndFlush(user);
   }
 
   private Train train() {
+    return train("PG4401");
+  }
+
+  private Train train(String number) {
     Train train = new Train();
-    train.setNumber("PG4401");
+    train.setNumber(number);
     train.setName("Postgres Queue Express");
     train.setCategory("TEST");
     return trains.saveAndFlush(train);
