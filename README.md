@@ -121,7 +121,7 @@ Required Compose values are documented in [`.env.example`](.env.example): `DB_US
 
 ### Local development
 
-Start PostgreSQL and apply `database/001_schema.sql` through `database/005_booking_concurrency.sql` in numeric order, then run:
+Start PostgreSQL and apply `database/001_schema.sql` through `database/006_queue_and_token_concurrency.sql` in numeric order, then run:
 
 ```bash
 cd backend

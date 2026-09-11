@@ -77,6 +77,12 @@ public class BookingCancellationService {
     Booking booking = findBookingForUpdate(pnr);
     validateBookingOwnership(currentUser, booking);
     validateBookingCanBeCancelled(booking);
+    // Admin ownership validation returns without touching the lazy owner. Capture
+    // every value needed after native queue compaction clears the persistence
+    // context, while the booking is still managed.
+    User bookingOwner = booking.getUser();
+    java.util.UUID bookingOwnerId = bookingOwner.getId();
+    String bookingOwnerEmail = bookingOwner.getEmail();
 
     RefundQuoteDto quote = refundCalculationService.calculate(booking);
     booking.setStatus(BookingStatus.CANCELLED);
@@ -87,14 +93,14 @@ public class BookingCancellationService {
     bookings.flush();
     rebalanceQueues(train, booking);
     auditLogService.log(
-            booking.getUser().getId(),
-            booking.getUser().getEmail(),
+            bookingOwnerId,
+            bookingOwnerEmail,
             "BOOKING_CANCELLED",
             "BOOKING",
             "Ticket cancelled successfully with PNR: " + booking.getPnr()
     );
     try {
-      notificationService.notifyBookingCancelled(booking.getUser(), booking, quote);
+      notificationService.notifyBookingCancelled(bookingOwner, booking, quote);
     } catch (RuntimeException ex) {
       log.warn("cancellation_notification_failed pnr={}", booking.getPnr(), ex);
     }
