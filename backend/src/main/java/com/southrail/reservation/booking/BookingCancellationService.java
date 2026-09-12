@@ -132,11 +132,14 @@ public class BookingCancellationService {
         if (queuedPassengers.size() > availableSeats) {
           break; // Preserve FIFO ordering; do not let a smaller party jump the queue.
         }
+        // Allocate while this party is still RAC. Marking it confirmed first makes
+        // the legacy-inventory fallback count its passengers as already occupying
+        // anonymous seats, so findAvailableSeats can reject otherwise free capacity.
+        seatAllocationService.allocateSeats(next, queuedPassengers);
         next.setStatus(BookingStatus.CONFIRMED);
         next.setQueuePosition(null);
         next.setReservationLabel("CNF");
         queuedPassengers.forEach(passenger -> passenger.setStatus(BookingStatus.CONFIRMED));
-        seatAllocationService.allocateSeats(next, queuedPassengers);
         availableSeats -= queuedPassengers.size();
         changed = true;
       }

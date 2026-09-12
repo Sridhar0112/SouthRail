@@ -112,6 +112,7 @@ class ProductionConfigurationValidatorTest {
     SouthRailCorsProperties cors = new SouthRailCorsProperties();
     cors.setAllowedOrigins(Collections.singletonList("https://app.example"));
     SouthRailFeatureProperties features = new SouthRailFeatureProperties();
+    features.setEmailEnabled(true);
     GeminiConfiguration gemini = new GeminiConfiguration();
     return new ProductionConfigurationValidator("jdbc:postgresql://db/southrail", databaseUsername,
         databasePassword, "smtp-user", "smtp-password", security, cors, features, gemini);
