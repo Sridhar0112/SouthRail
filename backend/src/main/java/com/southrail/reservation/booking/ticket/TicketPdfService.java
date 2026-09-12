@@ -83,7 +83,7 @@ public class TicketPdfService {
         this.passengerRepository = passengerRepository;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public byte[] generateTicket(String email, String pnr) {
         User currentUser = userRepository
                 .findByEmailIgnoreCase(email)

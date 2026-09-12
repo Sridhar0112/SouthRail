@@ -13,6 +13,7 @@ import jakarta.persistence.LockModeType;
 import org.springframework.data.repository.query.Param;
 
 public interface AccountTokenRepository extends JpaRepository<AccountToken, UUID> {
+  Optional<AccountToken> findByTokenHashAndTokenType(String tokenHash, String tokenType);
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   @Query("select t from AccountToken t where t.tokenHash = :tokenHash and t.tokenType = :tokenType and t.usedAt is null")
   Optional<AccountToken> findOpenByHashAndTypeForUpdate(
@@ -29,4 +30,8 @@ public interface AccountTokenRepository extends JpaRepository<AccountToken, UUID
                 "  and t.tokenType = :tokenType\n" +
                 "  and t.usedAt is null\n")
   void markOpenTokensUsed(@Param("user") User user, @Param("tokenType") String tokenType, @Param("usedAt") Instant usedAt);
+
+  @Modifying
+  @Query("update AccountToken t set t.usedAt = :usedAt where t.user = :user and t.usedAt is null")
+  void markAllOpenTokensUsed(@Param("user") User user, @Param("usedAt") Instant usedAt);
 }

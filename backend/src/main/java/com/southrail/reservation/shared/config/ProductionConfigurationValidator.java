@@ -75,10 +75,12 @@ public class ProductionConfigurationValidator {
     if (features.isAiEnabled()) {
       require("GEMINI_API_KEY", gemini.getApiKey());
     }
-    if (features.isEmailEnabled()) {
-      require("SMTP_USERNAME", mailUsername);
-      require("SMTP_PASSWORD", mailPassword);
+    if (!features.isEmailEnabled()) {
+      throw new IllegalStateException(
+          "EMAIL_ENABLED must be true in prod because account verification requires email delivery");
     }
+    require("SMTP_USERNAME", mailUsername);
+    require("SMTP_PASSWORD", mailPassword);
   }
 
   private void require(String name, String value) {

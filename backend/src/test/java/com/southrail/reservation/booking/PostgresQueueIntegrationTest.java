@@ -9,12 +9,25 @@ import com.southrail.reservation.train.Station;
 import com.southrail.reservation.train.StationRepository;
 import com.southrail.reservation.train.Train;
 import com.southrail.reservation.train.TrainRepository;
+import com.southrail.reservation.booking.inventory.BookingSeat;
+import com.southrail.reservation.booking.inventory.BookingSeatRepository;
+import com.southrail.reservation.booking.inventory.BookingSeatStatus;
+import com.southrail.reservation.booking.inventory.Coach;
+import com.southrail.reservation.booking.inventory.CoachRepository;
+import com.southrail.reservation.auth.AccountToken;
+import com.southrail.reservation.auth.AccountTokenRepository;
+import com.southrail.reservation.auth.AuthService;
+import com.southrail.reservation.auth.dto.AuthDtos;
+import com.southrail.reservation.shared.web.error.ApiException;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.time.Instant;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,6 +66,10 @@ class PostgresQueueIntegrationTest {
   @Autowired private BookingRepository bookings;
   @Autowired private PassengerRepository passengers;
   @Autowired private BookingCancellationService cancellations;
+  @Autowired private CoachRepository coaches;
+  @Autowired private BookingSeatRepository bookingSeats;
+  @Autowired private AccountTokenRepository accountTokens;
+  @Autowired private AuthService authService;
   @Autowired private JdbcTemplate jdbc;
 
   @BeforeEach
@@ -158,18 +175,13 @@ class PostgresQueueIntegrationTest {
     Booking wl1 = queuedBooking(customer, train, source, destination, date,
         "UP-WL-0001", BookingStatus.WAITLISTED, 1);
     Booking wl2 = queuedBooking(customer, train, source, destination, date,
-        "UP-WL-0002", BookingStatus.WAITLISTED, 2);
+        "UP-WL-0002", BookingStatus.WAITLISTED, 1_000_001);
     passenger(rac1, BookingStatus.RAC, "Upgrade RAC One");
     passenger(rac2, BookingStatus.RAC, "Upgrade RAC Two");
     passenger(wl1, BookingStatus.WAITLISTED, "Upgrade WL One");
     passenger(wl2, BookingStatus.WAITLISTED, "Upgrade WL Two");
     List<String> orderBefore = queueOrder(train, date);
 
-    // Recreate the constraint as it existed in deployed migration-005
-    // databases. The current 005 script was amended later to drop it, so using
-    // that file alone no longer reproduces the historical upgrade baseline.
-    jdbc.execute("alter table bookings add constraint ck_bookings_rac_capacity "
-        + "check (status <> 'RAC' or (queue_position is not null and queue_position <= 10))");
     assertThat(jdbc.queryForObject(
         "select count(*) from pg_constraint where conname = 'ck_bookings_rac_capacity'",
         Integer.class)).isEqualTo(1);
@@ -196,6 +208,81 @@ class PostgresQueueIntegrationTest {
     String helper = Files.readString(Path.of("../deploy/upgrade_v0.2.2.sh"));
     assertThat(helper).contains("006_queue_and_token_concurrency.sql")
         .doesNotContain("004_foundation_schema.sql", "005_booking_concurrency.sql");
+  }
+
+  @Test
+  void cancellationStabilizesNewlyPromotedRacUntilNoEligibleSeatIsIdle() throws Exception {
+    User customer = user("stabilize@southrail.invalid", RoleName.ROLE_USER);
+    Train train = train("PG4404");
+    Station source = station("SSRC");
+    Station destination = station("SDST");
+    LocalDate date = LocalDate.now().plusDays(33);
+    Coach coach = coach(train, "S1", 5);
+    Booking confirmed = queuedBooking(customer, train, source, destination, date,
+        "ST-CNF-001", BookingStatus.CONFIRMED, 0);
+    confirmed.setQueuePosition(null);
+    confirmed.setReservationLabel("CNF");
+    bookings.saveAndFlush(confirmed);
+    for (int seat = 1; seat <= 5; seat++) {
+      Passenger passenger = passenger(confirmed, BookingStatus.CONFIRMED, "Confirmed " + seat);
+      bookedSeat(confirmed, passenger, coach, seat);
+    }
+    Booking rac = queuedBooking(customer, train, source, destination, date,
+        "ST-RAC-001", BookingStatus.RAC, 1);
+    passenger(rac, BookingStatus.RAC, "Existing RAC");
+    Booking wl1 = queuedBooking(customer, train, source, destination, date,
+        "ST-WL-0001", BookingStatus.WAITLISTED, 1);
+    passenger(wl1, BookingStatus.WAITLISTED, "Waitlist One");
+    passenger(wl1, BookingStatus.WAITLISTED, "Waitlist Two");
+    Booking wl2 = queuedBooking(customer, train, source, destination, date,
+        "ST-WL-0002", BookingStatus.WAITLISTED, 2);
+    passenger(wl2, BookingStatus.WAITLISTED, "Waitlist Three");
+    passenger(wl2, BookingStatus.WAITLISTED, "Waitlist Four");
+    executeSql("../database/006_queue_and_token_concurrency.sql");
+
+    cancellations.cancel(customer.getEmail(), confirmed.getPnr());
+
+    assertThat(jdbc.queryForList(
+        "select status from bookings where id in (?, ?, ?)", String.class,
+        rac.getId(), wl1.getId(), wl2.getId())).containsOnly("CONFIRMED");
+    assertThat(jdbc.queryForObject(
+        "select count(*) from passengers where booking_id in (?, ?, ?) and status <> 'CONFIRMED'",
+        Integer.class, rac.getId(), wl1.getId(), wl2.getId())).isZero();
+    assertThat(jdbc.queryForObject(
+        "select count(*) from booking_seats where train_id = ? and journey_date = ? and status = 'BOOKED'",
+        Integer.class, train.getId(), date)).isEqualTo(5);
+    assertThat(jdbc.queryForObject(
+        "select count(*) from bookings where train_id = ? and journey_date = ? "
+            + "and status in ('RAC', 'WAITLISTED')",
+        Integer.class, train.getId(), date)).isZero();
+  }
+
+  @Test
+  void deletedAccountCannotUsePreviouslyIssuedPasswordResetToken() throws Exception {
+    executeSql("../database/006_queue_and_token_concurrency.sql");
+    User deleted = user("deleted-reset@southrail.invalid", RoleName.ROLE_USER);
+    deleted.setDeleted(true);
+    deleted.setEnabled(false);
+    users.saveAndFlush(deleted);
+    String rawToken = "previously-issued-reset-token";
+    AccountToken token = new AccountToken();
+    token.setUser(deleted);
+    token.setTokenType("RESET_PASSWORD");
+    token.setTokenHash(sha256(rawToken));
+    token.setExpiresAt(Instant.now().plusSeconds(600));
+    token = accountTokens.saveAndFlush(token);
+
+    org.junit.jupiter.api.Assertions.assertThrows(ApiException.class,
+        () -> authService.resetPassword(new AuthDtos.ResetPasswordRequest(rawToken, "new-password")));
+
+    assertThat(accountTokens.findById(token.getId()).orElseThrow().getUsedAt()).isNotNull();
+  }
+
+  private String sha256(String value) throws Exception {
+    byte[] digest = MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8));
+    StringBuilder result = new StringBuilder();
+    for (byte item : digest) result.append(String.format("%02x", item & 0xff));
+    return result.toString();
   }
 
   private List<String> queueOrder(Train train, LocalDate date) {
@@ -238,6 +325,29 @@ class PostgresQueueIntegrationTest {
     station.setCity("Test City");
     station.setState("Test State");
     return stations.saveAndFlush(station);
+  }
+
+  private Coach coach(Train train, String code, int capacity) {
+    Coach coach = new Coach();
+    coach.setTrain(train);
+    coach.setCoachCode(code);
+    coach.setTravelClass("3A");
+    coach.setCapacity(capacity);
+    return coaches.saveAndFlush(coach);
+  }
+
+  private BookingSeat bookedSeat(Booking booking, Passenger passenger, Coach coach, int seatNumber) {
+    BookingSeat seat = new BookingSeat();
+    seat.setBooking(booking);
+    seat.setPassenger(passenger);
+    seat.setCoach(coach);
+    seat.setTrain(booking.getTrain());
+    seat.setJourneyDate(booking.getJourneyDate());
+    seat.setTravelClass(booking.getTravelClass());
+    seat.setCoachCode(coach.getCoachCode());
+    seat.setSeatNumber(seatNumber);
+    seat.setStatus(BookingSeatStatus.BOOKED);
+    return bookingSeats.saveAndFlush(seat);
   }
 
   private Booking queuedBooking(User user, Train train, Station source, Station destination,

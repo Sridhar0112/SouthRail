@@ -27,14 +27,14 @@ Production configuration is immutable per process. Do not use machine-local file
 | `GEMINI_DEFAULT_MODEL` | No | No | Default model. |
 | `GEMINI_CONNECT_TIMEOUT` | No | No | Positive milliseconds; default 3000. |
 | `GEMINI_READ_TIMEOUT` | No | No | Positive milliseconds; default 10000. |
-| `EMAIL_ENABLED` | No | No | Credential-enforcement switch: when true, prod requires SMTP credentials. It does not suppress existing email calls; default false. |
+| `EMAIL_ENABLED` | Yes | No | Runtime delivery switch. `false` sends no outbound email; production requires `true` because registration requires verification. |
 | `SMTP_HOST` / `SMTP_PORT` | Conditional | No | SMTP endpoint; localhost:1025 default is safe while disabled. Legacy `MAIL_HOST` / `MAIL_PORT` remain fallbacks. |
 | `SMTP_USERNAME` | Conditional | Sensitive | Required when `EMAIL_ENABLED=true`. |
 | `SMTP_PASSWORD` | Conditional | Yes | Required when `EMAIL_ENABLED=true`. |
 | `MAIL_FROM` | Yes | No | Sender identity. |
 | `SLOW_REQUEST_THRESHOLD` | No | No | Spring duration, default `2s`. |
 
-Production fails before accepting traffic when PostgreSQL values are blank, JWT issuer/secret is blank, the key is weak/default, CORS is empty/wildcard, or an optional integration's credential-enforcement switch is enabled without its credentials. The `AI_ENABLED` and `EMAIL_ENABLED` names are retained for deployment compatibility, but they control validation only: existing `/chat` and email execution paths still run when called. Gemini and mail are excluded from readiness regardless of these switches.
+Production fails before accepting traffic when PostgreSQL values are blank, JWT issuer/secret is blank, the key is weak/default, CORS is empty/wildcard, email is disabled, or SMTP credentials are missing. `AI_ENABLED=false` prevents Gemini calls and `EMAIL_ENABLED=false` prevents SMTP calls. Email may be disabled in local/test profiles, but not in production because that would create unverified accounts with no verification channel. Gemini and mail are excluded from readiness.
 
 SMTP is an optional notification dependency. Spring Boot's built-in mail health indicator is disabled in every profile, so an unavailable SMTP server does not make aggregate health or readiness `DOWN`. Delivery attempts and their existing degraded-failure logs remain the source of SMTP failure visibility; this setting does not change email sending behavior.
 

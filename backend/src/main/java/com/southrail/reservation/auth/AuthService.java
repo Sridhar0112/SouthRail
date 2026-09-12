@@ -118,6 +118,7 @@ public class AuthService {
             passwordEncoder.encode(request.getPassword()));
 
     refreshTokens.revokeActiveTokens(user);
+    accountTokens.markAllOpenTokensUsed(user, Instant.now());
 
     users.saveAndFlush(user);
 
@@ -267,6 +268,9 @@ public class AuthService {
   public void resetPassword(AuthDtos.ResetPasswordRequest request) {
     AccountToken token = consumeAccountToken(request.getToken(), RESET_PASSWORD);
       User user = token.getUser();
+      if (user.isDeleted() || !user.isEnabled()) {
+        throw new ApiException(HttpStatus.FORBIDDEN, "Account is not eligible for password reset");
+      }
 
       user.setPasswordHash(
               passwordEncoder.encode(
@@ -281,6 +285,7 @@ public class AuthService {
             "Password changed successfully"
     );
     refreshTokens.revokeActiveTokens(token.getUser());
+    accountTokens.markAllOpenTokensUsed(user, Instant.now());
 
   }
 
@@ -303,7 +308,13 @@ public class AuthService {
   }
 
   private AccountToken consumeAccountToken(String rawToken, String tokenType) {
-    AccountToken token = accountTokens.findOpenByHashAndTypeForUpdate(hash(rawToken), tokenType)
+    String tokenHash = hash(rawToken);
+    AccountToken observed = accountTokens.findByTokenHashAndTokenType(tokenHash, tokenType)
+        .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Token is invalid or already used"));
+    // All account/token flows acquire User before AccountToken.
+    users.findByEmailIgnoreCaseForUpdate(observed.getUser().getEmail())
+        .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Token is invalid or already used"));
+    AccountToken token = accountTokens.findOpenByHashAndTypeForUpdate(tokenHash, tokenType)
             .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Token is invalid or already used"));
     if (token.getExpiresAt().isBefore(Instant.now())) {
       token.setUsedAt(Instant.now());

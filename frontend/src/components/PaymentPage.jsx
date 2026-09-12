@@ -73,7 +73,7 @@ export default function PaymentPage() {
     }
 
     setLoadingBooking(true)
-    api.get(`/api/bookings/${bookingId}`)
+    api.get(`/bookings/${bookingId}`)
       .then(({ data }) => setBooking(data))
       .catch(() => setBookingError(
         "Unable to load booking details. Please go back and try again."
@@ -111,7 +111,7 @@ export default function PaymentPage() {
     try {
       // 2. Create order on backend
       // Amount in paise (backend expects paise)
-      const { data: createdOrder } = await api.post("/api/payment/create-order", {
+      const { data: createdOrder } = await api.post("/payment/create-order", {
         bookingId: booking.bookingId,
         amount: booking.fare.totalAmount * 100
       })
@@ -160,7 +160,7 @@ export default function PaymentPage() {
 
         try {
           // 5. Verify signature on backend
-          const { data: result } = await api.post("/api/payment/verify", {
+          const { data: result } = await api.post("/payment/verify", {
             razorpayPaymentId: response.razorpay_payment_id,
             razorpayOrderId: response.razorpay_order_id,
             razorpaySignature: response.razorpay_signature,

@@ -6,6 +6,8 @@ SouthRail keeps shared safe behavior in `application.yml` and uses explicit `loc
 
 For Compose, copy `.env.example` to `.env` and replace every placeholder. The populated file is ignored by Git. Multiple CORS origins can be supplied as a comma-separated list; wildcard origins are intentionally unsupported because browser credentials are enabled.
 
+Production requires `EMAIL_ENABLED=true` and valid SMTP credentials. With `EMAIL_ENABLED=false` the application performs no outbound email delivery, which is suitable for tests but incompatible with the production registration flow because new accounts require email verification; production startup therefore fails fast for that configuration.
+
 Health probes are available at `/api/actuator/health/liveness` and `/api/actuator/health/readiness`. Only health is anonymous, metrics and info require an administrator, health details are hidden in production, and graceful shutdown allows 30 seconds for in-flight work.
 
 The current database lifecycle still uses ordered SQL scripts rather than Flyway. Fresh Compose databases apply `database/001_schema.sql` through `database/006_queue_and_token_concurrency.sql` automatically when PostgreSQL initializes an empty volume. The v0.2.2 existing-database upgrade assumes the database is already through `database/005_booking_concurrency.sql`; Hibernate remains on `ddl-auto=validate` and will not mutate production tables.

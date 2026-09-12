@@ -151,6 +151,48 @@ class BackendBlockerRegressionTest {
   }
 
   @Test
+  void newBookingCannotEnterConfirmedOrRacAheadOfExistingWaitlist() {
+    BookingRepository bookings = mock(BookingRepository.class);
+    PassengerRepository passengerRepository = mock(PassengerRepository.class);
+    UserRepository users = mock(UserRepository.class);
+    TrainRepository trains = mock(TrainRepository.class);
+    StationRepository stations = mock(StationRepository.class);
+    RouteStopRepository stops = mock(RouteStopRepository.class);
+    SeatAllocationService allocation = mock(SeatAllocationService.class);
+    BookingService service = new BookingService(bookings, passengerRepository, users, trains, stations, stops,
+        allocation, mock(EmailNotificationService.class), mock(AuditLogService.class));
+    Train train = train(true);
+    train.setNumber("10003");
+    train.setName("Waitlist FIFO Express");
+    Station source = station(); source.setCode("SRC"); source.setName("Source");
+    Station destination = station(); destination.setCode("DST"); destination.setName("Destination");
+    com.southrail.reservation.account.User user = new com.southrail.reservation.account.User();
+    user.setId(UUID.randomUUID()); user.setEmail("waitlist@example.com");
+    BookingDtos.BookingRequest request = request(train, source, destination);
+    when(users.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
+    when(trains.findByIdForUpdate(train.getId())).thenReturn(Optional.of(train));
+    when(stations.findByCodeIgnoreCase("SRC")).thenReturn(Optional.of(source));
+    when(stations.findByCodeIgnoreCase("DST")).thenReturn(Optional.of(destination));
+    when(stops.findFirstByTrainAndStationOrderByStopOrderAsc(train, source)).thenReturn(Optional.of(stop(1)));
+    when(stops.findFirstByTrainAndStationOrderByStopOrderAsc(train, destination)).thenReturn(Optional.of(stop(2)));
+    when(allocation.getConfiguredCapacity(train, "3A")).thenReturn(20);
+    when(allocation.getAvailableSeatCount(train, request.getJourneyDate(), "3A")).thenReturn(2);
+    when(bookings.countByTrainIdAndJourneyDateAndTravelClassAndStatus(
+        train.getId(), request.getJourneyDate(), "3A", BookingStatus.WAITLISTED)).thenReturn(1L);
+    when(bookings.findMaximumQueuePosition(
+        train.getId(), request.getJourneyDate(), "3A", BookingStatus.WAITLISTED)).thenReturn(4);
+    doAnswer(invocation -> { Booking saved = invocation.getArgument(0); saved.setId(UUID.randomUUID()); return saved; })
+        .when(bookings).save(any(Booking.class));
+    when(passengerRepository.save(any(Passenger.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    BookingDtos.BookingResponse response = service.create(user.getEmail(), request);
+
+    assertEquals("WAITLISTED", response.getStatus());
+    assertEquals(5, response.getQueuePosition());
+    verify(allocation, never()).allocateSeats(any(), any());
+  }
+
+  @Test
   void inventoryCountsPhysicalConfirmedSeatsAndOnlyConfirmedLegacyPassengers() {
     CoachRepository coaches = mock(CoachRepository.class);
     BookingSeatRepository seats = mock(BookingSeatRepository.class);

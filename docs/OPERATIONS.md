@@ -22,7 +22,7 @@ curl -fsS http://HOST:8080/api/actuator/health/liveness
 curl -fsS http://HOST:8080/api/actuator/health/readiness
 ```
 
-A PostgreSQL outage makes readiness `DOWN` while liveness remains `UP`; drain the instance and investigate DB reachability/pool metrics rather than restarting a healthy JVM repeatedly. Gemini or SMTP outages do not change either probe. The built-in mail health indicator is disabled, so SMTP also cannot make aggregate health `DOWN`; delivery failures surface through the existing bounded email execution paths and logs instead. `AI_ENABLED` and `EMAIL_ENABLED` enforce credentials at production startup only; they do not disable `/chat`, remove beans, or suppress existing email calls. Health checks never generate content or send mail.
+A PostgreSQL outage makes readiness `DOWN` while liveness remains `UP`; drain the instance and investigate DB reachability/pool metrics rather than restarting a healthy JVM repeatedly. Gemini or SMTP outages do not change either probe. `AI_ENABLED=false` prevents Gemini calls and `EMAIL_ENABLED=false` prevents SMTP calls. Production requires email enabled with valid SMTP credentials because registration requires verification. Health checks never generate content or send mail.
 
 ## Incident workflow
 

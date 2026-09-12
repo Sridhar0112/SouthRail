@@ -117,7 +117,7 @@ The Compose frontend is available at <http://localhost:8088>. Nginx serves the S
 
 The ordered scripts in `database/` initialize a **new** `postgres-data` volume. They are not a migration system for an existing database; follow the controlled upgrade notes in [the deployment guide](docs/DEPLOYMENT.md).
 
-Required Compose values are documented in [`.env.example`](.env.example): `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` (at least 32 characters), `CORS_ALLOWED_ORIGINS`, `APP_FRONTEND_URL`, `MAIL_FROM`, `MAIL_USERNAME`, `MAIL_PASSWORD`, and `GEMINI_API_KEY`.
+Required Compose values are documented in [`.env.example`](.env.example). Production must set `EMAIL_ENABLED=true` with valid `SMTP_USERNAME` and `SMTP_PASSWORD`; disabling email is supported only for local/test use because production registration requires email verification.
 
 ### Local development
 
