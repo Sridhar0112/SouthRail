@@ -101,6 +101,8 @@ public class TrainService {
     Train train = source.getTrain();
     long minutes = calculateDurationMinutes(source, destination);
     BigDecimal fare = calculateFare(source, destination, travelClass);
+    boolean travelClassConfigured = seatAllocationService.getConfiguredCapacity(
+        train, travelClass) > 0;
     int availableSeats = calculateAvailableSeats(train, journeyDate, travelClass);
 
     return new TrainDtos.TrainSearchResult(
@@ -114,7 +116,7 @@ public class TrainService {
         (int) minutes,
         availableSeats,
         fare,
-        availabilityLabel(availableSeats));
+        availabilityLabel(availableSeats, travelClassConfigured));
   }
 
   private long calculateDurationMinutes(RouteStop source, RouteStop destination) {
@@ -140,9 +142,12 @@ public class TrainService {
         train, journeyDate, travelClass);
   }
 
-  private String availabilityLabel(int availableSeats) {
+  private String availabilityLabel(int availableSeats, boolean travelClassConfigured) {
+    if (!travelClassConfigured) {
+      return "Unavailable";
+    }
     if (availableSeats == 0) {
-      return "Sold out";
+      return "RAC / Waitlist available";
     }
     if (availableSeats < 10) {
       return "Limited seats";
