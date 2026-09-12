@@ -11,6 +11,7 @@ import com.southrail.reservation.train.Train;
 import com.southrail.reservation.train.TrainRepository;
 import java.math.BigDecimal;
 import java.nio.file.Path;
+import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -55,17 +56,19 @@ class PostgresQueueIntegrationTest {
   @Autowired private JdbcTemplate jdbc;
 
   @BeforeEach
-  void installProductionQueueIndexesAndMigrations() throws Exception {
+  void installMigration005Baseline() throws Exception {
+    executeSql("../database/005_booking_concurrency.sql");
+  }
+
+  private void executeSql(String path) throws Exception {
     try (java.sql.Connection connection = dataSource.getConnection()) {
       ScriptUtils.executeSqlScript(connection,
-          new FileSystemResource(Path.of("../database/005_booking_concurrency.sql")));
-      ScriptUtils.executeSqlScript(connection,
-          new FileSystemResource(Path.of("../database/006_queue_and_token_concurrency.sql")));
+          new FileSystemResource(Path.of(path)));
     }
   }
 
   @Test
-  void waitlistPromotionIsFlushSafeAgainstPostgresPartialIndexes() {
+  void waitlistPromotionIsFlushSafeAgainstPostgresPartialIndexes() throws Exception {
     User user = user();
     Train train = train();
     Station source = station("SRC");
@@ -80,6 +83,7 @@ class PostgresQueueIntegrationTest {
     passenger(rac2, BookingStatus.RAC, "RAC Two");
     passenger(wl1, BookingStatus.WAITLISTED, "WL One");
     passenger(wl2, BookingStatus.WAITLISTED, "WL Two");
+    executeSql("../database/006_queue_and_token_concurrency.sql");
 
     cancellations.cancel(user.getEmail(), rac2.getPnr());
 
@@ -107,7 +111,7 @@ class PostgresQueueIntegrationTest {
   }
 
   @Test
-  void adminCancellationKeepsLazyBookingOwnerAvailableAfterQueueClear() {
+  void adminCancellationKeepsLazyBookingOwnerAvailableAfterQueueClear() throws Exception {
     User admin = user("queue-admin@southrail.invalid", RoleName.ROLE_ADMIN);
     User customer = user("queue-customer@southrail.invalid", RoleName.ROLE_USER);
     Train train = train("PG4402");
@@ -120,6 +124,7 @@ class PostgresQueueIntegrationTest {
         customer, train, source, destination, date, "ADMIN-WL-1", BookingStatus.WAITLISTED, 1);
     Passenger cancelledPassenger = passenger(cancelled, BookingStatus.RAC, "Cancelled Customer");
     Passenger waitingPassenger = passenger(waiting, BookingStatus.WAITLISTED, "Waiting Customer");
+    executeSql("../database/006_queue_and_token_concurrency.sql");
 
     cancellations.cancel(admin.getEmail(), cancelled.getPnr());
 
@@ -137,6 +142,62 @@ class PostgresQueueIntegrationTest {
     assertThat(jdbc.queryForObject(
         "select username from audit_logs where action = 'BOOKING_CANCELLED' and description like ?",
         String.class, "%" + cancelled.getPnr())).isEqualTo(customer.getEmail());
+  }
+
+  @Test
+  void migration006UpgradesAnExisting005DatabaseWithoutReplayingEarlierMigrations() throws Exception {
+    User customer = user("upgrade-customer@southrail.invalid", RoleName.ROLE_USER);
+    Train train = train("PG4403");
+    Station source = station("USRC");
+    Station destination = station("UDST");
+    LocalDate date = LocalDate.now().plusDays(32);
+    Booking rac1 = queuedBooking(customer, train, source, destination, date,
+        "UP-RAC-001", BookingStatus.RAC, 1);
+    Booking rac2 = queuedBooking(customer, train, source, destination, date,
+        "UP-RAC-002", BookingStatus.RAC, 2);
+    Booking wl1 = queuedBooking(customer, train, source, destination, date,
+        "UP-WL-0001", BookingStatus.WAITLISTED, 1);
+    Booking wl2 = queuedBooking(customer, train, source, destination, date,
+        "UP-WL-0002", BookingStatus.WAITLISTED, 2);
+    passenger(rac1, BookingStatus.RAC, "Upgrade RAC One");
+    passenger(rac2, BookingStatus.RAC, "Upgrade RAC Two");
+    passenger(wl1, BookingStatus.WAITLISTED, "Upgrade WL One");
+    passenger(wl2, BookingStatus.WAITLISTED, "Upgrade WL Two");
+    List<String> orderBefore = queueOrder(train, date);
+
+    assertThat(jdbc.queryForObject(
+        "select count(*) from pg_constraint where conname = 'ck_bookings_rac_capacity'",
+        Integer.class)).isEqualTo(1);
+    executeSql("../database/006_queue_and_token_concurrency.sql");
+
+    assertThat(jdbc.queryForObject(
+        "select count(*) from pg_constraint where conname = 'ck_bookings_rac_capacity'",
+        Integer.class)).isZero();
+    assertThat(queueOrder(train, date)).containsExactlyElementsOf(orderBefore);
+    assertThat(jdbc.queryForList(
+        "select indexname from pg_indexes where schemaname = current_schema() and indexname in "
+            + "('uq_bookings_rac_queue_position', 'uq_bookings_waitlist_queue_position', "
+            + "'uq_account_tokens_one_open_per_type') order by indexname",
+        String.class)).containsExactly(
+            "uq_account_tokens_one_open_per_type",
+            "uq_bookings_rac_queue_position",
+            "uq_bookings_waitlist_queue_position");
+    assertThat(jdbc.queryForObject(
+        "select count(*) from pg_index i join pg_class c on c.oid = i.indexrelid "
+            + "where c.relname in ('uq_bookings_rac_queue_position', "
+            + "'uq_bookings_waitlist_queue_position', 'uq_account_tokens_one_open_per_type') "
+            + "and not i.indisvalid",
+        Integer.class)).isZero();
+    String helper = Files.readString(Path.of("../deploy/upgrade_v0.2.2.sh"));
+    assertThat(helper).contains("006_queue_and_token_concurrency.sql")
+        .doesNotContain("004_foundation_schema.sql", "005_booking_concurrency.sql");
+  }
+
+  private List<String> queueOrder(Train train, LocalDate date) {
+    return jdbc.queryForList(
+        "select pnr from bookings where train_id = ? and journey_date = ? "
+            + "and status in ('RAC', 'WAITLISTED') order by status, queue_position",
+        String.class, train.getId(), date);
   }
 
   private User user() {
