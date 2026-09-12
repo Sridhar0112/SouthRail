@@ -83,6 +83,7 @@ public class BookingCancellationService {
     User bookingOwner = booking.getUser();
     java.util.UUID bookingOwnerId = bookingOwner.getId();
     String bookingOwnerEmail = bookingOwner.getEmail();
+    String cancelledPnr = booking.getPnr();
 
     RefundQuoteDto quote = refundCalculationService.calculate(booking);
     booking.setStatus(BookingStatus.CANCELLED);
@@ -97,16 +98,17 @@ public class BookingCancellationService {
             bookingOwnerEmail,
             "BOOKING_CANCELLED",
             "BOOKING",
-            "Ticket cancelled successfully with PNR: " + booking.getPnr()
+            "Ticket cancelled successfully with PNR: " + cancelledPnr
     );
     try {
-      notificationService.notifyBookingCancelled(bookingOwner, booking, quote);
+      notificationService.notifyBookingCancelled(
+          bookingOwnerId, cancelledPnr, quote.getRefundAmount());
     } catch (RuntimeException ex) {
-      log.warn("cancellation_notification_failed pnr={}", booking.getPnr(), ex);
+      log.warn("cancellation_notification_failed pnr={}", cancelledPnr, ex);
     }
 
     return new CancellationResponse(
-        booking.getPnr(),
+        cancelledPnr,
         booking.getStatus().name(),
         quote.getRefundAmount(),
         quote.getCancellationCharge(),

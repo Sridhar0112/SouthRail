@@ -258,6 +258,37 @@ class PostgresQueueIntegrationTest {
   }
 
   @Test
+  void runtimeWaitlistCompactionDoesNotCollideWithLargeExistingPositions() throws Exception {
+    User customer = user("large-runtime-queue@southrail.invalid", RoleName.ROLE_USER);
+    Train train = train("PG4405");
+    Station source = station("LSRC");
+    Station destination = station("LDST");
+    LocalDate date = LocalDate.now().plusDays(34);
+    Booking first = queuedBooking(customer, train, source, destination, date,
+        "LG-WL-00001", BookingStatus.WAITLISTED, 1);
+    Booking removed = queuedBooking(customer, train, source, destination, date,
+        "LG-WL-00002", BookingStatus.WAITLISTED, 2);
+    Booking large = queuedBooking(customer, train, source, destination, date,
+        "LG-WL-00003", BookingStatus.WAITLISTED, 1_000_001);
+    passenger(first, BookingStatus.WAITLISTED, "First Waiting");
+    passenger(removed, BookingStatus.WAITLISTED, "Cancelled Waiting");
+    passenger(large, BookingStatus.WAITLISTED, "Large Position Waiting");
+
+    cancellations.cancel(customer.getEmail(), removed.getPnr());
+
+    List<Map<String, Object>> queue = jdbc.queryForList(
+        "select pnr, queue_position, reservation_label from bookings where train_id = ? "
+            + "and journey_date = ? and status = 'WAITLISTED' order by queue_position",
+        train.getId(), date);
+    assertThat(queue).extracting(row -> row.get("pnr"))
+        .containsExactly(first.getPnr(), large.getPnr());
+    assertThat(queue).extracting(row -> ((Number) row.get("queue_position")).intValue())
+        .containsExactly(1, 2);
+    assertThat(queue).extracting(row -> row.get("reservation_label"))
+        .containsExactly("WL 1", "WL 2");
+  }
+
+  @Test
   void deletedAccountCannotUsePreviouslyIssuedPasswordResetToken() throws Exception {
     executeSql("../database/006_queue_and_token_concurrency.sql");
     User deleted = user("deleted-reset@southrail.invalid", RoleName.ROLE_USER);

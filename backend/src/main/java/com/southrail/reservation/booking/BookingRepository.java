@@ -42,7 +42,14 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
       @Param("travelClass") String travelClass, @Param("status") BookingStatus status);
 
   @Modifying(flushAutomatically = true, clearAutomatically = true)
-  @Query(value = "update bookings set queue_position = queue_position + 1000000, updated_at = now() where train_id = :trainId and journey_date = :journeyDate and upper(travel_class) = upper(:travelClass) and status = :status", nativeQuery = true)
+  @Query(value = "with staged as ("
+      + " select id, (select coalesce(max(queue_position::bigint), 0) from bookings"
+      + " where queue_position is not null) + row_number() over ("
+      + " order by queue_position, created_at, pnr, id) as temporary_position"
+      + " from bookings where train_id = :trainId and journey_date = :journeyDate"
+      + " and upper(travel_class) = upper(:travelClass) and status = :status"
+      + ") update bookings b set queue_position = staged.temporary_position::integer, updated_at = now()"
+      + " from staged where b.id = staged.id", nativeQuery = true)
   void moveQueueToTemporaryRange(@Param("trainId") UUID trainId, @Param("journeyDate") LocalDate journeyDate,
       @Param("travelClass") String travelClass, @Param("status") String status);
 }
