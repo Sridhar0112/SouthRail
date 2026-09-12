@@ -87,6 +87,8 @@ public class BookingCancellationService {
 
     RefundQuoteDto quote = refundCalculationService.calculate(booking);
     booking.setStatus(BookingStatus.CANCELLED);
+    booking.setRefundAmount(quote.getRefundAmount());
+    booking.setCancellationCharge(quote.getCancellationCharge());
     seatAllocationService.releaseSeatsForBooking(booking);
     passengers.findByBooking(booking).forEach(passenger -> passenger.setStatus(BookingStatus.CANCELLED));
     booking.setQueuePosition(null);
@@ -223,6 +225,9 @@ public class BookingCancellationService {
         && booking.getStatus() != BookingStatus.WAITLISTED) {
       throw new ApiException(HttpStatus.BAD_REQUEST, "Booking status is not eligible for cancellation");
     }
+    if (refundCalculationService.hasDeparted(booking)) {
+      throw new ApiException(HttpStatus.BAD_REQUEST, "A journey that has already departed cannot be cancelled");
+    }
   }
 
   private CancellationReviewResponse cancellationReview(Booking booking, RefundQuoteDto quote, boolean cancellable, String message) {
@@ -245,11 +250,18 @@ public class BookingCancellationService {
 
   private RefundQuoteDto zeroRefund(Booking booking) {
     BigDecimal totalFare = booking.getTotalFare().setScale(2, RoundingMode.HALF_UP);
+    BigDecimal refundAmount = booking.getRefundAmount() == null
+        ? BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP)
+        : booking.getRefundAmount().setScale(2, RoundingMode.HALF_UP);
+    BigDecimal cancellationCharge = booking.getCancellationCharge() == null
+        ? totalFare.subtract(refundAmount).setScale(2, RoundingMode.HALF_UP)
+        : booking.getCancellationCharge().setScale(2, RoundingMode.HALF_UP);
     return new RefundQuoteDto(
         totalFare,
-        BigDecimal.valueOf(0).setScale(2, RoundingMode.HALF_UP),
-        totalFare,
-        BigDecimal.valueOf(0).setScale(2, RoundingMode.HALF_UP),
+        refundAmount,
+        cancellationCharge,
+        totalFare.signum() == 0 ? BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP)
+            : refundAmount.multiply(BigDecimal.valueOf(100)).divide(totalFare, 2, RoundingMode.HALF_UP),
         "Booking is already cancelled.");
   }
 
