@@ -1,14 +1,14 @@
 package com.southrail.reservation.notification;
 
 import com.southrail.reservation.notification.dto.NotificationDtos;
-import com.southrail.reservation.booking.dto.RefundQuoteDto;
-import com.southrail.reservation.booking.Booking;
 import com.southrail.reservation.notification.Notification;
 import com.southrail.reservation.account.User;
 import com.southrail.reservation.shared.web.error.ApiException;
 import com.southrail.reservation.notification.NotificationRepository;
 import com.southrail.reservation.account.UserRepository;
 import java.util.List;
+import java.math.BigDecimal;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -40,13 +40,15 @@ public class NotificationService {
         .collect(Collectors.toList());
   }
 
-  public void notifyBookingCancelled(User user, Booking booking, RefundQuoteDto quote) {
+  public void notifyBookingCancelled(UUID userId, String pnr, BigDecimal refundAmount) {
+    User user = users.findById(userId)
+        .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Booking owner not found"));
     Notification notification = new Notification();
     notification.setUser(user);
     notification.setChannel("IN_APP");
     notification.setTitle("Booking cancelled");
-    notification.setMessage("Your booking PNR " + booking.getPnr()
-        + " has been cancelled. Refund amount: Rs " + quote.getRefundAmount() + ".");
+    notification.setMessage("Your booking PNR " + pnr
+        + " has been cancelled. Refund amount: Rs " + refundAmount + ".");
     notification.setReadFlag(false);
     notifications.save(notification);
   }
