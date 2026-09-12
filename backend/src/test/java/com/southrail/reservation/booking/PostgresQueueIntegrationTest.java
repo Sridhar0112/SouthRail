@@ -165,6 +165,11 @@ class PostgresQueueIntegrationTest {
     passenger(wl2, BookingStatus.WAITLISTED, "Upgrade WL Two");
     List<String> orderBefore = queueOrder(train, date);
 
+    // Recreate the constraint as it existed in deployed migration-005
+    // databases. The current 005 script was amended later to drop it, so using
+    // that file alone no longer reproduces the historical upgrade baseline.
+    jdbc.execute("alter table bookings add constraint ck_bookings_rac_capacity "
+        + "check (status <> 'RAC' or (queue_position is not null and queue_position <= 10))");
     assertThat(jdbc.queryForObject(
         "select count(*) from pg_constraint where conname = 'ck_bookings_rac_capacity'",
         Integer.class)).isEqualTo(1);
