@@ -9,6 +9,8 @@ import com.southrail.reservation.train.Station;
 import com.southrail.reservation.train.StationRepository;
 import com.southrail.reservation.train.Train;
 import com.southrail.reservation.train.TrainRepository;
+import com.southrail.reservation.train.RouteStop;
+import com.southrail.reservation.train.RouteStopRepository;
 import com.southrail.reservation.booking.inventory.BookingSeat;
 import com.southrail.reservation.booking.inventory.BookingSeatRepository;
 import com.southrail.reservation.booking.inventory.BookingSeatStatus;
@@ -23,6 +25,7 @@ import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.nio.file.Files;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.nio.charset.StandardCharsets;
@@ -62,6 +65,7 @@ class PostgresQueueIntegrationTest {
   @Autowired private DataSource dataSource;
   @Autowired private UserRepository users;
   @Autowired private TrainRepository trains;
+  @Autowired private RouteStopRepository routeStops;
   @Autowired private StationRepository stations;
   @Autowired private BookingRepository bookings;
   @Autowired private PassengerRepository passengers;
@@ -91,6 +95,7 @@ class PostgresQueueIntegrationTest {
     Station source = station("SRC");
     Station destination = station("DST");
     LocalDate date = LocalDate.now().plusDays(30);
+    ensureBookableRoute(train, source, destination);
 
     Booking rac1 = queuedBooking(user, train, source, destination, date, "RAC-000001", BookingStatus.RAC, 1);
     Booking rac2 = queuedBooking(user, train, source, destination, date, "RAC-000002", BookingStatus.RAC, 2);
@@ -135,6 +140,7 @@ class PostgresQueueIntegrationTest {
     Station source = station("ASRC");
     Station destination = station("ADST");
     LocalDate date = LocalDate.now().plusDays(31);
+    ensureBookableRoute(train, source, destination);
     Booking cancelled = queuedBooking(
         customer, train, source, destination, date, "ADMIN-RAC-1", BookingStatus.RAC, 1);
     Booking waiting = queuedBooking(
@@ -217,6 +223,7 @@ class PostgresQueueIntegrationTest {
     Station source = station("SSRC");
     Station destination = station("SDST");
     LocalDate date = LocalDate.now().plusDays(33);
+    ensureBookableRoute(train, source, destination);
     Coach coach = coach(train, "S1", 5);
     Booking confirmed = queuedBooking(customer, train, source, destination, date,
         "ST-CNF-001", BookingStatus.CONFIRMED, 0);
@@ -264,6 +271,7 @@ class PostgresQueueIntegrationTest {
     Station source = station("LSRC");
     Station destination = station("LDST");
     LocalDate date = LocalDate.now().plusDays(34);
+    ensureBookableRoute(train, source, destination);
     Booking fullRac = queuedBooking(customer, train, source, destination, date,
         "LG-RAC-0001", BookingStatus.RAC, 1);
     for (int occupant = 1; occupant <= BookingService.RAC_LIMIT; occupant++) {
@@ -416,6 +424,26 @@ class PostgresQueueIntegrationTest {
     booking.setReservationLabel(status == BookingStatus.RAC ? "RAC " + position : "WL " + position);
     booking.setTotalFare(BigDecimal.valueOf(100));
     return bookings.saveAndFlush(booking);
+  }
+
+  private void ensureBookableRoute(Train train, Station source, Station destination) {
+    if (routeStops.findFirstByTrainAndStationOrderByStopOrderAsc(train, source).isPresent()) {
+      return;
+    }
+    RouteStop sourceStop = new RouteStop();
+    sourceStop.setTrain(train);
+    sourceStop.setStation(source);
+    sourceStop.setStopOrder(1);
+    sourceStop.setDepartureTime(LocalTime.NOON);
+    sourceStop.setDistanceKm(0);
+
+    RouteStop destinationStop = new RouteStop();
+    destinationStop.setTrain(train);
+    destinationStop.setStation(destination);
+    destinationStop.setStopOrder(2);
+    destinationStop.setArrivalTime(LocalTime.of(14, 0));
+    destinationStop.setDistanceKm(100);
+    routeStops.saveAllAndFlush(List.of(sourceStop, destinationStop));
   }
 
   private Passenger passenger(Booking booking, BookingStatus status, String name) {

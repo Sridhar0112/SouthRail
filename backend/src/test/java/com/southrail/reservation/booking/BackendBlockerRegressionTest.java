@@ -33,6 +33,7 @@ import jakarta.persistence.LockModeType;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -383,6 +384,8 @@ class BackendBlockerRegressionTest {
   private static RouteStop stop(int order) {
     RouteStop stop = new RouteStop();
     stop.setStopOrder(order);
+    stop.setDepartureTime(LocalTime.NOON);
+    stop.setDistanceKm((order - 1) * 100);
     return stop;
   }
 
