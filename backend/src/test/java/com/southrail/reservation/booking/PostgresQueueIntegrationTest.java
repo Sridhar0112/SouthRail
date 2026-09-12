@@ -264,6 +264,11 @@ class PostgresQueueIntegrationTest {
     Station source = station("LSRC");
     Station destination = station("LDST");
     LocalDate date = LocalDate.now().plusDays(34);
+    Booking fullRac = queuedBooking(customer, train, source, destination, date,
+        "LG-RAC-0001", BookingStatus.RAC, 1);
+    for (int occupant = 1; occupant <= BookingService.RAC_LIMIT; occupant++) {
+      passenger(fullRac, BookingStatus.RAC, "RAC Occupant " + occupant);
+    }
     Booking first = queuedBooking(customer, train, source, destination, date,
         "LG-WL-00001", BookingStatus.WAITLISTED, 1);
     Booking removed = queuedBooking(customer, train, source, destination, date,
