@@ -193,11 +193,21 @@ public class BookingService {
     String travelClass = request.getTravelClass().toUpperCase(Locale.ROOT);
     int physicalSeats = seatAllocationService.getAvailableSeatCount(
         train, request.getJourneyDate(), travelClass);
-    boolean queuedBookingsExist = hasQueuedBookings(
-        train.getId(), request.getJourneyDate(), travelClass, BookingStatus.RAC)
-        || hasQueuedBookings(
-            train.getId(), request.getJourneyDate(), travelClass, BookingStatus.WAITLISTED);
+    long racPassengerCount = bookings.countQueuedPassengers(
+        train.getId(), request.getJourneyDate(), travelClass, BookingStatus.RAC);
+    boolean waitlistExists = hasQueuedBookings(
+        train.getId(), request.getJourneyDate(), travelClass, BookingStatus.WAITLISTED);
+    boolean queuedBookingsExist = racPassengerCount > 0 || waitlistExists;
     int availableSeats = queuedBookingsExist ? 0 : physicalSeats;
+    String availabilityMessage;
+    if (availableSeats >= request.getPassengers().size()) {
+      availabilityMessage = availableSeats < 18 ? "Limited seats" : "Available";
+    } else if (!waitlistExists
+        && racPassengerCount + request.getPassengers().size() <= RAC_LIMIT) {
+      availabilityMessage = "Confirmed seats unavailable. RAC will be assigned";
+    } else {
+      availabilityMessage = "Confirmed seats unavailable. Waitlist will be assigned";
+    }
 
     return new BookingDtos.BookingReview(
         fare.baseFare(),
@@ -206,13 +216,7 @@ public class BookingService {
         fare.gst(),
         fare.total(),
         availableSeats,
-            availableSeats == 0
-                    ? "Confirmed seats full. RAC may be available"
-                    : availableSeats < request.getPassengers().size()
-                      ? "Limited confirmed seats. RAC may be assigned"
-                      : availableSeats < 18
-                        ? "Limited seats"
-                        : "Available",
+        availabilityMessage,
         Arrays.asList(
             new BookingDtos.FareLine("Base fare", fare.baseFare()),
             new BookingDtos.FareLine("Reservation charge", fare.reservationCharge()),
