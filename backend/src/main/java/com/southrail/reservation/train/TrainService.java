@@ -99,11 +99,12 @@ public class TrainService {
   }
 
   private long calculateDurationMinutes(RouteStop source, RouteStop destination) {
-    long minutes = Duration.between(source.getDepartureTime(), destination.getArrivalTime()).toMinutes();
-    if (minutes < 0) {
-      minutes += 24 * 60L;
-    }
-    return minutes;
+    java.time.LocalDate serviceDate = java.time.LocalDate.of(2000, 1, 1);
+    java.time.LocalDateTime departure = serviceDate.plusDays(source.getDayOffset())
+        .atTime(source.getDepartureTime());
+    java.time.LocalDateTime arrival = serviceDate.plusDays(destination.getDayOffset())
+        .atTime(destination.getArrivalTime());
+    return Duration.between(departure, arrival).toMinutes();
   }
 
   private BigDecimal calculateFare(RouteStop source, RouteStop destination, String travelClass) {

@@ -117,64 +117,65 @@ public class BookingCancellationService {
   }
 
   private void rebalanceQueues(Train train, Booking cancelledBooking) {
-    while (true) {
+    java.util.UUID trainId = train.getId();
+    java.time.LocalDate journeyDate = cancelledBooking.getJourneyDate();
+    String travelClass = cancelledBooking.getTravelClass();
+    boolean changed;
+    do {
+      changed = false;
       int availableSeats = seatAllocationService.getAvailableSeatCount(
-          train, cancelledBooking.getJourneyDate(), cancelledBooking.getTravelClass());
-      if (availableSeats == 0) {
-        break;
-      }
+          train, journeyDate, travelClass);
       List<Booking> racQueue = bookings.findQueueForUpdate(
-          train.getId(), cancelledBooking.getJourneyDate(), cancelledBooking.getTravelClass(), BookingStatus.RAC);
-      if (racQueue.isEmpty()) {
-        break;
+          trainId, journeyDate, travelClass, BookingStatus.RAC);
+      for (Booking next : racQueue) {
+        List<Passenger> queuedPassengers = passengers.findByBooking(next);
+        if (queuedPassengers.size() > availableSeats) {
+          break; // Preserve FIFO ordering; do not let a smaller party jump the queue.
+        }
+        next.setStatus(BookingStatus.CONFIRMED);
+        next.setQueuePosition(null);
+        next.setReservationLabel("CNF");
+        queuedPassengers.forEach(passenger -> passenger.setStatus(BookingStatus.CONFIRMED));
+        seatAllocationService.allocateSeats(next, queuedPassengers);
+        availableSeats -= queuedPassengers.size();
+        changed = true;
       }
-      Booking next = racQueue.get(0);
-      List<Passenger> queuedPassengers = passengers.findByBooking(next);
-      if (queuedPassengers.size() > availableSeats) {
-        break; // Preserve FIFO ordering; do not let a smaller party jump the queue.
-      }
-      next.setStatus(BookingStatus.CONFIRMED);
-      next.setQueuePosition(null);
-      next.setReservationLabel("CNF");
-      queuedPassengers.forEach(passenger -> passenger.setStatus(BookingStatus.CONFIRMED));
-      seatAllocationService.allocateSeats(next, queuedPassengers);
-    }
+      bookings.flush();
+      resequence(trainId, journeyDate, travelClass, BookingStatus.RAC);
 
-    resequence(train, cancelledBooking, BookingStatus.RAC);
-
-    long racPassengers = bookings.countQueuedPassengers(
-        train.getId(), cancelledBooking.getJourneyDate(), cancelledBooking.getTravelClass(), BookingStatus.RAC);
-    int racVacancies = Math.max(0, BookingService.RAC_LIMIT - Math.toIntExact(racPassengers));
-    int nextRacPosition = bookings.findMaximumQueuePosition(
-        train.getId(), cancelledBooking.getJourneyDate(), cancelledBooking.getTravelClass(), BookingStatus.RAC) + 1;
-    List<Booking> waitlist = bookings.findQueueForUpdate(
-        train.getId(), cancelledBooking.getJourneyDate(), cancelledBooking.getTravelClass(), BookingStatus.WAITLISTED);
-    for (Booking waiting : waitlist) {
-      int partySize = Math.toIntExact(passengers.countByBooking(waiting));
-      if (partySize > racVacancies) {
-        break; // FIFO, and bookings are the indivisible queue unit in the current model.
+      long racPassengers = bookings.countQueuedPassengers(
+          trainId, journeyDate, travelClass, BookingStatus.RAC);
+      int racVacancies = Math.max(0, BookingService.RAC_LIMIT - Math.toIntExact(racPassengers));
+      int nextRacPosition = bookings.findMaximumQueuePosition(
+          trainId, journeyDate, travelClass, BookingStatus.RAC) + 1;
+      List<Booking> waitlist = bookings.findQueueForUpdate(
+          trainId, journeyDate, travelClass, BookingStatus.WAITLISTED);
+      for (Booking waiting : waitlist) {
+        int partySize = Math.toIntExact(passengers.countByBooking(waiting));
+        if (partySize > racVacancies) {
+          break; // FIFO, and bookings are the indivisible queue unit in the current model.
+        }
+        waiting.setQueuePosition(nextRacPosition++);
+        waiting.setReservationLabel("RAC " + waiting.getQueuePosition());
+        waiting.setStatus(BookingStatus.RAC);
+        passengers.findByBooking(waiting).forEach(passenger -> passenger.setStatus(BookingStatus.RAC));
+        racVacancies -= partySize;
+        changed = true;
       }
-      // Assign all RAC-indexed values before changing status. No query occurs
-      // between these mutations, so FlushMode.AUTO cannot expose the old WL
-      // position through the RAC partial unique index.
-      waiting.setQueuePosition(nextRacPosition++);
-      waiting.setReservationLabel("RAC " + waiting.getQueuePosition());
-      waiting.setStatus(BookingStatus.RAC);
-      passengers.findByBooking(waiting).forEach(passenger -> passenger.setStatus(BookingStatus.RAC));
-      racVacancies -= partySize;
-    }
-    bookings.flush();
-    resequence(train, cancelledBooking, BookingStatus.RAC);
-    resequence(train, cancelledBooking, BookingStatus.WAITLISTED);
+      bookings.flush();
+      resequence(trainId, journeyDate, travelClass, BookingStatus.RAC);
+      resequence(trainId, journeyDate, travelClass, BookingStatus.WAITLISTED);
+    } while (changed);
   }
 
-  private void resequence(Train train, Booking scope, BookingStatus status) {
+  private void resequence(java.util.UUID trainId, java.time.LocalDate journeyDate,
+      String travelClass, BookingStatus status) {
     // Move rows out of the target range first so immediate partial-unique-index
     // checks cannot collide while positions are compacted.
     bookings.moveQueueToTemporaryRange(
-        train.getId(), scope.getJourneyDate(), scope.getTravelClass(), status.name());
+        trainId, journeyDate, travelClass, status.name());
     List<Booking> queue = bookings.findQueueForUpdate(
-        train.getId(), scope.getJourneyDate(), scope.getTravelClass(), status);
+        trainId, journeyDate, travelClass, status);
     int position = 1;
     for (Booking queued : queue) {
       queued.setQueuePosition(position);

@@ -5,10 +5,16 @@ on:
     branches: [main]
     paths:
       - "backend/**"
+      - "database/**"
+      - "deploy/**"
+      - "docker-compose.yml"
       - ".github/workflows/backend-ci.yml"
   pull_request:
     paths:
       - "backend/**"
+      - "database/**"
+      - "deploy/**"
+      - "docker-compose.yml"
       - ".github/workflows/backend-ci.yml"
   workflow_dispatch:
 

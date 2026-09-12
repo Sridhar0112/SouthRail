@@ -55,7 +55,7 @@ const router = createBrowserRouter([
       { path: "forgot-password", element: <ForgotPasswordPage /> },
       { path: "reset-password", element: <ResetPasswordPage /> },
       { path: "verify-email", element: <VerifyEmailPage /> },
-      { path: "pnr", element: <PnrPage /> },
+      { path: "pnr", element: <ProtectedRoute><PnrPage /></ProtectedRoute> },
       {
         path: "booking/:trainId",
         element: (
@@ -81,7 +81,7 @@ const router = createBrowserRouter([
         ),
       },
       { path: "unlock-account", element: <UnlockAccountPage /> },
-      { path: "support", element: <SupportPage /> },
+      { path: "support", element: <ProtectedRoute><SupportPage /></ProtectedRoute> },
       {path:"payment/:bookingId",element:<ProtectedRoute><PaymentPage/></ProtectedRoute>},
       {
         path: "profile",

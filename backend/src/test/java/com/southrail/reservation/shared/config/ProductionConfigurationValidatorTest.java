@@ -12,9 +12,9 @@ import org.junit.jupiter.api.Test;
 
 class ProductionConfigurationValidatorTest {
   @Test
-  void acceptsValidCoreConfigurationWhenOptionalIntegrationsAreDisabled() {
-    assertThatCode(() -> validator(false, false, strongSecret(), "issuer", "https://app.example", "", "").validate())
-        .doesNotThrowAnyException();
+  void rejectsEmailDisabledProductionBecauseVerificationWouldBeUnusable() {
+    assertThatThrownBy(() -> validator(false, false, strongSecret(), "issuer", "https://app.example", "", "").validate())
+        .hasMessage("EMAIL_ENABLED must be true in prod because account verification requires email delivery");
   }
 
   @Test
@@ -89,6 +89,7 @@ class ProductionConfigurationValidatorTest {
     SouthRailCorsProperties cors = new SouthRailCorsProperties();
     cors.setAllowedOrigins(Collections.singletonList(origin));
     SouthRailFeatureProperties features = new SouthRailFeatureProperties();
+    features.setEmailEnabled(true);
     features.setAiEnabled(ai);
     features.setEmailEnabled(email);
     GeminiConfiguration gemini = new GeminiConfiguration();
@@ -113,6 +114,6 @@ class ProductionConfigurationValidatorTest {
     SouthRailFeatureProperties features = new SouthRailFeatureProperties();
     GeminiConfiguration gemini = new GeminiConfiguration();
     return new ProductionConfigurationValidator("jdbc:postgresql://db/southrail", databaseUsername,
-        databasePassword, "", "", security, cors, features, gemini);
+        databasePassword, "smtp-user", "smtp-password", security, cors, features, gemini);
   }
 }

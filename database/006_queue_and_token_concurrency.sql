@@ -7,20 +7,17 @@
 alter table bookings
   drop constraint if exists ck_bookings_rac_capacity;
 
--- Queue positions are temporarily shifted upward while a locked queue is
--- compacted. Only committed state is visible to other transactions.
+-- Temporarily allow negative positions. Existing valid queue positions are
+-- positive, so negative values provide a collision-free namespace without
+-- assuming that an arbitrary positive offset is unused.
 alter table bookings
   drop constraint if exists ck_bookings_queue_position_positive;
-
-alter table bookings
-  add constraint ck_bookings_queue_position_positive
-  check (status not in ('RAC', 'WAITLISTED') or (queue_position is not null and queue_position > 0));
 
 -- Repair RAC using passenger occupancy, preserving whole-booking FIFO semantics.
 -- Existing waitlist rows are moved aside first to avoid immediate unique-index
 -- collisions while overflow RAC parties join the queue.
 update bookings
-set queue_position = queue_position + 1000000
+set queue_position = (-(queue_position::bigint))::integer
 where status = 'WAITLISTED';
 
 with rac_parties as (
@@ -37,7 +34,6 @@ with rac_parties as (
 )
 update bookings b
 set status = 'WAITLISTED',
-    queue_position = 2000000 + b.queue_position,
     reservation_label = 'WL'
 from rac_parties ranked
 where b.id = ranked.id
@@ -51,11 +47,30 @@ where p.booking_id = b.id
   and b.status = 'WAITLISTED'
   and p.status = 'RAC';
 
+-- First move every combined waitlist row to a fresh negative range below all
+-- currently used absolute values. PostgreSQL's checked integer cast aborts the
+-- surrounding migration transaction instead of wrapping if the domain is exhausted.
+with waitlist_order as (
+  select id,
+         row_number() over (
+           partition by train_id, journey_date, upper(travel_class)
+           order by case when queue_position < 0 then 0 else 1 end,
+                    abs(queue_position::bigint), created_at, pnr, id
+         ) as new_position,
+         max(abs(queue_position::bigint)) over () as global_max
+  from bookings
+  where status = 'WAITLISTED'
+)
+update bookings b
+set queue_position = (-(ranked.global_max + ranked.new_position))::integer
+from waitlist_order ranked
+where b.id = ranked.id;
+
 with ranked_waitlist as (
   select id,
          row_number() over (
            partition by train_id, journey_date, upper(travel_class)
-           order by queue_position, created_at, pnr, id
+           order by abs(queue_position::bigint), created_at, pnr, id
          ) as new_position
   from bookings
   where status = 'WAITLISTED'
@@ -67,14 +82,14 @@ from ranked_waitlist ranked
 where b.id = ranked.id;
 
 update bookings
-set queue_position = queue_position + 1000000
+set queue_position = (-(queue_position::bigint))::integer
 where status = 'RAC';
 
 with ranked_rac as (
   select id,
          row_number() over (
            partition by train_id, journey_date, upper(travel_class)
-           order by queue_position, created_at, pnr, id
+           order by abs(queue_position::bigint), created_at, pnr, id
          ) as new_position
   from bookings
   where status = 'RAC'
@@ -84,6 +99,10 @@ set queue_position = ranked.new_position,
     reservation_label = 'RAC ' || ranked.new_position
 from ranked_rac ranked
 where b.id = ranked.id;
+
+alter table bookings
+  add constraint ck_bookings_queue_position_positive
+  check (status not in ('RAC', 'WAITLISTED') or (queue_position is not null and queue_position > 0));
 
 -- Repair duplicates defensively before adding the invariant. The newest token
 -- stays open and all older tokens become consumed.

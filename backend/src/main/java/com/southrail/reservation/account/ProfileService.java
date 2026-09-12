@@ -6,6 +6,7 @@ import com.southrail.reservation.account.dto.ProfileDtos;
 import com.southrail.reservation.account.User;
 import com.southrail.reservation.shared.web.error.ApiException;
 import com.southrail.reservation.auth.RefreshTokenRepository;
+import com.southrail.reservation.auth.AccountTokenRepository;
 import com.southrail.reservation.account.UserRepository;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
@@ -21,12 +22,15 @@ public class ProfileService {
   private final PasswordEncoder passwordEncoder;
   private final RefreshTokenRepository refreshTokens;
   private final AuditLogService auditLogService;
+  private final AccountTokenRepository accountTokens;
 
-  public ProfileService(UserRepository users,PasswordEncoder passwordEncoder,RefreshTokenRepository refreshTokenRepository,AuditLogService auditLogService) {
+  public ProfileService(UserRepository users,PasswordEncoder passwordEncoder,RefreshTokenRepository refreshTokenRepository,
+      AuditLogService auditLogService, AccountTokenRepository accountTokens) {
     this.users = users;
     this.passwordEncoder=passwordEncoder;
     this.refreshTokens=refreshTokenRepository;
     this.auditLogService=auditLogService;
+    this.accountTokens=accountTokens;
   }
 
   @Transactional(readOnly = true)
@@ -83,6 +87,7 @@ public class ProfileService {
     user.setDeleted(true);
     user.setDeletedAt(Instant.now());
     refreshTokens.revokeActiveTokens(user);
+    accountTokens.markAllOpenTokensUsed(user, Instant.now());
     auditLogService.log(
             user.getId(),
             user.getEmail(),
@@ -128,5 +133,6 @@ public class ProfileService {
     );
 
     refreshTokens.revokeActiveTokens(user);
+    accountTokens.markAllOpenTokensUsed(user, Instant.now());
   }
 }

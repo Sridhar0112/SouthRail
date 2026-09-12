@@ -82,14 +82,15 @@ public class BookingService {
     String reservationLabel;
     long racPassengerCount = bookings.countQueuedPassengers(
         train.getId(), request.getJourneyDate(), travelClass, BookingStatus.RAC);
+    boolean waitlistExists = bookings.countByTrainIdAndJourneyDateAndTravelClassAndStatus(
+        train.getId(), request.getJourneyDate(), travelClass, BookingStatus.WAITLISTED) > 0;
 
-    // Residual physical inventory belongs to the existing RAC head. A new
-    // booking must join the queue rather than bypass an older indivisible party.
-    if (availableSeats >= passengerCount && racPassengerCount == 0) {
+    // Existing queued parties always have priority over a newcomer.
+    if (availableSeats >= passengerCount && racPassengerCount == 0 && !waitlistExists) {
       bookingStatus = BookingStatus.CONFIRMED;
       reservationLabel = "CNF";
     } else {
-      if (racPassengerCount + passengerCount <= RAC_LIMIT) {
+      if (!waitlistExists && racPassengerCount + passengerCount <= RAC_LIMIT) {
         bookingStatus = BookingStatus.RAC;
         queuePosition = bookings.findMaximumQueuePosition(
             train.getId(), request.getJourneyDate(), travelClass, BookingStatus.RAC) + 1;
