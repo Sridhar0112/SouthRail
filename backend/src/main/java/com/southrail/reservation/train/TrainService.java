@@ -13,6 +13,7 @@ import com.southrail.reservation.train.TrainRepository;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -43,8 +44,18 @@ public class TrainService {
   @Transactional(readOnly = true)
   public List<TrainDtos.TrainSearchResult> search(TrainDtos.SearchRequest request) {
     return routeStops.searchRoutes(request.getSource(), request.getDestination()).stream()
+            .filter(row -> hasFutureDeparture((RouteStop) row[0], request.getJourneyDate()))
             .map(row -> toSearchResult((RouteStop) row[0], (RouteStop) row[1], request.getTravelClass(), request.getJourneyDate()))
             .collect(Collectors.toList());
+  }
+
+  private boolean hasFutureDeparture(RouteStop source, LocalDate journeyDate) {
+    if (source.getDepartureTime() == null) {
+      return false;
+    }
+    LocalDateTime departure = journeyDate.plusDays(source.getDayOffset())
+        .atTime(source.getDepartureTime());
+    return departure.isAfter(LocalDateTime.now());
   }
 
   public Page<Train> keyword(String query, Pageable pageable) {

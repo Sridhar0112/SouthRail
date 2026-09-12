@@ -294,12 +294,14 @@ public class BookingService {
     if (sourceStop.getStopOrder() >= destinationStop.getStopOrder()) {
       throw new ApiException(HttpStatus.BAD_REQUEST, "Source must precede destination on the selected train route");
     }
-    if (sourceStop.getDepartureTime() != null) {
-      LocalDateTime departure = journeyDate.plusDays(sourceStop.getDayOffset())
-          .atTime(sourceStop.getDepartureTime());
-      if (!departure.isAfter(LocalDateTime.now())) {
-        throw new ApiException(HttpStatus.BAD_REQUEST, "Selected journey has already departed");
-      }
+    if (sourceStop.getDepartureTime() == null) {
+      throw new ApiException(HttpStatus.BAD_REQUEST,
+          "Selected source station does not have a departure time");
+    }
+    LocalDateTime departure = journeyDate.plusDays(sourceStop.getDayOffset())
+        .atTime(sourceStop.getDepartureTime());
+    if (!departure.isAfter(LocalDateTime.now())) {
+      throw new ApiException(HttpStatus.BAD_REQUEST, "Selected journey has already departed");
     }
     if (seatAllocationService.getConfiguredCapacity(train, travelClass) <= 0) {
       throw new ApiException(HttpStatus.BAD_REQUEST, "Travel class is not configured for the selected train");

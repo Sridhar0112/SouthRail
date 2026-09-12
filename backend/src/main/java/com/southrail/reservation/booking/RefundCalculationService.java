@@ -4,11 +4,13 @@ import com.southrail.reservation.booking.dto.RefundQuoteDto;
 import com.southrail.reservation.booking.Booking;
 import com.southrail.reservation.train.RouteStop;
 import com.southrail.reservation.train.RouteStopRepository;
+import com.southrail.reservation.shared.web.error.ApiException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
 
 @Service
 public class RefundCalculationService {
@@ -38,8 +40,8 @@ public class RefundCalculationService {
     return routeStops.findFirstByTrainAndStationOrderByStopOrderAsc(booking.getTrain(), booking.getSourceStation())
         .filter(stop -> stop.getDepartureTime() != null)
         .map(stop -> booking.getJourneyDate().plusDays(stop.getDayOffset()).atTime(stop.getDepartureTime()))
-        // Bookings store journeyDate but not a captured departure timestamp, so fall back to start of journey day.
-        .orElse(booking.getJourneyDate().atStartOfDay());
+        .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST,
+            "Selected source station does not have a departure time"));
   }
 
   public boolean hasDeparted(Booking booking) {
