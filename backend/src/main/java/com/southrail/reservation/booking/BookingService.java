@@ -15,6 +15,7 @@ import com.southrail.reservation.train.Train;
 import com.southrail.reservation.train.TrainRepository;
 import com.southrail.reservation.train.RouteStop;
 import com.southrail.reservation.train.RouteStopRepository;
+import com.southrail.reservation.train.RailwayTime;
 
 import java.math.BigDecimal;
 import java.security.SecureRandom;
@@ -24,7 +25,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -97,8 +98,8 @@ public class BookingService {
     String reservationLabel;
     long racPassengerCount = bookings.countQueuedPassengers(
         train.getId(), request.getJourneyDate(), travelClass, BookingStatus.RAC);
-    boolean waitlistExists = bookings.countByTrainIdAndJourneyDateAndTravelClassAndStatus(
-        train.getId(), request.getJourneyDate(), travelClass, BookingStatus.WAITLISTED) > 0;
+    boolean waitlistExists = hasQueuedBookings(
+        train.getId(), request.getJourneyDate(), travelClass, BookingStatus.WAITLISTED);
 
     // Existing queued parties always have priority over a newcomer.
     if (availableSeats >= passengerCount && racPassengerCount == 0 && !waitlistExists) {
@@ -126,7 +127,7 @@ public class BookingService {
     booking.setJourneyDate(request.getJourneyDate());
     booking.setTravelClass(travelClass);
     booking.setQuota(request.getQuota());
-    booking.setPnr(generatePnr());
+    booking.setPnr(generateUniquePnr());
     booking.setStatus(bookingStatus);
     booking.setQueuePosition(queuePosition);
     booking.setReservationLabel(reservationLabel);
@@ -189,7 +190,14 @@ public class BookingService {
     JourneyStops journeyStops = validateJourney(train, source, destination, request.getJourneyDate(), request.getTravelClass());
 
     FareCalculationService.Fare fare = calculateFare(request, journeyStops);
-    int availableSeats = seatAllocationService.getAvailableSeatCount(train, request.getJourneyDate(), request.getTravelClass());
+    String travelClass = request.getTravelClass().toUpperCase(Locale.ROOT);
+    int physicalSeats = seatAllocationService.getAvailableSeatCount(
+        train, request.getJourneyDate(), travelClass);
+    boolean queuedBookingsExist = hasQueuedBookings(
+        train.getId(), request.getJourneyDate(), travelClass, BookingStatus.RAC)
+        || hasQueuedBookings(
+            train.getId(), request.getJourneyDate(), travelClass, BookingStatus.WAITLISTED);
+    int availableSeats = queuedBookingsExist ? 0 : physicalSeats;
 
     return new BookingDtos.BookingReview(
         fare.baseFare(),
@@ -267,8 +275,25 @@ public class BookingService {
                 booking.getQueuePosition()));
   }
 
-  private String generatePnr() {
-    return String.valueOf(1000000000L + Math.abs(random.nextLong() % 8999999999L));
+  private String generateUniquePnr() {
+    // Keep the uniqueness check and insert collision-free across bookings for
+    // different trains; the advisory lock is held until this transaction ends.
+    bookings.acquirePnrGenerationLock();
+    for (int attempt = 0; attempt < 100; attempt++) {
+      String candidate = String.valueOf(
+          1000000000L + Math.floorMod(random.nextLong(), 8999999999L));
+      if (!bookings.existsByPnr(candidate)) {
+        return candidate;
+      }
+    }
+    throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE,
+        "Unable to generate a booking reference. Please retry.");
+  }
+
+  private boolean hasQueuedBookings(UUID trainId, LocalDate journeyDate, String travelClass,
+      BookingStatus status) {
+    return bookings.countByTrainIdAndJourneyDateAndTravelClassAndStatus(
+        trainId, journeyDate, travelClass, status) > 0;
   }
 
   private UUID parseTrainId(String trainId) {
@@ -298,9 +323,9 @@ public class BookingService {
       throw new ApiException(HttpStatus.BAD_REQUEST,
           "Selected source station does not have a departure time");
     }
-    LocalDateTime departure = journeyDate.plusDays(sourceStop.getDayOffset())
-        .atTime(sourceStop.getDepartureTime());
-    if (!departure.isAfter(LocalDateTime.now())) {
+    Instant departure = RailwayTime.departureInstant(
+        journeyDate, sourceStop.getDayOffset(), sourceStop.getDepartureTime());
+    if (!departure.isAfter(Instant.now())) {
       throw new ApiException(HttpStatus.BAD_REQUEST, "Selected journey has already departed");
     }
     if (seatAllocationService.getConfiguredCapacity(train, travelClass) <= 0) {

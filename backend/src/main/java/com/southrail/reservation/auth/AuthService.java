@@ -35,6 +35,8 @@ public class AuthService {
   private static final String RESET_PASSWORD = "RESET_PASSWORD";
   private static final String VERIFY_EMAIL = "VERIFY_EMAIL";
   private static final String UNLOCK_ACCOUNT = "UNLOCK_ACCOUNT";
+  private static final String REGISTRATION_MESSAGE =
+      "If this email is eligible, verification instructions will be sent.";
 
   private final UserRepository users;
   private final RefreshTokenRepository refreshTokens;
@@ -70,15 +72,14 @@ public class AuthService {
     if (existingUser != null) {
 
       if (!existingUser.isDeleted()) {
-        throw new ApiException(
-                HttpStatus.CONFLICT,
-                "Email is already registered");
+        return new AuthDtos.RegisterResponse(
+            REGISTRATION_MESSAGE, request.getEmail().trim().toLowerCase(), true);
       }
 
       restoreDeletedAccount(existingUser, request);
 
       return new AuthDtos.RegisterResponse(
-              "Account restored successfully. Please verify your email before logging in.",
+              REGISTRATION_MESSAGE,
               existingUser.getEmail(),
               true);
     }
@@ -95,7 +96,7 @@ public class AuthService {
     trySendVerification(user, verificationToken);
 
     return new AuthDtos.RegisterResponse(
-            "Account created successfully. Please verify your email before logging in.",
+            REGISTRATION_MESSAGE,
             user.getEmail(),
             true);
   }
@@ -116,6 +117,7 @@ public class AuthService {
 
     user.setPasswordHash(
             passwordEncoder.encode(request.getPassword()));
+    user.setCredentialsVersion(user.getCredentialsVersion() + 1);
 
     // Public re-registration must not resurrect privileged roles held by the
     // previously deleted account.
@@ -161,6 +163,10 @@ public class AuthService {
             throw new ApiException(
                     HttpStatus.LOCKED,
                     "Account is temporarily locked. Use the unlock option or try again after 15 minutes.",user.getAccountLockedUntil());
+        }
+        if (user.getAccountLockedUntil() != null) {
+          user.setFailedLoginAttempts(0);
+          user.setAccountLockedUntil(null);
         }
 
         try {
@@ -245,10 +251,8 @@ public class AuthService {
   @Transactional
   public void forgotPassword(AuthDtos.ForgotPasswordRequest request) {
     users.findByEmailIgnoreCaseForUpdate(request.getEmail()).ifPresent(user -> {
-      if (user.isDeleted()) {
-        throw new ApiException(
-                HttpStatus.FORBIDDEN,
-                "Account has been deleted");
+      if (user.isDeleted() || !user.isEnabled()) {
+        return;
       }
       AccountToken latestToken =
               accountTokens
@@ -260,9 +264,7 @@ public class AuthService {
               latestToken.getCreatedAt().isAfter(
                       Instant.now().minusSeconds(300))) {
 
-        throw new ApiException(
-                HttpStatus.TOO_MANY_REQUESTS,
-                "Please wait 5 minutes before requesting another password reset email.");
+        return;
       }
       String resetToken = createAccountToken(user, RESET_PASSWORD, Duration.ofMinutes(30));
       trySendPasswordReset(user, resetToken);
@@ -280,6 +282,7 @@ public class AuthService {
       user.setPasswordHash(
               passwordEncoder.encode(
                       request.getPassword()));
+      user.setCredentialsVersion(user.getCredentialsVersion() + 1);
       user.setFailedLoginAttempts(0);
       user.setAccountLockedUntil(null);
     auditLogService.log(
@@ -381,20 +384,9 @@ public class AuthService {
   @Transactional
   public void resendVerificationEmail(AuthDtos.ResendVerificationRequest request) {
 
-    User user = users.findByEmailIgnoreCaseForUpdate(request.getEmail())
-            .orElseThrow(() ->
-                    new ApiException(
-                            HttpStatus.NOT_FOUND,
-                            "Email address is not registered"));
-    if (user.isDeleted()) {
-      throw new ApiException(
-              HttpStatus.FORBIDDEN,
-              "Account has been deleted");
-    }
-    if (user.isEmailVerified()) {
-      throw new ApiException(
-              HttpStatus.BAD_REQUEST,
-              "Email is already verified");
+    User user = users.findByEmailIgnoreCaseForUpdate(request.getEmail()).orElse(null);
+    if (user == null || user.isDeleted() || !user.isEnabled() || user.isEmailVerified()) {
+      return;
     }
 
     AccountToken latestToken =
@@ -408,9 +400,7 @@ public class AuthService {
             latestToken.getCreatedAt().isAfter(
                     Instant.now().minusSeconds(300))) {
 
-      throw new ApiException(
-              HttpStatus.TOO_MANY_REQUESTS,
-              "Please wait 5 minutes before requesting another verification email.");
+      return;
     }
 
     String verificationToken =
@@ -433,16 +423,9 @@ public class AuthService {
     public void sendUnlockEmail(
             AuthDtos.SendUnlockEmailRequest request) {
 
-        User user = users.findByEmailIgnoreCaseForUpdate(
-                        request.getEmail())
-                .orElseThrow(() ->
-                        new ApiException(
-                                HttpStatus.NOT_FOUND,
-                                "User not found"));
-      if (user.isDeleted()) {
-        throw new ApiException(
-                HttpStatus.FORBIDDEN,
-                "Account has been deleted");
+        User user = users.findByEmailIgnoreCaseForUpdate(request.getEmail()).orElse(null);
+      if (user == null || user.isDeleted() || !user.isEnabled()) {
+        return;
       }
       AccountToken latestToken =
               accountTokens
@@ -454,17 +437,13 @@ public class AuthService {
               latestToken.getCreatedAt().isAfter(
                       Instant.now().minusSeconds(300))) {
 
-        throw new ApiException(
-                HttpStatus.TOO_MANY_REQUESTS,
-                "Please wait 5 minutes before requesting another unlock email.");
+        return;
       }
 
         if (user.getAccountLockedUntil() == null ||
                 user.getAccountLockedUntil().isBefore(Instant.now())) {
 
-            throw new ApiException(
-                    HttpStatus.BAD_REQUEST,
-                    "Account is not locked");
+            return;
         }
 
         String token =

@@ -17,6 +17,9 @@ import org.springframework.data.jpa.repository.Modifying;
 import java.util.List;
 public interface BookingRepository extends JpaRepository<Booking, UUID> {
   Optional<Booking> findByPnr(String pnr);
+  boolean existsByPnr(String pnr);
+  @Query(value = "select pg_advisory_xact_lock(6003110648787124553)", nativeQuery = true)
+  Object acquirePnrGenerationLock();
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   @Query("select b from Booking b where b.pnr = :pnr")
   Optional<Booking> findByPnrForUpdate(@Param("pnr") String pnr);

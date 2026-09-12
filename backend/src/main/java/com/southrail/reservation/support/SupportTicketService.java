@@ -145,6 +145,10 @@ public class SupportTicketService {
                     HttpStatus.BAD_REQUEST,
                     "Ticket is closed. Messages cannot be added.");
         }
+        if ("RESOLVED".equals(ticket.getStatus())) {
+            ticket.setStatus("OPEN");
+            repository.save(ticket);
+        }
         SupportTicketMessage message =
                 new SupportTicketMessage();
 
@@ -198,7 +202,7 @@ public class SupportTicketService {
                     "Ticket is closed. Messages cannot be added."
             );
         }
-        if ("OPEN".equals(ticket.getStatus())) {
+        if ("OPEN".equals(ticket.getStatus()) || "RESOLVED".equals(ticket.getStatus())) {
             ticket.setStatus("IN_PROGRESS");
             repository.save(ticket);
         }

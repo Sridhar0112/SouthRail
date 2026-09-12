@@ -124,6 +124,7 @@ public class ProfileService {
     user.setPasswordHash(
             passwordEncoder.encode(
                     request.getNewPassword()));
+    user.setCredentialsVersion(user.getCredentialsVersion() + 1);
     auditLogService.log(
             user.getId(),
             user.getEmail(),

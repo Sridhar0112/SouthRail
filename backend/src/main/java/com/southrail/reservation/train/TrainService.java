@@ -2,6 +2,8 @@ package com.southrail.reservation.train;
 
 import com.southrail.reservation.booking.inventory.SeatAllocationService;
 import com.southrail.reservation.booking.FareCalculationService;
+import com.southrail.reservation.booking.BookingRepository;
+import com.southrail.reservation.booking.BookingStatus;
 
 import com.southrail.reservation.train.dto.TrainDtos;
 import com.southrail.reservation.train.RouteStop;
@@ -13,7 +15,7 @@ import com.southrail.reservation.train.TrainRepository;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -31,14 +33,17 @@ public class TrainService {
   private final StationRepository stations;
   private final SeatAllocationService seatAllocationService;
   private final FareCalculationService fareCalculationService;
+  private final BookingRepository bookings;
 
   public TrainService(TrainRepository trains, RouteStopRepository routeStops, StationRepository stations,
-      SeatAllocationService seatAllocationService, FareCalculationService fareCalculationService) {
+      SeatAllocationService seatAllocationService, FareCalculationService fareCalculationService,
+      BookingRepository bookings) {
     this.trains = trains;
     this.routeStops = routeStops;
     this.stations = stations;
     this.seatAllocationService = seatAllocationService;
     this.fareCalculationService = fareCalculationService;
+    this.bookings = bookings;
   }
 
   @Transactional(readOnly = true)
@@ -53,9 +58,9 @@ public class TrainService {
     if (source.getDepartureTime() == null) {
       return false;
     }
-    LocalDateTime departure = journeyDate.plusDays(source.getDayOffset())
-        .atTime(source.getDepartureTime());
-    return departure.isAfter(LocalDateTime.now());
+    Instant departure = RailwayTime.departureInstant(
+        journeyDate, source.getDayOffset(), source.getDepartureTime());
+    return departure.isAfter(Instant.now());
   }
 
   public Page<Train> keyword(String query, Pageable pageable) {
@@ -127,7 +132,12 @@ public class TrainService {
   }
 
   private int calculateAvailableSeats(Train train, LocalDate journeyDate, String travelClass) {
-    return seatAllocationService.getAvailableSeatCount(train, journeyDate, travelClass);
+    boolean queueExists = bookings.countByTrainIdAndJourneyDateAndTravelClassAndStatus(
+        train.getId(), journeyDate, travelClass, BookingStatus.RAC) > 0
+        || bookings.countByTrainIdAndJourneyDateAndTravelClassAndStatus(
+            train.getId(), journeyDate, travelClass, BookingStatus.WAITLISTED) > 0;
+    return queueExists ? 0 : seatAllocationService.getAvailableSeatCount(
+        train, journeyDate, travelClass);
   }
 
   private String availabilityLabel(int availableSeats) {

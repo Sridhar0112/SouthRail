@@ -64,4 +64,7 @@ public class User extends BaseEntity {
   private boolean deleted;
 
   private Instant deletedAt;
+
+  @Column(nullable = false)
+  private long credentialsVersion;
 }

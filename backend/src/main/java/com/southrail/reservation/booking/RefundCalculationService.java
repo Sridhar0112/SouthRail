@@ -4,11 +4,12 @@ import com.southrail.reservation.booking.dto.RefundQuoteDto;
 import com.southrail.reservation.booking.Booking;
 import com.southrail.reservation.train.RouteStop;
 import com.southrail.reservation.train.RouteStopRepository;
+import com.southrail.reservation.train.RailwayTime;
 import com.southrail.reservation.shared.web.error.ApiException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import org.springframework.stereotype.Service;
 import org.springframework.http.HttpStatus;
 
@@ -21,7 +22,7 @@ public class RefundCalculationService {
   }
 
   public RefundQuoteDto calculate(Booking booking) {
-    BigDecimal refundPercentage = refundPercentage(resolveJourneyDateTime(booking));
+    BigDecimal refundPercentage = refundPercentage(resolveDepartureInstant(booking));
     BigDecimal totalFare = booking.getTotalFare().setScale(2, RoundingMode.HALF_UP);
     BigDecimal refundAmount = totalFare
         .multiply(refundPercentage)
@@ -36,20 +37,21 @@ public class RefundCalculationService {
         policyMessage(refundPercentage));
   }
 
-  private LocalDateTime resolveJourneyDateTime(Booking booking) {
+  private Instant resolveDepartureInstant(Booking booking) {
     return routeStops.findFirstByTrainAndStationOrderByStopOrderAsc(booking.getTrain(), booking.getSourceStation())
         .filter(stop -> stop.getDepartureTime() != null)
-        .map(stop -> booking.getJourneyDate().plusDays(stop.getDayOffset()).atTime(stop.getDepartureTime()))
+        .map(stop -> RailwayTime.departureInstant(
+            booking.getJourneyDate(), stop.getDayOffset(), stop.getDepartureTime()))
         .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST,
             "Selected source station does not have a departure time"));
   }
 
   public boolean hasDeparted(Booking booking) {
-    return !resolveJourneyDateTime(booking).isAfter(LocalDateTime.now());
+    return !resolveDepartureInstant(booking).isAfter(Instant.now());
   }
 
-  private BigDecimal refundPercentage(LocalDateTime journeyDateTime) {
-    Duration timeUntilJourney = Duration.between(LocalDateTime.now(), journeyDateTime);
+  private BigDecimal refundPercentage(Instant departureInstant) {
+    Duration timeUntilJourney = Duration.between(Instant.now(), departureInstant);
 
     if (timeUntilJourney.compareTo(Duration.ofHours(48)) > 0) {
       return BigDecimal.valueOf(90);
