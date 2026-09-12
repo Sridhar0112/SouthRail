@@ -65,6 +65,12 @@ public class Booking extends BaseEntity {
 
   @Column(nullable = false, precision = 10, scale = 2)
   private BigDecimal totalFare;
+
+  @Column(precision = 10, scale = 2)
+  private BigDecimal refundAmount;
+
+  @Column(precision = 10, scale = 2)
+  private BigDecimal cancellationCharge;
   @Column(name = "queue_position")
   private Integer queuePosition;
 

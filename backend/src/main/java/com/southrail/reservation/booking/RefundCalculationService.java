@@ -42,6 +42,10 @@ public class RefundCalculationService {
         .orElse(booking.getJourneyDate().atStartOfDay());
   }
 
+  public boolean hasDeparted(Booking booking) {
+    return !resolveJourneyDateTime(booking).isAfter(LocalDateTime.now());
+  }
+
   private BigDecimal refundPercentage(LocalDateTime journeyDateTime) {
     Duration timeUntilJourney = Duration.between(LocalDateTime.now(), journeyDateTime);
 

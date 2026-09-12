@@ -3,6 +3,7 @@ package com.southrail.reservation.train.dto;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -31,6 +32,7 @@ public final class TrainDtos {
     private LocalDate journeyDate;
 
     @NotBlank
+    @Pattern(regexp = "(?i)1A|2A|3A|CC|SL|2S", message = "travel class is invalid")
     private String travelClass;
 
     @NotBlank

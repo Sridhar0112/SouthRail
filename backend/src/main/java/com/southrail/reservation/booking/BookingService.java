@@ -23,6 +23,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -30,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,11 +48,22 @@ public class BookingService {
   private final SecureRandom random = new SecureRandom();
   private final EmailNotificationService accountEmailService;
   private final AuditLogService auditLogService;
+  private final FareCalculationService fareCalculationService;
   private static final Logger log = LoggerFactory.getLogger(BookingService.class);
   static final int RAC_LIMIT = 10;
   public BookingService(BookingRepository bookings, PassengerRepository passengers, UserRepository users,
       TrainRepository trains, StationRepository stations, RouteStopRepository routeStops,
-      SeatAllocationService seatAllocationService, EmailNotificationService accountEmailService, AuditLogService auditLogService) {
+      SeatAllocationService seatAllocationService, EmailNotificationService accountEmailService,
+      AuditLogService auditLogService) {
+    this(bookings, passengers, users, trains, stations, routeStops, seatAllocationService,
+        accountEmailService, auditLogService, new FareCalculationService());
+  }
+
+  @Autowired
+  public BookingService(BookingRepository bookings, PassengerRepository passengers, UserRepository users,
+      TrainRepository trains, StationRepository stations, RouteStopRepository routeStops,
+      SeatAllocationService seatAllocationService, EmailNotificationService accountEmailService,
+      AuditLogService auditLogService, FareCalculationService fareCalculationService) {
     this.bookings = bookings;
     this.passengers = passengers;
     this.users = users;
@@ -59,6 +73,7 @@ public class BookingService {
     this.seatAllocationService = seatAllocationService;
     this.accountEmailService=accountEmailService;
     this.auditLogService=auditLogService;
+    this.fareCalculationService = fareCalculationService;
   }
 
   @Transactional
@@ -68,7 +83,7 @@ public class BookingService {
     Train train = trains.findByIdForUpdate(parseTrainId(request.getTrainId())).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Train not found"));
     Station source = stations.findByCodeIgnoreCase(request.getSourceStationCode()).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Source station not found"));
     Station destination = stations.findByCodeIgnoreCase(request.getDestinationStationCode()).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Destination station not found"));
-    validateJourney(train, source, destination, request.getTravelClass());
+    JourneyStops journeyStops = validateJourney(train, source, destination, request.getJourneyDate(), request.getTravelClass());
     int passengerCount = request.getPassengers().size();
     String travelClass = request.getTravelClass().toUpperCase(Locale.ROOT);
 
@@ -115,7 +130,7 @@ public class BookingService {
     booking.setStatus(bookingStatus);
     booking.setQueuePosition(queuePosition);
     booking.setReservationLabel(reservationLabel);
-    booking.setTotalFare(calculateFare(request).getTotal());
+    booking.setTotalFare(calculateFare(request, journeyStops).total());
     bookings.save(booking);
 
     List<Passenger> savedPassengers = request.getPassengers().stream().map(item -> {
@@ -171,17 +186,17 @@ public class BookingService {
     Train train = trains.findById(parseTrainId(request.getTrainId())).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Train not found"));
     Station source = stations.findByCodeIgnoreCase(request.getSourceStationCode()).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Source station not found"));
     Station destination = stations.findByCodeIgnoreCase(request.getDestinationStationCode()).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Destination station not found"));
-    validateJourney(train, source, destination, request.getTravelClass());
+    JourneyStops journeyStops = validateJourney(train, source, destination, request.getJourneyDate(), request.getTravelClass());
 
-    FareParts fare = calculateFare(request);
+    FareCalculationService.Fare fare = calculateFare(request, journeyStops);
     int availableSeats = seatAllocationService.getAvailableSeatCount(train, request.getJourneyDate(), request.getTravelClass());
 
     return new BookingDtos.BookingReview(
-        fare.getBaseFare(),
-        fare.getReservationCharge(),
-        fare.getConvenienceFee(),
-        fare.getGst(),
-        fare.getTotal(),
+        fare.baseFare(),
+        fare.reservationCharge(),
+        fare.convenienceFee(),
+        fare.gst(),
+        fare.total(),
         availableSeats,
             availableSeats == 0
                     ? "Confirmed seats full. RAC may be available"
@@ -191,16 +206,16 @@ public class BookingService {
                         ? "Limited seats"
                         : "Available",
         Arrays.asList(
-            new BookingDtos.FareLine("Base fare", fare.getBaseFare()),
-            new BookingDtos.FareLine("Reservation charge", fare.getReservationCharge()),
-            new BookingDtos.FareLine("Convenience fee", fare.getConvenienceFee()),
-            new BookingDtos.FareLine("GST", fare.getGst())),
+            new BookingDtos.FareLine("Base fare", fare.baseFare()),
+            new BookingDtos.FareLine("Reservation charge", fare.reservationCharge()),
+            new BookingDtos.FareLine("Convenience fee", fare.convenienceFee()),
+            new BookingDtos.FareLine("GST", fare.gst())),
         request.getPassengers().stream()
             .map(passenger -> new BookingDtos.BerthSuggestion(passenger.getFullName(), berthSuggestion(passenger.getAge(), passenger.getBerthPreference()),
                 passenger.getAge() > 58 ? "Senior passenger comfort" : "Based on selected preference"))
             .collect(Collectors.toList()),
-        Arrays.asList("Cancellation before charting is eligible for refund after railway charges",
-            "Partial cancellation is allowed until chart preparation",
+        Arrays.asList("Cancellation before departure is eligible for refund after railway charges",
+            "The complete booking may be cancelled before departure",
             "Refund is routed to the original payment method"));
   }
 
@@ -226,7 +241,8 @@ public class BookingService {
         booking.getQuota(),
         booking.getStatus().name(),
         passengers.findByBooking(booking).stream().map(passenger -> passenger.getFullName() + " - " + passenger.getStatus()).collect(Collectors.toList()),
-        booking.getStatus() == BookingStatus.CANCELLED ? booking.getTotalFare().multiply(BigDecimal.valueOf(0.82)) : BigDecimal.ZERO,
+        booking.getStatus() == BookingStatus.CANCELLED && booking.getRefundAmount() != null
+            ? booking.getRefundAmount() : BigDecimal.ZERO,
         booking.getTotalFare(),booking.getReservationLabel(),
             booking.getQueuePosition());
   }
@@ -263,7 +279,8 @@ public class BookingService {
     }
   }
 
-  private void validateJourney(Train train, Station source, Station destination, String travelClass) {
+  private JourneyStops validateJourney(Train train, Station source, Station destination, LocalDate journeyDate,
+      String travelClass) {
     if (!train.isActive()) {
       throw new ApiException(HttpStatus.BAD_REQUEST, "Train is inactive");
     }
@@ -277,36 +294,23 @@ public class BookingService {
     if (sourceStop.getStopOrder() >= destinationStop.getStopOrder()) {
       throw new ApiException(HttpStatus.BAD_REQUEST, "Source must precede destination on the selected train route");
     }
+    if (sourceStop.getDepartureTime() != null) {
+      LocalDateTime departure = journeyDate.plusDays(sourceStop.getDayOffset())
+          .atTime(sourceStop.getDepartureTime());
+      if (!departure.isAfter(LocalDateTime.now())) {
+        throw new ApiException(HttpStatus.BAD_REQUEST, "Selected journey has already departed");
+      }
+    }
     if (seatAllocationService.getConfiguredCapacity(train, travelClass) <= 0) {
       throw new ApiException(HttpStatus.BAD_REQUEST, "Travel class is not configured for the selected train");
     }
+    return new JourneyStops(sourceStop, destinationStop);
   }
 
-  private BigDecimal classBaseFare(String travelClass) {
-    switch (travelClass.toUpperCase()) {
-      case "1A":
-        return BigDecimal.valueOf(2850);
-      case "2A":
-        return BigDecimal.valueOf(1950);
-      case "3A":
-        return BigDecimal.valueOf(1260);
-      case "CC":
-        return BigDecimal.valueOf(880);
-      case "SL":
-        return BigDecimal.valueOf(420);
-      default:
-        return BigDecimal.valueOf(260);
-    }
-  }
-
-  private FareParts calculateFare(BookingDtos.BookingRequest request) {
-    BigDecimal passengerCount = BigDecimal.valueOf(request.getPassengers().size());
-    BigDecimal baseFare = classBaseFare(request.getTravelClass()).multiply(passengerCount);
-    BigDecimal reservationCharge = BigDecimal.valueOf(40).multiply(passengerCount);
-    BigDecimal convenienceFee = BigDecimal.valueOf(24);
-    BigDecimal gst = baseFare.multiply(BigDecimal.valueOf(0.05));
-    return new FareParts(baseFare, reservationCharge, convenienceFee, gst,
-        baseFare.add(reservationCharge).add(convenienceFee).add(gst));
+  private FareCalculationService.Fare calculateFare(BookingDtos.BookingRequest request,
+      JourneyStops stops) {
+    int distance = stops.destination().getDistanceKm() - stops.source().getDistanceKm();
+    return fareCalculationService.quote(distance, request.getTravelClass(), request.getPassengers().size());
   }
 
   private String berthSuggestion(int age, String preference) {
@@ -316,39 +320,5 @@ public class BookingService {
     return preference == null || preference.trim().isEmpty() ? "NO_PREFERENCE" : preference;
   }
 
-  private static class FareParts {
-    private final BigDecimal baseFare;
-    private final BigDecimal reservationCharge;
-    private final BigDecimal convenienceFee;
-    private final BigDecimal gst;
-    private final BigDecimal total;
-
-    FareParts(BigDecimal baseFare, BigDecimal reservationCharge, BigDecimal convenienceFee, BigDecimal gst, BigDecimal total) {
-      this.baseFare = baseFare;
-      this.reservationCharge = reservationCharge;
-      this.convenienceFee = convenienceFee;
-      this.gst = gst;
-      this.total = total;
-    }
-
-    BigDecimal getBaseFare() {
-      return baseFare;
-    }
-
-    BigDecimal getReservationCharge() {
-      return reservationCharge;
-    }
-
-    BigDecimal getConvenienceFee() {
-      return convenienceFee;
-    }
-
-    BigDecimal getGst() {
-      return gst;
-    }
-
-    BigDecimal getTotal() {
-      return total;
-    }
-  }
+  private record JourneyStops(RouteStop source, RouteStop destination) {}
 }

@@ -117,6 +117,11 @@ public class AuthService {
     user.setPasswordHash(
             passwordEncoder.encode(request.getPassword()));
 
+    // Public re-registration must not resurrect privileged roles held by the
+    // previously deleted account.
+    user.getRoles().clear();
+    user.getRoles().add(RoleName.ROLE_USER);
+
     refreshTokens.revokeActiveTokens(user);
     accountTokens.markAllOpenTokensUsed(user, Instant.now());
 

@@ -95,6 +95,8 @@ create table bookings (
   quota varchar(20) not null,
   status varchar(30) not null,
   total_fare numeric(10, 2) not null,
+  refund_amount numeric(10, 2),
+  cancellation_charge numeric(10, 2),
   created_at timestamptz not null,
   updated_at timestamptz not null
 );

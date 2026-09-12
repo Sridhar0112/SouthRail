@@ -1,6 +1,7 @@
 package com.southrail.reservation.train;
 
 import com.southrail.reservation.booking.inventory.SeatAllocationService;
+import com.southrail.reservation.booking.FareCalculationService;
 
 import com.southrail.reservation.train.dto.TrainDtos;
 import com.southrail.reservation.train.RouteStop;
@@ -28,13 +29,15 @@ public class TrainService {
   private final RouteStopRepository routeStops;
   private final StationRepository stations;
   private final SeatAllocationService seatAllocationService;
+  private final FareCalculationService fareCalculationService;
 
   public TrainService(TrainRepository trains, RouteStopRepository routeStops, StationRepository stations,
-      SeatAllocationService seatAllocationService) {
+      SeatAllocationService seatAllocationService, FareCalculationService fareCalculationService) {
     this.trains = trains;
     this.routeStops = routeStops;
     this.stations = stations;
     this.seatAllocationService = seatAllocationService;
+    this.fareCalculationService = fareCalculationService;
   }
 
   @Transactional(readOnly = true)
@@ -109,7 +112,7 @@ public class TrainService {
 
   private BigDecimal calculateFare(RouteStop source, RouteStop destination, String travelClass) {
     int distance = Math.max(1, destination.getDistanceKm() - source.getDistanceKm());
-    return BigDecimal.valueOf(distance).multiply(classRate(travelClass));
+    return fareCalculationService.quote(distance, travelClass, 1).total();
   }
 
   private int calculateAvailableSeats(Train train, LocalDate journeyDate, String travelClass) {
@@ -126,20 +129,4 @@ public class TrainService {
     return "Available";
   }
 
-  private BigDecimal classRate(String travelClass) {
-    switch (travelClass.toUpperCase()) {
-      case "1A":
-        return BigDecimal.valueOf(4.20);
-      case "2A":
-        return BigDecimal.valueOf(2.80);
-      case "3A":
-        return BigDecimal.valueOf(2.00);
-      case "CC":
-        return BigDecimal.valueOf(1.70);
-      case "SL":
-        return BigDecimal.valueOf(0.75);
-      default:
-        return BigDecimal.valueOf(0.45);
-    }
-  }
 }
