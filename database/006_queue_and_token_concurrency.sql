@@ -1,6 +1,12 @@
 -- v0.2.2: support collision-free in-transaction queue resequencing and ensure
 -- no two open account tokens exist for the same user and purpose.
 
+-- Migration 005 enforced RAC capacity against booking queue positions. RAC
+-- capacity is passenger-based in v0.2.2, so remove the obsolete constraint on
+-- both fresh and existing databases before repairing the queue.
+alter table bookings
+  drop constraint if exists ck_bookings_rac_capacity;
+
 -- Queue positions are temporarily shifted upward while a locked queue is
 -- compacted. Only committed state is visible to other transactions.
 alter table bookings

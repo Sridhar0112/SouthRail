@@ -8,10 +8,9 @@ fi
 
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# One transaction and stop-on-first-error make the controlled upgrade atomic.
+# This helper upgrades an existing database that is already through migration
+# 005. One transaction and stop-on-first-error make migration 006 atomic.
 psql "${DATABASE_URL}" \
   --set=ON_ERROR_STOP=1 \
   --single-transaction \
-  --file="${PROJECT_ROOT}/database/004_foundation_schema.sql" \
-  --file="${PROJECT_ROOT}/database/005_booking_concurrency.sql" \
   --file="${PROJECT_ROOT}/database/006_queue_and_token_concurrency.sql"
