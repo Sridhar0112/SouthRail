@@ -278,6 +278,20 @@ class PostgresQueueIntegrationTest {
     passenger(first, BookingStatus.WAITLISTED, "First Waiting");
     passenger(removed, BookingStatus.WAITLISTED, "Cancelled Waiting");
     passenger(large, BookingStatus.WAITLISTED, "Large Position Waiting");
+    executeSql("../database/006_queue_and_token_concurrency.sql");
+    // Migration 006 compacts legacy queues. Restore the deliberately large,
+    // valid post-migration position needed to exercise runtime staging.
+    jdbc.update("update bookings set queue_position = ?, reservation_label = ? where id = ?",
+        1_000_001, "WL 1000001", large.getId());
+
+    assertThat(jdbc.queryForObject(
+        "select count(*) from passengers p join bookings b on b.id = p.booking_id "
+            + "where b.id = ? and b.status = 'RAC' and p.status = 'RAC'",
+        Integer.class, fullRac.getId())).isEqualTo(BookingService.RAC_LIMIT);
+    assertThat(jdbc.queryForList(
+        "select queue_position from bookings where train_id = ? and journey_date = ? "
+            + "and status = 'WAITLISTED' order by queue_position",
+        Integer.class, train.getId(), date)).containsExactly(1, 2, 1_000_001);
 
     cancellations.cancel(customer.getEmail(), removed.getPnr());
 
