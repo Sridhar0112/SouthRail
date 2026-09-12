@@ -30,6 +30,7 @@ public class JwtService {
     Map<String, Object> claims = new HashMap<>();
     claims.put("roles", user.getRoles().stream().map(Enum::name).collect(Collectors.toList()));
     claims.put("uid", user.getId().toString());
+    claims.put("cv", user.getCredentialsVersion());
     return Jwts.builder()
         .issuer(issuer)
         .subject(user.getEmail())
@@ -41,12 +42,23 @@ public class JwtService {
   }
 
   public String subject(String token) {
+    return claims(token).getSubject();
+  }
+
+  public boolean isValidFor(String token, User user) {
+    io.jsonwebtoken.Claims claims = claims(token);
+    Object credentialsVersionClaim = claims.get("cv");
+    return user.getEmail().equalsIgnoreCase(claims.getSubject())
+        && credentialsVersionClaim instanceof Number credentialsVersion
+        && credentialsVersion.longValue() == user.getCredentialsVersion();
+  }
+
+  private io.jsonwebtoken.Claims claims(String token) {
     return Jwts.parser()
         .verifyWith(key)
         .requireIssuer(issuer)
         .build()
         .parseSignedClaims(token)
-        .getPayload()
-        .getSubject();
+        .getPayload();
   }
 }

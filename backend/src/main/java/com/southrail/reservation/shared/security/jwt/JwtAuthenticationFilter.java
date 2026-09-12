@@ -43,8 +43,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     String header = request.getHeader("Authorization");
     if (header != null && header.startsWith("Bearer ")) {
       try {
-        String email = jwtService.subject(header.substring(7));
+        String token = header.substring(7);
+        String email = jwtService.subject(token);
         accounts.findEnabledAccount(email)
+            .filter(user -> jwtService.isValidFor(token, user))
             .ifPresent(user -> {
               List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
                   .map(role -> new SimpleGrantedAuthority(role.name()))
