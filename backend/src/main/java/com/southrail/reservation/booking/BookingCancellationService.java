@@ -70,9 +70,10 @@ public class BookingCancellationService {
   public CancellationResponse cancel(String email, String pnr) {
     User currentUser = findCurrentUser(email);
     Booking observedBooking = findBooking(pnr);
-    // Booking creation serializes on the train first. Cancellation uses the same
-    // lock order before locking the booking, preventing lock-order deadlocks.
-    Train train = trains.findByIdForUpdate(observedBooking.getTrain().getId())
+    java.util.UUID trainId = observedBooking.getTrain().getId();
+    bookings.acquireScopedLock("inventory:" + trainId + ":" + observedBooking.getJourneyDate()
+        + ":" + observedBooking.getTravelClass().toUpperCase(java.util.Locale.ROOT));
+    Train train = trains.findById(trainId)
         .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Train not found"));
     Booking booking = findBookingForUpdate(pnr);
     validateBookingOwnership(currentUser, booking);

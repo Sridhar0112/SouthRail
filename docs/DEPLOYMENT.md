@@ -10,7 +10,7 @@ Production requires `EMAIL_ENABLED=true` and valid SMTP credentials. With `EMAIL
 
 Health probes are available at `/api/actuator/health/liveness` and `/api/actuator/health/readiness`. Only health is anonymous, metrics and info require an administrator, health details are hidden in production, and graceful shutdown allows 30 seconds for in-flight work.
 
-The current database lifecycle still uses ordered SQL scripts rather than Flyway. Fresh Compose databases apply `database/001_schema.sql` through `database/006_queue_and_token_concurrency.sql` automatically when PostgreSQL initializes an empty volume. The v0.2.2 existing-database upgrade assumes the database is already through `database/005_booking_concurrency.sql`; Hibernate remains on `ddl-auto=validate` and will not mutate production tables.
+Flyway owns schema evolution from `backend/src/main/resources/db/migration`. Existing databases previously upgraded through script 008 are baselined at version 8, so only later migrations run; empty databases replay the complete versioned history. Hibernate remains on `ddl-auto=validate`. Take a backup before first Flyway-managed deployment and verify the database is through manual script 008.
 
 For an existing database, take a verified backup, stop backend writers, and run the repository helper from the project root with a privileged migration connection:
 
@@ -58,7 +58,7 @@ Redis is not required for this project. PostgreSQL is required. Mailpit is optio
 
 ## Database
 
-Run schema creation through a migration tool before first deployment. The SQL files in `database/` are ready to convert to Flyway naming such as `V1__schema.sql` and `V2__seed_south_india.sql`.
+Do not manually replay schema or seed scripts. Flyway validates checksums and applies only pending migrations at application startup.
 
 Critical indexes already included:
 

@@ -79,14 +79,28 @@ public class BookingService {
 
   @Transactional
   public BookingDtos.BookingResponse create(String email, BookingDtos.BookingRequest request) {
+    return create(email, null, request);
+  }
+
+  @Transactional
+  public BookingDtos.BookingResponse create(String email, String idempotencyKey, BookingDtos.BookingRequest request) {
     User user = users.findByEmailIgnoreCase(email).orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "User not found"));
-    // Serializes inventory and queue decisions for this train only.
-    Train train = trains.findByIdForUpdate(parseTrainId(request.getTrainId())).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Train not found"));
+    String normalizedKey = normalizeIdempotencyKey(idempotencyKey);
+    if (normalizedKey != null) {
+      bookings.acquireScopedLock("booking-request:" + user.getId() + ":" + normalizedKey);
+      Booking existing = bookings.findByUserAndIdempotencyKey(user, normalizedKey).orElse(null);
+      if (existing != null) {
+        return toResponse(existing, Math.toIntExact(passengers.countByBooking(existing)));
+      }
+    }
+    UUID trainId = parseTrainId(request.getTrainId());
+    String travelClass = request.getTravelClass().toUpperCase(Locale.ROOT);
+    bookings.acquireScopedLock("inventory:" + trainId + ":" + request.getJourneyDate() + ":" + travelClass);
+    Train train = trains.findById(trainId).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Train not found"));
     Station source = stations.findByCodeIgnoreCase(request.getSourceStationCode()).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Source station not found"));
     Station destination = stations.findByCodeIgnoreCase(request.getDestinationStationCode()).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Destination station not found"));
     JourneyStops journeyStops = validateJourney(train, source, destination, request.getJourneyDate(), request.getTravelClass());
     int passengerCount = request.getPassengers().size();
-    String travelClass = request.getTravelClass().toUpperCase(Locale.ROOT);
 
     int availableSeats = seatAllocationService.getAvailableSeatCount(
             train,
@@ -131,6 +145,7 @@ public class BookingService {
     booking.setStatus(bookingStatus);
     booking.setQueuePosition(queuePosition);
     booking.setReservationLabel(reservationLabel);
+    booking.setIdempotencyKey(normalizedKey);
     booking.setTotalFare(calculateFare(request, journeyStops).total());
     bookings.save(booking);
 
@@ -159,27 +174,38 @@ public class BookingService {
             "Ticket booked with status " + booking.getReservationLabel()
                     + " and PNR: " + booking.getPnr()
     );
-    try {
-      if (bookingStatus == BookingStatus.CONFIRMED) {
-        accountEmailService.sendBookingConfirmation(
-                booking,
-                savedPassengers,
-                allocatedSeats);
-      }
-    } catch (RuntimeException ex) {
-      log.warn("booking_confirmation_deferred_failure pnr={} passengerCount={}",
-          booking.getPnr(), Integer.valueOf(savedPassengers.size()), ex);
+    if (bookingStatus == BookingStatus.CONFIRMED) {
+      accountEmailService.sendBookingConfirmation(
+              booking,
+              savedPassengers,
+              allocatedSeats);
     }
+    return toResponse(booking, request.getPassengers().size());
+  }
+
+  private BookingDtos.BookingResponse toResponse(Booking booking, int passengerCount) {
+    Train train = booking.getTrain();
+    Station source = booking.getSourceStation();
+    Station destination = booking.getDestinationStation();
     return new BookingDtos.BookingResponse(booking.getId().toString(), booking.getPnr(), booking.getStatus().name(),
         train.getNumber(), train.getName(),
         source.getCode(), source.getName(),
         destination.getCode(), destination.getName(),
         booking.getJourneyDate(),
         booking.getTravelClass(),
-        request.getPassengers().size(),
+        passengerCount,
         booking.getTotalFare(),
         "NOT_COLLECTED",booking.getReservationLabel(),
             booking.getQueuePosition());
+  }
+
+  private String normalizeIdempotencyKey(String key) {
+    if (key == null || key.isBlank()) return null;
+    String normalized = key.trim();
+    if (normalized.length() > 128) {
+      throw new ApiException(HttpStatus.BAD_REQUEST, "Idempotency-Key must not exceed 128 characters");
+    }
+    return normalized;
   }
 
   @Transactional(readOnly = true)

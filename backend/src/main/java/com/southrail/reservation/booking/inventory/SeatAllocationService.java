@@ -32,9 +32,7 @@ public class SeatAllocationService {
       "Not enough seats available for the selected train, date, and class.";
   private static final String CONFLICT_MESSAGE =
       "Selected train/class no longer has enough available seats. Please search again.";
-  private static final EnumSet<BookingStatus> ACTIVE_BOOKING_STATUSES = EnumSet.of(
-      BookingStatus.CONFIRMED,
-      BookingStatus.PARTIALLY_CANCELLED);
+  private static final EnumSet<BookingStatus> ACTIVE_BOOKING_STATUSES = EnumSet.of(BookingStatus.CONFIRMED);
 
   private final CoachRepository coaches;
   private final BookingSeatRepository bookingSeats;

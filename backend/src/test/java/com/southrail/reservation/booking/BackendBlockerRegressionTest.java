@@ -47,6 +47,36 @@ import org.springframework.transaction.annotation.Transactional;
 class BackendBlockerRegressionTest {
 
   @Test
+  void repeatedIdempotencyKeyReturnsOriginalBookingWithoutAllocatingAgain() {
+    BookingRepository bookings = mock(BookingRepository.class);
+    PassengerRepository passengerRepository = mock(PassengerRepository.class);
+    UserRepository users = mock(UserRepository.class);
+    TrainRepository trains = mock(TrainRepository.class);
+    com.southrail.reservation.account.User user = new com.southrail.reservation.account.User();
+    user.setId(UUID.randomUUID()); user.setEmail("repeat@example.com");
+    Train train = train(true); train.setNumber("10000"); train.setName("Original");
+    Station source = station(); source.setCode("SRC"); source.setName("Source");
+    Station destination = station(); destination.setCode("DST"); destination.setName("Destination");
+    Booking original = new Booking(); original.setId(UUID.randomUUID()); original.setUser(user);
+    original.setTrain(train); original.setSourceStation(source); original.setDestinationStation(destination);
+    original.setPnr("1234567890"); original.setStatus(BookingStatus.CONFIRMED);
+    original.setJourneyDate(LocalDate.now().plusDays(2)); original.setTravelClass("3A");
+    original.setTotalFare(BigDecimal.TEN); original.setReservationLabel("CNF");
+    when(users.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
+    when(bookings.findByUserAndIdempotencyKey(user, "retry-1")).thenReturn(Optional.of(original));
+    when(passengerRepository.countByBooking(original)).thenReturn(2L);
+    BookingService service = new BookingService(bookings, passengerRepository, users, trains,
+        mock(StationRepository.class), mock(RouteStopRepository.class), mock(SeatAllocationService.class),
+        mock(EmailNotificationService.class), mock(AuditLogService.class));
+
+    BookingDtos.BookingResponse response = service.create(user.getEmail(), " retry-1 ", mock(BookingDtos.BookingRequest.class));
+
+    assertEquals(original.getId().toString(), response.getBookingId());
+    assertEquals(original.getPnr(), response.getPnr());
+    verify(trains, never()).findById(any());
+  }
+
+  @Test
   void racCapacityCountsPassengersAndKeepsPartiesAtomic() {
     BookingRepository bookings = mock(BookingRepository.class);
     PassengerRepository passengerRepository = mock(PassengerRepository.class);
@@ -77,7 +107,7 @@ class BackendBlockerRegressionTest {
         new BookingDtos.PassengerRequest("Two", 31, "other", null),
         new BookingDtos.PassengerRequest("Three", 32, "other", null)));
     when(users.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
-    when(trains.findByIdForUpdate(train.getId())).thenReturn(Optional.of(train));
+    when(trains.findById(train.getId())).thenReturn(Optional.of(train));
     when(stations.findByCodeIgnoreCase("SRC")).thenReturn(Optional.of(source));
     when(stations.findByCodeIgnoreCase("DST")).thenReturn(Optional.of(destination));
     when(stops.findFirstByTrainAndStationOrderByStopOrderAsc(train, source)).thenReturn(Optional.of(sourceStop));
@@ -126,7 +156,7 @@ class BackendBlockerRegressionTest {
     user.setEmail("fifo@example.com");
     BookingDtos.BookingRequest request = request(train, source, destination);
     when(users.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
-    when(trains.findByIdForUpdate(train.getId())).thenReturn(Optional.of(train));
+    when(trains.findById(train.getId())).thenReturn(Optional.of(train));
     when(stations.findByCodeIgnoreCase("SRC")).thenReturn(Optional.of(source));
     when(stations.findByCodeIgnoreCase("DST")).thenReturn(Optional.of(destination));
     when(stops.findFirstByTrainAndStationOrderByStopOrderAsc(train, source)).thenReturn(Optional.of(stop(1)));
@@ -171,7 +201,7 @@ class BackendBlockerRegressionTest {
     user.setId(UUID.randomUUID()); user.setEmail("waitlist@example.com");
     BookingDtos.BookingRequest request = request(train, source, destination);
     when(users.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
-    when(trains.findByIdForUpdate(train.getId())).thenReturn(Optional.of(train));
+    when(trains.findById(train.getId())).thenReturn(Optional.of(train));
     when(stations.findByCodeIgnoreCase("SRC")).thenReturn(Optional.of(source));
     when(stations.findByCodeIgnoreCase("DST")).thenReturn(Optional.of(destination));
     when(stops.findFirstByTrainAndStationOrderByStopOrderAsc(train, source)).thenReturn(Optional.of(stop(1)));
@@ -201,7 +231,7 @@ class BackendBlockerRegressionTest {
     Train train = train(true);
     LocalDate date = LocalDate.now().plusDays(1);
     EnumSet<BookingStatus> physicalStatuses =
-        EnumSet.of(BookingStatus.CONFIRMED, BookingStatus.PARTIALLY_CANCELLED);
+        EnumSet.of(BookingStatus.CONFIRMED);
     when(coaches.totalCapacity(train.getId(), "3A")).thenReturn(20);
     when(seats.countActiveBookedSeats(train.getId(), date, "3A", BookingSeatStatus.BOOKED,
         physicalStatuses)).thenReturn(4L);
@@ -276,7 +306,7 @@ class BackendBlockerRegressionTest {
     booking.setStatus(BookingStatus.CANCELLED);
     when(users.findByEmailIgnoreCase("user@example.com")).thenReturn(Optional.of(user));
     when(bookings.findByPnr("PNR")).thenReturn(Optional.of(booking));
-    when(trains.findByIdForUpdate(train.getId())).thenReturn(Optional.of(train));
+    when(trains.findById(train.getId())).thenReturn(Optional.of(train));
     when(bookings.findByPnrForUpdate("PNR")).thenReturn(Optional.of(booking));
 
     assertThrows(ApiException.class, () -> service.cancel("user@example.com", "PNR"));
@@ -308,7 +338,7 @@ class BackendBlockerRegressionTest {
     Passenger waitingPassenger = passenger(waiting, BookingStatus.WAITLISTED);
     when(users.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
     when(bookings.findByPnr(cancelled.getPnr())).thenReturn(Optional.of(cancelled));
-    when(trains.findByIdForUpdate(train.getId())).thenReturn(Optional.of(train));
+    when(trains.findById(train.getId())).thenReturn(Optional.of(train));
     when(bookings.findByPnrForUpdate(cancelled.getPnr())).thenReturn(Optional.of(cancelled));
     when(refunds.calculate(cancelled)).thenReturn(new RefundQuoteDto(
         BigDecimal.TEN, BigDecimal.valueOf(9), BigDecimal.ONE, BigDecimal.valueOf(90), "refund"));
@@ -340,7 +370,6 @@ class BackendBlockerRegressionTest {
     assertWriteLock(AccountTokenRepository.class, "findOpenByHashAndTypeForUpdate",
         String.class, String.class);
     assertWriteLock(BookingRepository.class, "findByPnrForUpdate", String.class);
-    assertWriteLock(TrainRepository.class, "findByIdForUpdate", UUID.class);
     assertWriteLock(UserRepository.class, "findByEmailIgnoreCaseForUpdate", String.class);
     Transactional loginTransaction = com.southrail.reservation.auth.AuthService.class
         .getMethod("login", com.southrail.reservation.auth.dto.AuthDtos.LoginRequest.class)
@@ -352,7 +381,7 @@ class BackendBlockerRegressionTest {
   void sqlBackfillAndQueueConstraintsMatchInventoryAndConcurrencyRules() throws Exception {
     String backfill = Files.readString(Path.of("../database/003_booking_seats.sql"));
     assertTrue(backfill.contains("where p.status = 'CONFIRMED'"));
-    assertTrue(backfill.contains("b.status in ('CONFIRMED', 'PARTIALLY_CANCELLED')"));
+    assertTrue(backfill.contains("b.status = 'CONFIRMED'"));
     assertTrue(backfill.contains("not exists"));
     String concurrency = Files.readString(Path.of("../database/005_booking_concurrency.sql"));
     assertTrue(concurrency.contains("uq_bookings_rac_queue_position"));
