@@ -1,0 +1,467 @@
+package com.southrail.reservation.service.auth;
+
+import com.southrail.reservation.service.notification.EmailNotificationService;
+import com.southrail.reservation.service.audit.AuditLogService;
+
+import com.southrail.reservation.dto.auth.AuthDtos;
+import com.southrail.reservation.entity.auth.AccountToken;
+import com.southrail.reservation.entity.auth.RefreshToken;
+import com.southrail.reservation.entity.account.RoleName;
+import com.southrail.reservation.entity.account.User;
+import com.southrail.reservation.exception.ApiException;
+import com.southrail.reservation.repository.auth.AccountTokenRepository;
+import com.southrail.reservation.repository.auth.RefreshTokenRepository;
+import com.southrail.reservation.repository.account.UserRepository;
+import com.southrail.reservation.security.jwt.JwtService;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.time.Duration;
+import java.time.Instant;
+import com.southrail.reservation.config.properties.SouthRailSecurityProperties;
+import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class AuthService {
+  private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+  private static final String RESET_PASSWORD = "RESET_PASSWORD";
+  private static final String VERIFY_EMAIL = "VERIFY_EMAIL";
+  private static final String UNLOCK_ACCOUNT = "UNLOCK_ACCOUNT";
+  private static final String REGISTRATION_MESSAGE =
+      "If this email is eligible, verification instructions will be sent.";
+
+  private final UserRepository users;
+  private final RefreshTokenRepository refreshTokens;
+  private final AccountTokenRepository accountTokens;
+  private final PasswordEncoder passwordEncoder;
+  private final AuthenticationManager authenticationManager;
+  private final JwtService jwtService;
+  private final EmailNotificationService accountEmailService;
+  private final long refreshDays;
+  private final AuditLogService auditLogService;
+
+  public AuthService(UserRepository users, RefreshTokenRepository refreshTokens, AccountTokenRepository accountTokens,
+                     PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService,
+                     EmailNotificationService accountEmailService,
+                     SouthRailSecurityProperties securityProperties, AuditLogService auditLogService) {
+    this.users = users;
+    this.refreshTokens = refreshTokens;
+    this.accountTokens = accountTokens;
+    this.passwordEncoder = passwordEncoder;
+    this.authenticationManager = authenticationManager;
+    this.jwtService = jwtService;
+    this.accountEmailService = accountEmailService;
+    this.refreshDays = securityProperties.getRefreshTokenDays();
+    this.auditLogService=auditLogService;
+  }
+
+  @Transactional
+  public AuthDtos.RegisterResponse register(AuthDtos.RegisterRequest request) {
+    User existingUser = users.findByEmailIgnoreCaseForUpdate(
+                    request.getEmail().trim().toLowerCase())
+            .orElse(null);
+
+    if (existingUser != null) {
+
+      if (!existingUser.isDeleted()) {
+        return new AuthDtos.RegisterResponse(
+            REGISTRATION_MESSAGE, request.getEmail().trim().toLowerCase(), true);
+      }
+
+      restoreDeletedAccount(existingUser, request);
+
+      return new AuthDtos.RegisterResponse(
+              REGISTRATION_MESSAGE,
+              existingUser.getEmail(),
+              true);
+    }
+    User user = new User();
+    user.setFullName(request.getFullName());
+    user.setEmail(request.getEmail().trim().toLowerCase());
+    user.setPhone(request.getPhone());
+    user.setEmailVerified(false);
+    user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+    user.getRoles().add(RoleName.ROLE_USER);
+    users.save(user);
+
+    String verificationToken = createAccountToken(user, VERIFY_EMAIL, Duration.ofDays(2));
+    trySendVerification(user, verificationToken);
+
+    return new AuthDtos.RegisterResponse(
+            REGISTRATION_MESSAGE,
+            user.getEmail(),
+            true);
+  }
+  private void restoreDeletedAccount(
+          User user,
+          AuthDtos.RegisterRequest request) {
+
+    user.setDeleted(false);
+    user.setDeletedAt(null);
+    user.setEnabled(true);
+    user.setEmailVerified(false);
+
+    user.setFailedLoginAttempts(0);
+    user.setAccountLockedUntil(null);
+
+    user.setFullName(request.getFullName());
+    user.setPhone(request.getPhone());
+
+    user.setPasswordHash(
+            passwordEncoder.encode(request.getPassword()));
+    user.setCredentialsVersion(user.getCredentialsVersion() + 1);
+
+    // Public re-registration must not resurrect privileged roles held by the
+    // previously deleted account.
+    user.getRoles().clear();
+    user.getRoles().add(RoleName.ROLE_USER);
+
+    refreshTokens.revokeActiveTokens(user);
+    accountTokens.markAllOpenTokensUsed(user, Instant.now());
+
+    users.saveAndFlush(user);
+
+    String verificationToken =
+            createAccountToken(
+                    user,
+                    VERIFY_EMAIL,
+                    Duration.ofDays(2));
+
+    trySendVerification(user, verificationToken);
+  }
+  @Transactional(noRollbackFor = ApiException.class)
+  public AuthDtos.AuthResponse login(AuthDtos.LoginRequest request) {
+
+        User user = users.findByEmailIgnoreCaseForUpdate(request.getEmail())
+                .orElseThrow(() ->
+                        new ApiException(
+                                HttpStatus.UNAUTHORIZED,
+                                "Invalid email or password"));
+    // Account deleted scenario
+    if (user.isDeleted()) {
+      throw new ApiException(
+              HttpStatus.FORBIDDEN,
+              "This account has been deleted");
+    }
+    if (!user.isEnabled()) {
+      throw new ApiException(
+              HttpStatus.FORBIDDEN,
+              "Account is disabled");
+    }
+        // Check account lock before authentication
+        if (user.getAccountLockedUntil() != null &&
+                user.getAccountLockedUntil().isAfter(Instant.now())) {
+
+            throw new ApiException(
+                    HttpStatus.LOCKED,
+                    "Account is temporarily locked. Use the unlock option or try again after 15 minutes.",user.getAccountLockedUntil());
+        }
+        if (user.getAccountLockedUntil() != null) {
+          user.setFailedLoginAttempts(0);
+          user.setAccountLockedUntil(null);
+        }
+
+        try {
+
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()));
+
+        } catch (AuthenticationException ex) {
+
+            user.setFailedLoginAttempts(
+                    user.getFailedLoginAttempts() + 1);
+
+            if (user.getFailedLoginAttempts() >= 5) {
+
+                user.setAccountLockedUntil(
+                        Instant.now().plus(Duration.ofMinutes(15)));
+
+                users.save(user);
+
+                throw new ApiException(
+                        HttpStatus.LOCKED,
+                        "Account locked due to multiple failed login attempts.");
+            }
+
+            users.save(user);
+
+            throw new ApiException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Invalid email or password");
+        }
+
+        if (!user.isEmailVerified()) {
+            throw new ApiException(
+                    HttpStatus.FORBIDDEN,
+                    "Please verify your email before logging in.");
+        }
+
+        // Reset failed attempts after successful login
+        user.setFailedLoginAttempts(0);
+        user.setAccountLockedUntil(null);
+
+        users.save(user);
+    auditLogService.log(
+            user.getId(),
+            user.getEmail(),
+            "USER_LOGIN",
+            "AUTH",
+            "User logged in successfully"
+    );
+
+        return issueTokens(user);
+    }
+
+  @Transactional(noRollbackFor = ApiException.class)
+  public AuthDtos.AuthResponse refresh(AuthDtos.RefreshRequest request) {
+    RefreshToken token = refreshTokens.findActiveByTokenHashForUpdate(hash(request.getRefreshToken()))
+            .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Refresh token is invalid"));
+    User user= token.getUser();
+    if (user.isDeleted() || !user.isEnabled() || !user.isEmailVerified()) {
+      refreshTokens.revokeActiveTokens(user);
+      throw new ApiException(HttpStatus.FORBIDDEN, "Account is not eligible for authentication");
+    }
+    if (token.getExpiresAt().isBefore(Instant.now())) {
+      token.setRevoked(true);
+      refreshTokens.save(token);
+      throw new ApiException(HttpStatus.UNAUTHORIZED, "Refresh token expired");
+    }
+    token.setRevoked(true);
+    refreshTokens.save(token);
+    auditLogService.log(
+            user.getId(),
+            user.getEmail(),
+            "TOKEN_REFRESHED",
+            "AUTH",
+            "Access token refreshed successfully"
+    );
+    return issueTokens(user);
+  }
+
+  @Transactional
+  public void forgotPassword(AuthDtos.ForgotPasswordRequest request) {
+    users.findByEmailIgnoreCaseForUpdate(request.getEmail()).ifPresent(user -> {
+      if (user.isDeleted() || !user.isEnabled()) {
+        return;
+      }
+      AccountToken latestToken =
+              accountTokens
+                      .findTopByUserAndTokenTypeOrderByCreatedAtDesc(
+                              user,
+                              RESET_PASSWORD)
+                      .orElse(null);
+      if (latestToken != null &&
+              latestToken.getCreatedAt().isAfter(
+                      Instant.now().minusSeconds(300))) {
+
+        return;
+      }
+      String resetToken = createAccountToken(user, RESET_PASSWORD, Duration.ofMinutes(30));
+      trySendPasswordReset(user, resetToken);
+    });
+  }
+
+  @Transactional(noRollbackFor = ApiException.class)
+  public void resetPassword(AuthDtos.ResetPasswordRequest request) {
+    AccountToken token = consumeAccountToken(request.getToken(), RESET_PASSWORD);
+      User user = token.getUser();
+      if (user.isDeleted() || !user.isEnabled()) {
+        throw new ApiException(HttpStatus.FORBIDDEN, "Account is not eligible for password reset");
+      }
+
+      user.setPasswordHash(
+              passwordEncoder.encode(
+                      request.getPassword()));
+      user.setCredentialsVersion(user.getCredentialsVersion() + 1);
+      user.setFailedLoginAttempts(0);
+      user.setAccountLockedUntil(null);
+    auditLogService.log(
+            user.getId(),
+            user.getEmail(),
+            "PASSWORD_CHANGED",
+            "ACCOUNT",
+            "Password changed successfully"
+    );
+    refreshTokens.revokeActiveTokens(token.getUser());
+    accountTokens.markAllOpenTokensUsed(user, Instant.now());
+
+  }
+
+  @Transactional(noRollbackFor = ApiException.class)
+  public void verifyEmail(AuthDtos.VerifyEmailRequest request) {
+    AccountToken token = consumeAccountToken(request.getToken(), VERIFY_EMAIL);
+    token.getUser().setEmailVerified(true);
+  }
+
+  private String createAccountToken(User user, String tokenType, Duration ttl) {
+    accountTokens.markOpenTokensUsed(user, tokenType, Instant.now());
+    String rawToken = UUID.randomUUID() + "." + UUID.randomUUID();
+    AccountToken token = new AccountToken();
+    token.setUser(user);
+    token.setTokenType(tokenType);
+    token.setTokenHash(hash(rawToken));
+    token.setExpiresAt(Instant.now().plus(ttl));
+    accountTokens.save(token);
+    return rawToken;
+  }
+
+  private AccountToken consumeAccountToken(String rawToken, String tokenType) {
+    String tokenHash = hash(rawToken);
+    AccountToken observed = accountTokens.findByTokenHashAndTokenType(tokenHash, tokenType)
+        .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Token is invalid or already used"));
+    // All account/token flows acquire User before AccountToken.
+    users.findByEmailIgnoreCaseForUpdate(observed.getUser().getEmail())
+        .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Token is invalid or already used"));
+    AccountToken token = accountTokens.findOpenByHashAndTypeForUpdate(tokenHash, tokenType)
+            .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Token is invalid or already used"));
+    if (token.getExpiresAt().isBefore(Instant.now())) {
+      token.setUsedAt(Instant.now());
+      throw new ApiException(HttpStatus.BAD_REQUEST, "Token expired");
+    }
+    token.setUsedAt(Instant.now());
+    return token;
+  }
+
+  private void trySendPasswordReset(User user, String token) {
+    accountEmailService.sendPasswordReset(user, token);
+  }
+
+  private void trySendVerification(User user, String token) {
+    accountEmailService.sendEmailVerification(user, token);
+  }
+
+  private AuthDtos.AuthResponse issueTokens(User user) {
+    String refresh = UUID.randomUUID() + "." + UUID.randomUUID();
+    RefreshToken refreshToken = new RefreshToken();
+    refreshToken.setUser(user);
+    refreshToken.setTokenHash(hash(refresh));
+    refreshToken.setExpiresAt(Instant.now().plusSeconds(refreshDays * 24 * 60 * 60));
+    refreshTokens.save(refreshToken);
+    return new AuthDtos.AuthResponse(jwtService.createAccessToken(user), refresh, "Bearer", toSummary(user));
+  }
+
+  private AuthDtos.UserSummary toSummary(User user) {
+    return new AuthDtos.UserSummary(
+            user.getId().toString(),
+            user.getFullName(),
+            user.getEmail(),
+            user.getRoles().stream().map(Enum::name).collect(java.util.stream.Collectors.toSet()));
+  }
+
+  private String hash(String raw) {
+    try {
+      return toHex(MessageDigest.getInstance("SHA-256").digest(raw.getBytes(StandardCharsets.UTF_8)));
+    } catch (Exception ex) {
+      throw new IllegalStateException(ex);
+    }
+  }
+
+  private String toHex(byte[] bytes) {
+    StringBuilder builder = new StringBuilder(bytes.length * 2);
+    for (byte item : bytes) {
+      builder.append(String.format("%02x", item & 0xff));
+    }
+    return builder.toString();
+  }
+  @Transactional
+  public void resendVerificationEmail(AuthDtos.ResendVerificationRequest request) {
+
+    User user = users.findByEmailIgnoreCaseForUpdate(request.getEmail()).orElse(null);
+    if (user == null || user.isDeleted() || !user.isEnabled() || user.isEmailVerified()) {
+      return;
+    }
+
+    AccountToken latestToken =
+            accountTokens
+                    .findTopByUserAndTokenTypeOrderByCreatedAtDesc(
+                            user,
+                            VERIFY_EMAIL)
+                    .orElse(null);
+
+    if (latestToken != null &&
+            latestToken.getCreatedAt().isAfter(
+                    Instant.now().minusSeconds(300))) {
+
+      return;
+    }
+
+    String verificationToken =
+            createAccountToken(
+                    user,
+                    VERIFY_EMAIL,
+                    Duration.ofDays(2));
+
+    trySendVerification(user, verificationToken);
+  }
+    private void trySendUnlockEmail(User user, String token) {
+        accountEmailService.sendAccountUnlock(user, token);
+    }
+    @Transactional
+    public void sendUnlockEmail(
+            AuthDtos.SendUnlockEmailRequest request) {
+
+        User user = users.findByEmailIgnoreCaseForUpdate(request.getEmail()).orElse(null);
+      if (user == null || user.isDeleted() || !user.isEnabled()) {
+        return;
+      }
+      AccountToken latestToken =
+              accountTokens
+                      .findTopByUserAndTokenTypeOrderByCreatedAtDesc(
+                              user,
+                              UNLOCK_ACCOUNT)
+                      .orElse(null);
+      if (latestToken != null &&
+              latestToken.getCreatedAt().isAfter(
+                      Instant.now().minusSeconds(300))) {
+
+        return;
+      }
+
+        if (user.getAccountLockedUntil() == null ||
+                user.getAccountLockedUntil().isBefore(Instant.now())) {
+
+            return;
+        }
+
+        String token =
+                createAccountToken(
+                        user,
+                        UNLOCK_ACCOUNT,
+                        Duration.ofMinutes(30));
+
+        trySendUnlockEmail(user, token);
+    }
+    @Transactional(noRollbackFor = ApiException.class)
+    public void unlockAccount(
+            AuthDtos.UnlockAccountRequest request) {
+
+        AccountToken token =
+                consumeAccountToken(
+                        request.getToken(),
+                        UNLOCK_ACCOUNT);
+
+        User user = token.getUser();
+
+        user.setFailedLoginAttempts(0);
+        user.setAccountLockedUntil(null);
+      users.save(user);
+
+      auditLogService.log(
+              user.getId(),
+              user.getEmail(),
+              "ACCOUNT_UNLOCKED",
+              "SECURITY",
+              "Account unlocked successfully"
+      );
+    }
+}
