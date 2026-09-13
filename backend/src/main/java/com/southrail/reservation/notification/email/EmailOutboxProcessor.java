@@ -7,10 +7,15 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnProperty(
+    name = "southrail.email-outbox.scheduling-enabled",
+    havingValue = "true",
+    matchIfMissing = true)
 class EmailOutboxProcessor {
   private static final Logger log = LoggerFactory.getLogger(EmailOutboxProcessor.class);
   static final int MAX_ATTEMPTS = 10;

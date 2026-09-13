@@ -35,6 +35,8 @@ gemini:
   api-key: test-only-gemini-key
 
 southrail:
+  email-outbox:
+    scheduling-enabled: false
   features:
     ai-enabled: false
     email-enabled: false

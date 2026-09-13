@@ -331,6 +331,8 @@ class BackendBlockerRegressionTest {
     booking.setUser(user);
     Train train = train(true);
     booking.setTrain(train);
+    booking.setJourneyDate(LocalDate.now().plusDays(1));
+    booking.setTravelClass("3A");
     booking.setStatus(BookingStatus.CANCELLED);
     when(users.findByEmailIgnoreCase("user@example.com")).thenReturn(Optional.of(user));
     when(bookings.findByPnr("PNR")).thenReturn(Optional.of(booking));
@@ -409,7 +411,9 @@ class BackendBlockerRegressionTest {
   void sqlBackfillAndQueueConstraintsMatchInventoryAndConcurrencyRules() throws Exception {
     String backfill = Files.readString(Path.of("../database/003_booking_seats.sql"));
     assertTrue(backfill.contains("where p.status = 'CONFIRMED'"));
-    assertTrue(backfill.contains("b.status = 'CONFIRMED'"));
+    assertTrue(backfill.contains("p.status <> 'CONFIRMED'"));
+    assertTrue(backfill.contains("b.status not in ('CONFIRMED', 'PARTIALLY_CANCELLED')"));
+    assertTrue(backfill.contains("b.status in ('CONFIRMED', 'PARTIALLY_CANCELLED')"));
     assertTrue(backfill.contains("not exists"));
     String concurrency = Files.readString(Path.of("../database/005_booking_concurrency.sql"));
     assertTrue(concurrency.contains("uq_bookings_rac_queue_position"));
