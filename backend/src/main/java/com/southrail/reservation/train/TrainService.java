@@ -42,7 +42,7 @@ public class TrainService {
     this.stations = stations;
     this.seatAllocationService = seatAllocationService;
     this.fareCalculationService = fareCalculationService;
-    this.bookings=bookings;
+    this.bookings = bookings;
   }
 
   @Transactional(readOnly = true)
