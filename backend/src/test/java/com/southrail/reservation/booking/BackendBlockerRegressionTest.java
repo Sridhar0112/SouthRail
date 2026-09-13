@@ -47,7 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
 class BackendBlockerRegressionTest {
 
   @Test
-  void repeatedIdempotencyKeyReturnsOriginalBookingWithoutAllocatingAgain() {
+  void repeatedIdempotencyKeyReturnsOriginalBookingWithoutAllocatingAgain() throws Exception {
     BookingRepository bookings = mock(BookingRepository.class);
     PassengerRepository passengerRepository = mock(PassengerRepository.class);
     UserRepository users = mock(UserRepository.class);
@@ -68,12 +68,40 @@ class BackendBlockerRegressionTest {
     BookingService service = new BookingService(bookings, passengerRepository, users, trains,
         mock(StationRepository.class), mock(RouteStopRepository.class), mock(SeatAllocationService.class),
         mock(EmailNotificationService.class), mock(AuditLogService.class));
+    BookingDtos.BookingRequest request = request(train, source, destination);
+    java.lang.reflect.Method fingerprint = BookingService.class
+        .getDeclaredMethod("fingerprint", BookingDtos.BookingRequest.class);
+    fingerprint.setAccessible(true);
+    original.setIdempotencyFingerprint((String) fingerprint.invoke(service, request));
 
-    BookingDtos.BookingResponse response = service.create(user.getEmail(), " retry-1 ", mock(BookingDtos.BookingRequest.class));
+    BookingDtos.BookingResponse response = service.create(user.getEmail(), " retry-1 ", request);
 
     assertEquals(original.getId().toString(), response.getBookingId());
     assertEquals(original.getPnr(), response.getPnr());
     verify(trains, never()).findById(any());
+  }
+
+  @Test
+  void repeatedIdempotencyKeyWithDifferentPayloadIsRejected() {
+    BookingRepository bookings = mock(BookingRepository.class);
+    UserRepository users = mock(UserRepository.class);
+    com.southrail.reservation.account.User user = new com.southrail.reservation.account.User();
+    user.setId(UUID.randomUUID()); user.setEmail("conflict@example.com");
+    Booking original = new Booking(); original.setIdempotencyFingerprint("different-fingerprint");
+    when(users.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
+    when(bookings.findByUserAndIdempotencyKey(user, "same-key")).thenReturn(Optional.of(original));
+    BookingService service = new BookingService(bookings, mock(PassengerRepository.class), users,
+        mock(TrainRepository.class), mock(StationRepository.class), mock(RouteStopRepository.class),
+        mock(SeatAllocationService.class), mock(EmailNotificationService.class), mock(AuditLogService.class));
+    BookingDtos.BookingRequest request = new BookingDtos.BookingRequest();
+    request.setTrainId(UUID.randomUUID().toString()); request.setSourceStationCode("SRC");
+    request.setDestinationStationCode("DST"); request.setJourneyDate(LocalDate.now().plusDays(2));
+    request.setTravelClass("3A"); request.setQuota("GENERAL");
+    request.setPassengers(List.of(new BookingDtos.PassengerRequest("One", 30, "other", null)));
+
+    ApiException conflict = assertThrows(ApiException.class,
+        () -> service.create(user.getEmail(), "same-key", request));
+    assertEquals(org.springframework.http.HttpStatus.CONFLICT, conflict.status());
   }
 
   @Test

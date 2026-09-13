@@ -79,4 +79,7 @@ public class Booking extends BaseEntity {
 
   @Column(name = "idempotency_key", length = 128)
   private String idempotencyKey;
+
+  @Column(name = "idempotency_fingerprint", length = 64)
+  private String idempotencyFingerprint;
 }
