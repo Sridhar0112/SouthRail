@@ -2,12 +2,12 @@ package com.southrail.reservation.train;
 
 import com.southrail.reservation.booking.inventory.SeatAllocationService;
 import com.southrail.reservation.booking.FareCalculationService;
-import com.southrail.reservation.booking.BookingRepository;
-import com.southrail.reservation.booking.BookingStatus;
 
 import com.southrail.reservation.train.dto.TrainDtos;
 import com.southrail.reservation.train.RouteStop;
 import com.southrail.reservation.train.Train;
+import com.southrail.reservation.booking.BookingStatus;
+import com.southrail.reservation.booking.BookingRepository;
 import com.southrail.reservation.shared.web.error.ApiException;
 import com.southrail.reservation.train.RouteStopRepository;
 import com.southrail.reservation.train.StationRepository;
@@ -32,18 +32,17 @@ public class TrainService {
   private final RouteStopRepository routeStops;
   private final StationRepository stations;
   private final SeatAllocationService seatAllocationService;
-  private final FareCalculationService fareCalculationService;
   private final BookingRepository bookings;
+  private final FareCalculationService fareCalculationService;
 
   public TrainService(TrainRepository trains, RouteStopRepository routeStops, StationRepository stations,
-      SeatAllocationService seatAllocationService, FareCalculationService fareCalculationService,
-      BookingRepository bookings) {
+      SeatAllocationService seatAllocationService, FareCalculationService fareCalculationService, BookingRepository bookings) {
     this.trains = trains;
     this.routeStops = routeStops;
     this.stations = stations;
     this.seatAllocationService = seatAllocationService;
     this.fareCalculationService = fareCalculationService;
-    this.bookings = bookings;
+    this.bookings=bookings;
   }
 
   @Transactional(readOnly = true)
@@ -133,13 +132,29 @@ public class TrainService {
     return fareCalculationService.quote(distance, travelClass, 1).total();
   }
 
-  private int calculateAvailableSeats(Train train, LocalDate journeyDate, String travelClass) {
-    boolean queueExists = bookings.countByTrainIdAndJourneyDateAndTravelClassAndStatus(
-        train.getId(), journeyDate, travelClass, BookingStatus.RAC) > 0
-        || bookings.countByTrainIdAndJourneyDateAndTravelClassAndStatus(
-            train.getId(), journeyDate, travelClass, BookingStatus.WAITLISTED) > 0;
-    return queueExists ? 0 : seatAllocationService.getAvailableSeatCount(
-        train, journeyDate, travelClass);
+  private int calculateAvailableSeats(
+          Train train,
+          LocalDate journeyDate,
+          String travelClass) {
+
+    boolean queueExists =
+            bookings.countByTrainIdAndJourneyDateAndTravelClassAndStatus(
+                    train.getId(),
+                    journeyDate,
+                    travelClass,
+                    BookingStatus.RAC) > 0
+                    || bookings.countByTrainIdAndJourneyDateAndTravelClassAndStatus(
+                    train.getId(),
+                    journeyDate,
+                    travelClass,
+                    BookingStatus.WAITLISTED) > 0;
+
+    return queueExists
+            ? 0
+            : seatAllocationService.getAvailableSeatCount(
+            train,
+            journeyDate,
+            travelClass);
   }
 
   private String availabilityLabel(int availableSeats, boolean travelClassConfigured) {
@@ -147,7 +162,7 @@ public class TrainService {
       return "Unavailable";
     }
     if (availableSeats == 0) {
-      return "RAC / Waitlist available";
+      return "No confirmed seats available";
     }
     if (availableSeats < 10) {
       return "Limited seats";

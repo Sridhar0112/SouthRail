@@ -31,7 +31,9 @@ public class FareCalculationService {
       case "3A" -> BigDecimal.valueOf(2.00);
       case "CC" -> BigDecimal.valueOf(1.70);
       case "SL" -> BigDecimal.valueOf(0.75);
-      default -> BigDecimal.valueOf(0.45);
+      case "2S" -> BigDecimal.valueOf(0.45);
+      default -> throw new IllegalArgumentException(
+              "Unsupported travel class: " + travelClass);
     };
   }
 

@@ -224,8 +224,8 @@ public class SupportTicketService {
                 .findByIdAndEmail(ticketId, email)
                 .orElseThrow(() ->
                         new ApiException(
-                                HttpStatus.FORBIDDEN,
-                                "Ticket not found or access denied"));
+                                HttpStatus.NOT_FOUND,
+                                "Ticket not found"));
     }
     @Transactional(readOnly = true)
     public List<SupportDtos.TicketMessageResponse> getUserMessages(String email,UUID ticketId) {
