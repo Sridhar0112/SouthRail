@@ -1,6 +1,7 @@
 package com.southrail.reservation.booking;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.southrail.reservation.account.RoleName;
 import com.southrail.reservation.account.User;
@@ -28,6 +29,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
@@ -79,6 +81,7 @@ class PostgresQueueIntegrationTest {
   @BeforeEach
   void installMigration005Baseline() throws Exception {
     executeSql("../database/005_booking_concurrency.sql");
+    executeSql("../database/009_reliability_and_idempotency.sql");
   }
 
   private void executeSql(String path) throws Exception {
@@ -86,6 +89,38 @@ class PostgresQueueIntegrationTest {
       ScriptUtils.executeSqlScript(connection,
           new FileSystemResource(Path.of(path)));
     }
+  }
+
+  @Test
+  void databaseRejectsDuplicateIdempotencyKeysForOneUserButAllowsDifferentUsers() {
+    String suffix = UUID.randomUUID().toString();
+    User first = user("first-" + suffix + "@southrail.invalid", RoleName.ROLE_USER);
+    User second = user("second-" + suffix + "@southrail.invalid", RoleName.ROLE_USER);
+    Train train = train("IK" + suffix.substring(0, 4));
+    Station source = station("IKS");
+    Station destination = station("IKD");
+    LocalDate date = LocalDate.now().plusDays(30);
+
+    Booking firstBooking = queuedBooking(first, train, source, destination, date,
+        "IDEMP-0001", BookingStatus.WAITLISTED, 1);
+    firstBooking.setIdempotencyKey("shared-key");
+    firstBooking.setIdempotencyFingerprint("a".repeat(64));
+    bookings.saveAndFlush(firstBooking);
+
+    Booking independent = queuedBooking(second, train, source, destination, date,
+        "IDEMP-0002", BookingStatus.WAITLISTED, 2);
+    independent.setIdempotencyKey("shared-key");
+    independent.setIdempotencyFingerprint("b".repeat(64));
+    bookings.saveAndFlush(independent);
+
+    assertThatThrownBy(() -> jdbc.update(
+        "insert into bookings (id, pnr, user_id, train_id, source_station_id, destination_station_id, "
+            + "journey_date, travel_class, quota, status, total_fare, idempotency_key, "
+            + "idempotency_fingerprint, created_at, updated_at) "
+            + "select gen_random_uuid(), 'IDEMP-0003', user_id, train_id, source_station_id, "
+            + "destination_station_id, journey_date, travel_class, quota, status, total_fare, "
+            + "idempotency_key, idempotency_fingerprint, now(), now() from bookings where id = ?",
+        firstBooking.getId())).isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
   }
 
   @Test

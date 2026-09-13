@@ -44,7 +44,7 @@ from passengers p, bookings b
 where bs.passenger_id = p.id
   and bs.booking_id = b.id
   and bs.status = 'BOOKED'
-  and (p.status <> 'CONFIRMED' or b.status <> 'CONFIRMED');
+  and (p.status <> 'CONFIRMED' or b.status not in ('CONFIRMED', 'PARTIALLY_CANCELLED'));
 
 with active_passengers as (
   select
@@ -61,7 +61,7 @@ with active_passengers as (
   join bookings b on b.id = p.booking_id
   -- RAC, waitlist and cancelled passengers deliberately receive no physical seat.
   where p.status = 'CONFIRMED'
-    and b.status = 'CONFIRMED'
+    and b.status in ('CONFIRMED', 'PARTIALLY_CANCELLED')
     and not exists (
       select 1
       from booking_seats bs

@@ -19,6 +19,8 @@ import com.southrail.reservation.train.RailwayTime;
 
 import java.math.BigDecimal;
 import java.security.SecureRandom;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -86,10 +88,15 @@ public class BookingService {
   public BookingDtos.BookingResponse create(String email, String idempotencyKey, BookingDtos.BookingRequest request) {
     User user = users.findByEmailIgnoreCase(email).orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "User not found"));
     String normalizedKey = normalizeIdempotencyKey(idempotencyKey);
+    String requestFingerprint = normalizedKey == null ? null : fingerprint(request);
     if (normalizedKey != null) {
       bookings.acquireScopedLock("booking-request:" + user.getId() + ":" + normalizedKey);
       Booking existing = bookings.findByUserAndIdempotencyKey(user, normalizedKey).orElse(null);
       if (existing != null) {
+        if (!requestFingerprint.equals(existing.getIdempotencyFingerprint())) {
+          throw new ApiException(HttpStatus.CONFLICT,
+              "Idempotency-Key has already been used for a different booking request");
+        }
         return toResponse(existing, Math.toIntExact(passengers.countByBooking(existing)));
       }
     }
@@ -146,6 +153,7 @@ public class BookingService {
     booking.setQueuePosition(queuePosition);
     booking.setReservationLabel(reservationLabel);
     booking.setIdempotencyKey(normalizedKey);
+    booking.setIdempotencyFingerprint(requestFingerprint);
     booking.setTotalFare(calculateFare(request, journeyStops).total());
     bookings.save(booking);
 
@@ -206,6 +214,28 @@ public class BookingService {
       throw new ApiException(HttpStatus.BAD_REQUEST, "Idempotency-Key must not exceed 128 characters");
     }
     return normalized;
+  }
+
+  private String fingerprint(BookingDtos.BookingRequest request) {
+    StringBuilder canonical = new StringBuilder()
+        .append(request.getTrainId()).append('\n')
+        .append(request.getSourceStationCode()).append('\n')
+        .append(request.getDestinationStationCode()).append('\n')
+        .append(request.getJourneyDate()).append('\n')
+        .append(request.getTravelClass()).append('\n')
+        .append(request.getQuota()).append('\n');
+    request.getPassengers().forEach(passenger -> canonical
+        .append(passenger.getFullName()).append('\u001f')
+        .append(passenger.getAge()).append('\u001f')
+        .append(passenger.getGender()).append('\u001f')
+        .append(passenger.getBerthPreference()).append('\n'));
+    try {
+      byte[] digest = MessageDigest.getInstance("SHA-256")
+          .digest(canonical.toString().getBytes(StandardCharsets.UTF_8));
+      return java.util.HexFormat.of().formatHex(digest);
+    } catch (java.security.NoSuchAlgorithmException ex) {
+      throw new IllegalStateException("SHA-256 is unavailable", ex);
+    }
   }
 
   @Transactional(readOnly = true)
