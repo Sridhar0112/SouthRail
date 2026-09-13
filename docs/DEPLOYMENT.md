@@ -10,16 +10,23 @@ Production requires `EMAIL_ENABLED=true` and valid SMTP credentials. With `EMAIL
 
 Health probes are available at `/api/actuator/health/liveness` and `/api/actuator/health/readiness`. Only health is anonymous, metrics and info require an administrator, health details are hidden in production, and graceful shutdown allows 30 seconds for in-flight work.
 
-Flyway owns schema evolution from `backend/src/main/resources/db/migration`. Existing databases previously upgraded through script 008 are baselined at version 8, so only later migrations run; empty databases replay the complete versioned history. Hibernate remains on `ddl-auto=validate`. Take a backup before first Flyway-managed deployment and verify the database is through manual script 008.
+Flyway owns schema evolution from `backend/src/main/resources/db/migration`. Empty databases start with no application tables; Spring Boot then applies V1 through the latest migration. Hibernate remains on `ddl-auto=validate`.
 
-For an existing database, take a verified backup, stop backend writers, and run the repository helper from the project root with a privileged migration connection:
+For the first Flyway deployment to an existing database, use this supported sequence:
+
+1. Take and verify a database backup.
+2. Stop every backend instance and other database writer.
+3. Verify that manual migrations 001 through 008 have all been applied. Apply any missing scripts in numeric order before starting the Flyway-enabled application.
+4. Deploy and start the application. Because the database is non-empty, Flyway baselines it at version 8 and then applies V9 and later migrations.
+
+`deploy/upgrade_v0.2.2.sh` is only a historical helper for applying migration 006 from the project root with a privileged migration connection:
 
 ```bash
 DATABASE_URL='postgresql://user:password@host:5432/southrail' \
   ./deploy/upgrade_v0.2.2.sh
 ```
 
-The helper uses `psql --single-transaction` and `ON_ERROR_STOP` to apply only `006_queue_and_token_concurrency.sql` atomically. It deliberately does not replay `004` or `005`. Do not rely on `docker-entrypoint-initdb.d` for an existing volume: PostgreSQL runs those initialization scripts only for a new, empty data directory.
+The helper uses `psql --single-transaction` and `ON_ERROR_STOP` to apply only `006_queue_and_token_concurrency.sql` atomically. It does not apply 004, 005, 007, or 008, so running it alone does **not** satisfy the version-8 baseline prerequisite for an older database.
 
 Every API response carries `X-Correlation-ID`. Clients may supply a safe value in that header or let the backend generate one. Include it in incident reports, but never include JWTs, passwords, reset links, API keys, or request bodies.
 
@@ -86,7 +93,7 @@ Critical indexes already included:
 - Keep backend stateless; JWT and hashed refresh-token persistence already support this.
 - Read-heavy train search and train detail responses use simple in-memory Spring cache. For multiple backend replicas, each replica maintains its own local cache.
 - Partition high-volume booking/audit tables by date when traffic grows.
-- Add queue-backed email and SMS notification delivery.
+- Extend the existing transactional email outbox to additional notification channels if needed.
 
 ## CI/CD
 

@@ -1,6 +1,6 @@
 insert into roles (id, name, description) values
 ('10000000-0000-4000-9000-000000000001', 'ROLE_USER', 'Passenger user'),
-('10000000-0000-4000-9000-000000000002', 'ROLE_ADMIN', '10000000-0000-4000-9000-000000000002')
+('10000000-0000-4000-9000-000000000002', 'ROLE_ADMIN', 'Administrator')
 on conflict do nothing;
 
 insert into stations (id, code, name, city, state, latitude, longitude, created_at, updated_at) values
