@@ -147,7 +147,7 @@ public class BookingService {
     booking.setDestinationStation(destination);
     booking.setJourneyDate(request.getJourneyDate());
     booking.setTravelClass(travelClass);
-    booking.setQuota(request.getQuota());
+    booking.setQuota(request.getQuota().toUpperCase(Locale.ROOT));
     booking.setPnr(generateUniquePnr());
     booking.setStatus(bookingStatus);
     booking.setQueuePosition(queuePosition);
@@ -160,10 +160,13 @@ public class BookingService {
     List<Passenger> savedPassengers = request.getPassengers().stream().map(item -> {
       Passenger passenger = new Passenger();
       passenger.setBooking(booking);
-      passenger.setFullName(item.getFullName());
+      passenger.setFullName(item.getFullName().trim());
       passenger.setAge(item.getAge());
-      passenger.setGender(item.getGender());
-      passenger.setBerthPreference(item.getBerthPreference());
+      passenger.setGender(item.getGender().toUpperCase(Locale.ROOT));
+      passenger.setBerthPreference(
+              item.getBerthPreference() == null
+                      ? null
+                      : item.getBerthPreference().toUpperCase(Locale.ROOT));
       passenger.setStatus(bookingStatus);
       return passengers.save(passenger);
     }).collect(Collectors.toList());
@@ -222,13 +225,15 @@ public class BookingService {
         .append(request.getSourceStationCode()).append('\n')
         .append(request.getDestinationStationCode()).append('\n')
         .append(request.getJourneyDate()).append('\n')
-        .append(request.getTravelClass()).append('\n')
-        .append(request.getQuota()).append('\n');
+        .append(request.getTravelClass().toUpperCase(Locale.ROOT)).append('\n')
+        .append(request.getQuota().toUpperCase(Locale.ROOT)).append('\n');
     request.getPassengers().forEach(passenger -> canonical
-        .append(passenger.getFullName()).append('\u001f')
+            .append(passenger.getFullName().trim()).append('\u001f')
         .append(passenger.getAge()).append('\u001f')
-        .append(passenger.getGender()).append('\u001f')
-        .append(passenger.getBerthPreference()).append('\n'));
+            .append(passenger.getGender().toUpperCase(Locale.ROOT)).append('\u001f')
+            .append(passenger.getBerthPreference() == null ? ""
+                            : passenger.getBerthPreference().toUpperCase(Locale.ROOT))
+            .append('\n'));
     try {
       byte[] digest = MessageDigest.getInstance("SHA-256")
           .digest(canonical.toString().getBytes(StandardCharsets.UTF_8));

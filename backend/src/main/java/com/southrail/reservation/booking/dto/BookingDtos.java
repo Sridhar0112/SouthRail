@@ -37,7 +37,9 @@ public final class BookingDtos {
     @Pattern(regexp = "(?i)male|female|other", message = "gender must be male, female, or other")
     private String gender;
 
-    @Size(max = 20)
+    @Pattern(
+            regexp = "(?i)LOWER|MIDDLE|UPPER|SIDE_LOWER|SIDE_UPPER|NO_PREFERENCE",
+            message = "berth preference is invalid")
     private String berthPreference;
   }
 
@@ -67,7 +69,9 @@ public final class BookingDtos {
     private String travelClass;
 
     @NotBlank
-    @Size(max = 20)
+    @Pattern(
+            regexp = "(?i)GENERAL|TATKAL|LADIES|SENIOR_CITIZEN|PREMIUM_TATKAL",
+            message = "quota is invalid")
     private String quota;
 
     @NotEmpty
