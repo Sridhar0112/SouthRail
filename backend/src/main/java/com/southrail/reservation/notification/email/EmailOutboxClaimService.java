@@ -45,6 +45,7 @@ class EmailOutboxClaimService {
           message.setLastError(error);
           if (attempts >= EmailOutboxProcessor.MAX_ATTEMPTS) {
             message.setStatus("FAILED");
+            message.setMimeMessage(null);
           } else {
             message.setStatus("PENDING");
             long seconds = Math.min(300, 1L << Math.min(attempts, 11));

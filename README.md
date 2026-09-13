@@ -183,10 +183,10 @@ No genuine screenshots are committed yet. When preparing a public demo, capture 
 
 ### Planned engineering phases
 
-1. **Data lifecycle and integration testing:** convert ordered SQL to Flyway migrations and add PostgreSQL Testcontainers coverage.
+1. **Data lifecycle and integration testing:** expand PostgreSQL/Testcontainers coverage for the Flyway-managed migration lifecycle.
 2. **Reservation correctness at scale:** define inventory invariants; retain the database-scoped inventory locks, concurrency tests and idempotency keys. Evaluate temporary Redis seat holds only after the database-first design is measured.
 3. **Payments:** model an explicit payment state machine, provider callbacks, reconciliation and idempotent booking confirmation.
-4. **Reliable async delivery:** introduce a transactional outbox before Kafka/event-driven email and notification consumers.
+4. **Reliable async delivery:** operate and monitor the transactional email outbox; add other brokers only if measured requirements justify them.
 5. **Observability and performance:** publish selected Micrometer metrics to Prometheus/Grafana; add tracing, SLOs and booking/search load tests.
 6. **Delivery:** add frontend quality gates, image/security scanning, managed secrets, repeatable migrations and staged deployment/rollback automation.
 

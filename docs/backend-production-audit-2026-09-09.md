@@ -51,15 +51,16 @@ The existing train-row lock and partial unique indexes materially improve bookin
 - **Recommended fix:** Use a short transactional, pessimistically locked account-state transition or an atomic conditional update. Keep BCrypt authentication outside long lock holds where possible, then apply a versioned/conditional state update; add gateway and per-account rate limiting.
 - **Blocker before next feature work:** YES
 
-### H-4 — Email is sent while booking/auth database transactions and the train lock are open
+### H-4 — [RESOLVED] Email was sent while booking/auth transactions were open
 
 - **Severity:** HIGH (confirmed reliability defect)
+- **Resolution:** Resolved by the transactional email outbox. Business transactions persist MIME payloads; a leased worker sends SMTP outside the database transaction and retries failures.
 - **Exact file / symbol:** `BookingService.create`; `AuthService.register`, `forgotPassword`, `resendVerificationEmail`, `sendUnlockEmail`; `EmailNotificationService.send*`.
-- **Problem:** Blocking SMTP calls occur before transaction commit. Booking creation retains the pessimistic train lock throughout email rendering/network I/O. Catching mail exceptions does not solve latency or the send-before-commit inconsistency.
+- **Original finding:** Blocking SMTP calls occurred before transaction commit. Booking creation retained the pessimistic train lock throughout email rendering/network I/O. Catching mail exceptions does not solve latency or the send-before-commit inconsistency.
 - **Impact:** Slow SMTP serializes all bookings for a train, exhausts request/DB pools, and increases deadlock/timeout exposure. A message can be delivered even if the enclosing transaction later rolls back; conversely, failures are only logged and never retried.
 - **Reproduction:** Enable email with a server that accepts slowly, then issue concurrent bookings for one train; requests queue behind the locked transaction.
 - **Recommended fix:** Persist an idempotent transactional outbox event, commit, then deliver asynchronously with bounded retry/backoff and deduplication. Do not expose raw tokens beyond the outbox payload's protected lifetime.
-- **Blocker before next feature work:** YES
+- **Current blocker:** NO
 
 ### H-5 — AI and email feature flags are not connected to runtime behavior
 
@@ -73,14 +74,15 @@ The existing train-row lock and partial unique indexes materially improve bookin
 
 ## MEDIUM
 
-### M-1 — Production schema changes are neither automatically versioned nor verified
+### M-1 — [RESOLVED] Production schema changes were not automatically versioned
 
 - **Severity:** MEDIUM (confirmed production reliability risk)
-- **Exact file / config:** `application.yml` (`spring.flyway.enabled: false`, `ddl-auto: validate`); `database/001_schema.sql` through `005_booking_concurrency.sql`; `docker-compose.yml` PostgreSQL init mount.
-- **Problem:** SQL runs automatically only when Docker initializes an empty volume. Existing environments require undocumented/manual ordering, while application startup merely validates the final mapping. There is no schema-history table, checksum, rollback policy, or migration test.
+- **Resolution:** Resolved by the Flyway V1-V9 history, validation at startup, and the documented version-8 baseline procedure for existing databases.
+- **Original file / config:** `application.yml` (`spring.flyway.enabled: false`, `ddl-auto: validate`); `database/001_schema.sql` through `005_booking_concurrency.sql`; `docker-compose.yml` PostgreSQL init mount.
+- **Original finding:** SQL runs automatically only when Docker initializes an empty volume. Existing environments require undocumented/manual ordering, while application startup merely validates the final mapping. There is no schema-history table, checksum, rollback policy, or migration test.
 - **Impact:** A deployment against an existing v0.2.x database can fail startup or run with missing constraints/repairs. Operators cannot reliably determine which scripts ran. `003` and `005` contain production data rewrites whose results are not preflighted.
 - **Recommended fix:** Baseline existing production state, convert scripts into immutable Flyway migrations, add preflight queries/backups for data repairs, and test empty-database plus upgrade paths on PostgreSQL/Testcontainers.
-- **Blocker before next feature work:** YES
+- **Current blocker:** NO
 
 ### M-2 — Public AI endpoints permit anonymous quota consumption
 
@@ -109,12 +111,11 @@ The existing train-row lock and partial unique indexes materially improve bookin
 - **Recommended fix:** Centralize one fare service and return an explicit quote identifier/version consumed atomically by booking, or clearly label estimates and test the contract.
 - **Blocker before next feature work:** NO
 
-### M-5 — Cancellation behavior and API claims do not support partial cancellation
+### M-5 — [RESOLVED] Cancellation behavior previously implied partial cancellation
 
 - **Severity:** MEDIUM (confirmed missing domain behavior/contract defect)
 - **Resolution:** The unused aggregate partial-cancellation state was removed. The API supports complete-booking cancellation only, matching its implemented behavior and policy text.
-- **Impact:** Clients cannot perform advertised passenger-level cancellation; the dormant state is untested and legacy rows can have semantics the service cannot create or manage.
-- **Recommended fix:** Either remove the claim/state until implemented or design an idempotent passenger-level cancellation command with locked booking/passengers, per-seat release, fare/refund persistence, and queue promotion.
+- **Current behavior:** Passenger-level cancellation is not advertised or supported; legacy dormant-state rows are normalized by the forward migration.
 - **Blocker before next feature work:** NO
 
 ### M-6 — Token lifetime arithmetic can overflow and TTL properties lack upper bounds
@@ -171,8 +172,8 @@ The existing train-row lock and partial unique indexes materially improve bookin
 1. Correct and transactionally test cancellation promotion/queue compaction on PostgreSQL.
 2. Model and enforce RAC/WL capacity per passenger, including a bounded passenger count.
 3. Serialize account-token issuance and login lockout transitions; add public-endpoint rate limits.
-4. Adopt tested, immutable Flyway upgrade migrations with production preflight/backup procedures.
-5. Make integration flags real, move email delivery to an idempotent transactional outbox, and protect Gemini with authentication/quotas.
+4. Exercise Flyway backup/restore and version-8 baseline procedures in deployment rehearsals.
+5. Monitor the transactional email outbox and protect Gemini with authentication/quotas.
 
 ## Audit inventory and validation
 
