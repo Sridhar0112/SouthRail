@@ -13,6 +13,7 @@ import com.southrail.reservation.entity.account.RoleName;
 import com.southrail.reservation.entity.account.User;
 import com.southrail.reservation.exception.ApiException;
 import com.southrail.reservation.repository.booking.BookingRepository;
+import com.southrail.reservation.repository.booking.PassengerRepository;
 import com.southrail.reservation.repository.account.UserRepository;
 import com.southrail.reservation.entity.train.Train;
 import com.southrail.reservation.repository.train.TrainRepository;

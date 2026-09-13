@@ -1,6 +1,7 @@
 package com.southrail.reservation.controller.ai;
 
 import com.southrail.reservation.dto.ai.AiDtos;
+import com.southrail.reservation.service.ai.AiAssistantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
