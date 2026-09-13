@@ -22,7 +22,7 @@ class EmailOutboxProcessor {
     this.sender = sender;
   }
 
-  @Scheduled(fixedDelayString = "${southrail.email-outbox.poll-delay:5s}")
+  @Scheduled(fixedDelayString = "${southrail.email-outbox.poll-delay:5000}")
   public void deliverNext() {
     claims.claim().ifPresent(this::deliver);
   }
