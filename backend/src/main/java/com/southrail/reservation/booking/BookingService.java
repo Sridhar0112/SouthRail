@@ -222,8 +222,8 @@ public class BookingService {
   private String fingerprint(BookingDtos.BookingRequest request) {
     StringBuilder canonical = new StringBuilder()
         .append(request.getTrainId()).append('\n')
-        .append(request.getSourceStationCode()).append('\n')
-        .append(request.getDestinationStationCode()).append('\n')
+        .append(request.getSourceStationCode().toUpperCase(Locale.ROOT)).append('\n')
+        .append(request.getDestinationStationCode().toUpperCase(Locale.ROOT)).append('\n')
         .append(request.getJourneyDate()).append('\n')
         .append(request.getTravelClass().toUpperCase(Locale.ROOT)).append('\n')
         .append(request.getQuota().toUpperCase(Locale.ROOT)).append('\n');
@@ -231,7 +231,7 @@ public class BookingService {
             .append(passenger.getFullName().trim()).append('\u001f')
         .append(passenger.getAge()).append('\u001f')
             .append(passenger.getGender().toUpperCase(Locale.ROOT)).append('\u001f')
-            .append(passenger.getBerthPreference() == null ? ""
+            .append(passenger.getBerthPreference() == null ? null
                             : passenger.getBerthPreference().toUpperCase(Locale.ROOT))
             .append('\n'));
     try {
