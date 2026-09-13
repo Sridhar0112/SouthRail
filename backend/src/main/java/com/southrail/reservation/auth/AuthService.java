@@ -333,19 +333,11 @@ public class AuthService {
   }
 
   private void trySendPasswordReset(User user, String token) {
-    try {
-      accountEmailService.sendPasswordReset(user, token);
-    } catch (RuntimeException ex) {
-      log.warn("password_reset_email_failed userId={}", user.getId(), ex);
-    }
+    accountEmailService.sendPasswordReset(user, token);
   }
 
   private void trySendVerification(User user, String token) {
-    try {
-      accountEmailService.sendEmailVerification(user, token);
-    } catch (RuntimeException ex) {
-      log.warn("verification_email_failed userId={}", user.getId(), ex);
-    }
+    accountEmailService.sendEmailVerification(user, token);
   }
 
   private AuthDtos.AuthResponse issueTokens(User user) {
@@ -412,12 +404,7 @@ public class AuthService {
     trySendVerification(user, verificationToken);
   }
     private void trySendUnlockEmail(User user, String token) {
-
-        try {
-            accountEmailService.sendAccountUnlock(user, token);
-        } catch (RuntimeException ex) {
-            log.warn("unlock_email_failed userId={}", user.getId(), ex);
-        }
+        accountEmailService.sendAccountUnlock(user, token);
     }
     @Transactional
     public void sendUnlockEmail(

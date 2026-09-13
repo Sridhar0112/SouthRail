@@ -112,8 +112,7 @@ The existing train-row lock and partial unique indexes materially improve bookin
 ### M-5 — Cancellation behavior and API claims do not support partial cancellation
 
 - **Severity:** MEDIUM (confirmed missing domain behavior/contract defect)
-- **Exact file / symbol:** `BookingCancellationService.cancel`; `BookingStatus.PARTIALLY_CANCELLED`; `BookingService.review` cancellation-policy text.
-- **Problem:** The API advertises partial cancellation and the enum/inventory queries recognize `PARTIALLY_CANCELLED`, but there is no passenger-selection endpoint or transition. Cancellation always cancels the whole booking and releases every seat.
+- **Resolution:** The unused aggregate partial-cancellation state was removed. The API supports complete-booking cancellation only, matching its implemented behavior and policy text.
 - **Impact:** Clients cannot perform advertised passenger-level cancellation; the dormant state is untested and legacy rows can have semantics the service cannot create or manage.
 - **Recommended fix:** Either remove the claim/state until implemented or design an idempotent passenger-level cancellation command with locked booking/passengers, per-seat release, fare/refund persistence, and queue promotion.
 - **Blocker before next feature work:** NO

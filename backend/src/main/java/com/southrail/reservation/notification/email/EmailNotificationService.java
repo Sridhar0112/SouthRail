@@ -16,8 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 public class EmailNotificationService {
@@ -26,13 +24,16 @@ public class EmailNotificationService {
   private final String from;
   private final String frontendUrl;
   private final boolean enabled;
+  private final EmailOutboxService outbox;
 
   public EmailNotificationService(JavaMailSender mailSender, SouthRailMailProperties mailProperties,
-      SouthRailApplicationProperties applicationProperties, SouthRailFeatureProperties features) {
+      SouthRailApplicationProperties applicationProperties, SouthRailFeatureProperties features,
+      EmailOutboxService outbox) {
     this.mailSender = mailSender;
     this.from = mailProperties.getFrom();
     this.frontendUrl = applicationProperties.getFrontendUrl();
     this.enabled = features.isEmailEnabled();
+    this.outbox = outbox;
   }
 
   public void sendPasswordReset(User user, String token) {
@@ -58,7 +59,7 @@ public class EmailNotificationService {
         );
     }
   private void send(String to, String subject, String body) {
-    afterCommit(() -> sendNow(to, subject, body));
+    if (enabled) sendNow(to, subject, body);
   }
 
   private void sendNow(String to, String subject, String body) {
@@ -329,8 +330,8 @@ public class EmailNotificationService {
 
       helper.setText(html, true);
 
-      mailSender.send(message);
-      log.info("account_email_sent type={}", emailType(subject));
+      outbox.enqueue(message);
+      log.info("account_email_queued type={}", emailType(subject));
 
     } catch (Exception e) {
       throw new IllegalStateException("Unable to send account email", e);
@@ -341,7 +342,7 @@ public class EmailNotificationService {
           Booking booking,
           List<Passenger> passengers,
           List<BookingSeat> seats) {
-      afterCommit(() -> sendBookingConfirmationNow(booking, passengers, seats));
+      if (enabled) sendBookingConfirmationNow(booking, passengers, seats);
     }
 
     private void sendBookingConfirmationNow(
@@ -527,38 +528,11 @@ public class EmailNotificationService {
       );
       helper.setText(html, true);
 
-      mailSender.send(message);
-      log.info("booking_confirmation_email_sent pnr={}", booking.getPnr());
+      outbox.enqueue(message);
+      log.info("booking_confirmation_email_queued pnr={}", booking.getPnr());
 
     } catch (Exception e) {
       throw new IllegalStateException("Unable to send booking confirmation email", e);
-    }
-  }
-
-  private void afterCommit(Runnable delivery) {
-    if (!enabled) {
-      return;
-    }
-    if (!TransactionSynchronizationManager.isSynchronizationActive()
-        || !TransactionSynchronizationManager.isActualTransactionActive()) {
-      deliverSafely(delivery);
-      return;
-    }
-    TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-      @Override
-      public void afterCommit() {
-        deliverSafely(delivery);
-      }
-    });
-  }
-
-  private void deliverSafely(Runnable delivery) {
-    try {
-      delivery.run();
-    } catch (RuntimeException ex) {
-      // Business state is already committed. Delivery is deliberately best-effort
-      // in v0.2.2; never turn a successful commit into an apparent API failure.
-      log.warn("email_delivery_failed_after_commit", ex);
     }
   }
 

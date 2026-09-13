@@ -13,7 +13,10 @@ spring:
         jdbc:
           time_zone: UTC
   flyway:
-    enabled: false # Existing SQL is not yet a safe Flyway history; see backend audit.
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 8
+    validate-migration-naming: true
   cache:
     type: simple
   data:

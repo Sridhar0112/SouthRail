@@ -17,6 +17,9 @@ import org.springframework.data.jpa.repository.Modifying;
 import java.util.List;
 public interface BookingRepository extends JpaRepository<Booking, UUID> {
   Optional<Booking> findByPnr(String pnr);
+  Optional<Booking> findByUserAndIdempotencyKey(User user, String idempotencyKey);
+  @Query(value = "select pg_advisory_xact_lock(hashtextextended(:lockKey, 0))", nativeQuery = true)
+  Object acquireScopedLock(@Param("lockKey") String lockKey);
   boolean existsByPnr(String pnr);
   @Query(value = "select pg_advisory_xact_lock(6003110648787124553)", nativeQuery = true)
   Object acquirePnrGenerationLock();

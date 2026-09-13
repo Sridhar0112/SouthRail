@@ -4,6 +4,5 @@ public enum BookingStatus {
   CONFIRMED,
   RAC,
   WAITLISTED,
-  CANCELLED,
-  PARTIALLY_CANCELLED
+  CANCELLED
 }

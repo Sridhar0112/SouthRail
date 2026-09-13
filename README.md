@@ -121,7 +121,7 @@ Required Compose values are documented in [`.env.example`](.env.example). Produc
 
 ### Local development
 
-Start PostgreSQL and apply `database/001_schema.sql` through `database/006_queue_and_token_concurrency.sql` in numeric order, then run:
+Start PostgreSQL; Spring Boot Flyway applies and validates `backend/src/main/resources/db/migration` automatically, then run:
 
 ```bash
 cd backend
@@ -184,7 +184,7 @@ No genuine screenshots are committed yet. When preparing a public demo, capture 
 ### Planned engineering phases
 
 1. **Data lifecycle and integration testing:** convert ordered SQL to Flyway migrations and add PostgreSQL Testcontainers coverage.
-2. **Reservation correctness at scale:** define inventory invariants; add optimistic or pessimistic database locking, concurrency tests and idempotency keys. Evaluate temporary Redis seat holds only after the database-first design is measured.
+2. **Reservation correctness at scale:** define inventory invariants; retain the database-scoped inventory locks, concurrency tests and idempotency keys. Evaluate temporary Redis seat holds only after the database-first design is measured.
 3. **Payments:** model an explicit payment state machine, provider callbacks, reconciliation and idempotent booking confirmation.
 4. **Reliable async delivery:** introduce a transactional outbox before Kafka/event-driven email and notification consumers.
 5. **Observability and performance:** publish selected Micrometer metrics to Prometheus/Grafana; add tracing, SLOs and booking/search load tests.
