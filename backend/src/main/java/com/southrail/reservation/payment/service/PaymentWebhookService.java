@@ -135,6 +135,7 @@ public class PaymentWebhookService {
         && (payment.getStatus() == PaymentStatus.PENDING
             || payment.getStatus() == PaymentStatus.AUTHORIZED)) {
       payment.captured(paymentId);
+      activateRefundAfterCapture(payment);
     } else if ("payment.authorized".equals(eventType)
         && payment.getStatus() == PaymentStatus.PENDING) {
       payment.authorized(paymentId);
@@ -145,6 +146,13 @@ public class PaymentWebhookService {
           node.path("error_description").asText(null));
     }
     return true;
+  }
+
+  private void activateRefundAfterCapture(Payment payment) {
+    if (refunds.findByPaymentId(payment.getId()).isPresent()
+        && payment.getStatus() == PaymentStatus.CAPTURED) {
+      payment.transition(PaymentStatus.REFUND_PENDING);
+    }
   }
 
   private void validatePaymentPayload(Payment payment, JsonNode node) {

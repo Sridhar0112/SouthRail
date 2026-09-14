@@ -3,6 +3,7 @@ package com.southrail.reservation.repository.payment;
 import com.southrail.reservation.entity.payment.Payment;
 import com.southrail.reservation.entity.payment.PaymentStatus;
 import jakarta.persistence.LockModeType;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,6 +20,16 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
 
   Optional<Payment> findFirstByBookingIdAndStatusOrderByCreatedAtDesc(
       UUID bookingId, PaymentStatus status);
+
+  Optional<Payment> findFirstByBookingIdAndStatusInOrderByCreatedAtDesc(
+      UUID bookingId, Collection<PaymentStatus> statuses);
+
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("select p from Payment p join fetch p.booking b join fetch b.user "
+      + "where b.id = :bookingId and p.status in :statuses order by p.createdAt desc")
+  Optional<Payment> findFinancialPaymentForUpdate(
+      @Param("bookingId") UUID bookingId,
+      @Param("statuses") Collection<PaymentStatus> statuses);
 
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   @Query("select p from Payment p join fetch p.booking b join fetch b.user where p.id = :id")

@@ -36,6 +36,12 @@ public class RefundPersistenceService {
     if (refund.getPayment().getProviderPaymentId() == null) {
       return null;
     }
+    if (refund.getPayment().getStatus() == PaymentStatus.CAPTURED) {
+      refund.getPayment().transition(PaymentStatus.REFUND_PENDING);
+    }
+    if (refund.getPayment().getStatus() != PaymentStatus.REFUND_PENDING) {
+      return null;
+    }
     refund.processing();
     // A same-state stale claim still needs a new lease timestamp.
     refund.setUpdatedAt(Instant.now());

@@ -3,6 +3,7 @@ package com.southrail.reservation.payment.service;
 import com.southrail.reservation.entity.account.RoleName;
 import com.southrail.reservation.entity.account.User;
 import com.southrail.reservation.entity.booking.Booking;
+import com.southrail.reservation.entity.booking.BookingStatus;
 import com.southrail.reservation.entity.payment.Payment;
 import com.southrail.reservation.entity.payment.PaymentStatus;
 import com.southrail.reservation.exception.ApiException;
@@ -10,9 +11,11 @@ import com.southrail.reservation.payment.dto.PaymentDtos.PaymentStatusResponse;
 import com.southrail.reservation.payment.gateway.PaymentGateway.GatewayPayment;
 import com.southrail.reservation.repository.account.UserRepository;
 import com.southrail.reservation.repository.booking.BookingRepository;
+import com.southrail.reservation.repository.payment.PaymentRefundRepository;
 import com.southrail.reservation.repository.payment.PaymentRepository;
 import com.southrail.reservation.service.audit.AuditLogService;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,16 +30,19 @@ public class PaymentPersistenceService {
   private final BookingRepository bookings;
   private final UserRepository users;
   private final AuditLogService audit;
+  private final PaymentRefundRepository refunds;
 
   public PaymentPersistenceService(
       PaymentRepository payments,
       BookingRepository bookings,
       UserRepository users,
-      AuditLogService audit) {
+      AuditLogService audit,
+      PaymentRefundRepository refunds) {
     this.payments = payments;
     this.bookings = bookings;
     this.users = users;
     this.audit = audit;
+    this.refunds = refunds;
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -44,6 +50,10 @@ public class PaymentPersistenceService {
     User user = user(email);
     Booking booking = bookings.findById(bookingId).orElseThrow(this::notFound);
     requireOwnership(user, booking);
+    if (booking.getStatus() == BookingStatus.CANCELLED) {
+      throw new ApiException(
+          HttpStatus.CONFLICT, "BOOKING_CANCELLED", "Cancelled bookings cannot be paid");
+    }
     Optional<Payment> existing = payments.findByIdempotencyKey(idempotencyKey);
     if (existing.isPresent()) {
       if (!existing.get().getBooking().getId().equals(bookingId)) {
@@ -58,6 +68,12 @@ public class PaymentPersistenceService {
         bookingId, PaymentStatus.CAPTURED).isPresent()) {
       throw new ApiException(
           HttpStatus.CONFLICT, "PAYMENT_ALREADY_COMPLETED", "Booking is already paid");
+    }
+    if (payments.findFirstByBookingIdAndStatusInOrderByCreatedAtDesc(
+        bookingId,
+        List.of(PaymentStatus.CREATED, PaymentStatus.PENDING, PaymentStatus.AUTHORIZED))
+        .isPresent()) {
+      throw activeAttempt();
     }
     Payment payment = payments.saveAndFlush(Payment.create(booking, idempotencyKey));
     return prepared(payment, true);
@@ -74,6 +90,26 @@ public class PaymentPersistenceService {
           "Idempotency-Key has already been used for another booking");
     }
     return prepared(payment, false);
+  }
+
+  @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
+  public PreparedPayment resolveCreateConflict(
+      String email, UUID bookingId, String idempotencyKey) {
+    Optional<Payment> sameRequest = payments.findByIdempotencyKey(idempotencyKey);
+    if (sameRequest.isPresent()) {
+      return findPrepared(email, bookingId, idempotencyKey);
+    }
+    User user = user(email);
+    Booking booking = bookings.findById(bookingId).orElseThrow(this::notFound);
+    requireOwnership(user, booking);
+    if (payments.findFirstByBookingIdAndStatusInOrderByCreatedAtDesc(
+        bookingId,
+        List.of(PaymentStatus.CREATED, PaymentStatus.PENDING, PaymentStatus.AUTHORIZED))
+        .isPresent()) {
+      throw activeAttempt();
+    }
+    throw new ApiException(
+        HttpStatus.CONFLICT, "PAYMENT_CREATE_CONFLICT", "Payment attempt could not be created");
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -146,6 +182,7 @@ public class PaymentPersistenceService {
       payment.authorized(remote.id());
     } else if ("captured".equals(remote.status())) {
       payment.captured(remote.id());
+      activateRefundAfterCapture(payment);
     } else {
       throw new ApiException(
           HttpStatus.CONFLICT, "PAYMENT_NOT_CAPTURED", "Provider has not captured this payment");
@@ -158,6 +195,20 @@ public class PaymentPersistenceService {
         "PAYMENT",
         "Payment " + payment.getId() + " verified for PNR " + payment.getBooking().getPnr());
     return status(payment);
+  }
+
+  private void activateRefundAfterCapture(Payment payment) {
+    if (refunds.findByPaymentId(payment.getId()).isPresent()
+        && payment.getStatus() == PaymentStatus.CAPTURED) {
+      payment.transition(PaymentStatus.REFUND_PENDING);
+    }
+  }
+
+  private ApiException activeAttempt() {
+    return new ApiException(
+        HttpStatus.CONFLICT,
+        "PAYMENT_ATTEMPT_ACTIVE",
+        "An active payment attempt already exists for this booking");
   }
 
   @Transactional(readOnly = true)

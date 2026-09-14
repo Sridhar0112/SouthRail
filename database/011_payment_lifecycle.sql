@@ -11,7 +11,7 @@ CREATE UNIQUE INDEX uq_payments_order ON payments(provider_order_id) WHERE provi
 CREATE UNIQUE INDEX uq_payments_provider_payment ON payments(provider_payment_id) WHERE provider_payment_id IS NOT NULL;
 CREATE UNIQUE INDEX uq_payments_idempotency ON payments(idempotency_key);
 CREATE UNIQUE INDEX uq_payments_one_successful_booking ON payments(booking_id)
- WHERE status IN ('AUTHORIZED','CAPTURED','REFUND_PENDING','PARTIALLY_REFUNDED','REFUNDED');
+ WHERE status IN ('CREATED','PENDING','AUTHORIZED','CAPTURED','REFUND_PENDING','PARTIALLY_REFUNDED','REFUNDED');
 
 CREATE TABLE payment_refunds (
  id UUID PRIMARY KEY, payment_id UUID NOT NULL REFERENCES payments(id), booking_id UUID NOT NULL REFERENCES bookings(id),

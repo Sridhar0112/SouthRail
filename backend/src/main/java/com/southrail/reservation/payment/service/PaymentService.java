@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -68,7 +69,7 @@ public class PaymentService {
     try {
       prepared = persistence.prepare(email, bookingId, idempotencyKey);
     } catch (DataIntegrityViolationException duplicate) {
-      prepared = persistence.findPrepared(email, bookingId, idempotencyKey);
+      prepared = persistence.resolveCreateConflict(email, bookingId, idempotencyKey);
     }
 
     if (!prepared.created()) {
@@ -145,9 +146,9 @@ public class PaymentService {
     if (amount == null || amount.signum() <= 0) {
       return null;
     }
-    Optional<Payment> captured = payments.findFirstByBookingIdAndStatusOrderByCreatedAtDesc(
-        booking.getId(), PaymentStatus.CAPTURED);
-    if (captured.isEmpty()) {
+    Optional<Payment> financialPayment = payments.findFinancialPaymentForUpdate(
+        booking.getId(), List.of(PaymentStatus.AUTHORIZED, PaymentStatus.CAPTURED));
+    if (financialPayment.isEmpty()) {
       return null;
     }
     String key = "cancellation:" + booking.getId();
@@ -155,10 +156,12 @@ public class PaymentService {
     if (existing.isPresent()) {
       return existing.get();
     }
-    Payment payment = captured.get();
+    Payment payment = financialPayment.get();
     PaymentRefund refund = refunds.save(PaymentRefund.request(
         payment, amount, key, "SouthRail cancellation refund"));
-    payment.transition(PaymentStatus.REFUND_PENDING);
+    if (payment.getStatus() == PaymentStatus.CAPTURED) {
+      payment.transition(PaymentStatus.REFUND_PENDING);
+    }
     audit.log(
         booking.getUser().getId(),
         booking.getUser().getEmail(),

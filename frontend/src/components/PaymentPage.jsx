@@ -129,6 +129,9 @@ export default function PaymentPage() {
       )
       orderData = createdOrder
     } catch (err) {
+      if (err.response?.data?.errorCode === "PAYMENT_ORDER_FAILED") {
+        sessionStorage.removeItem(`payment-key:${booking.bookingId}`)
+      }
       setErrorMessage(
         err.response?.data?.message ??
           (err instanceof Error ? err.message : "Could not initiate payment. Try again.")
@@ -200,6 +203,7 @@ export default function PaymentPage() {
     razorpayRef.current = rzp
     rzp.on("payment.failed", () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      sessionStorage.removeItem(`payment-key:${booking.bookingId}`)
       setErrorMessage(
         "Payment was declined. Please try a different payment method."
       )
