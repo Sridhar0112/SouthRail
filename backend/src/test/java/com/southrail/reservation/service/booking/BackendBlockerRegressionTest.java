@@ -44,6 +44,7 @@ import java.util.UUID;
 import java.math.BigDecimal;
 import com.southrail.reservation.dto.booking.RefundQuoteDto;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -327,7 +328,7 @@ class BackendBlockerRegressionTest {
     PassengerRepository passengers = mock(PassengerRepository.class);
     BookingCancellationService service = new BookingCancellationService(bookings, users,
         mock(RefundCalculationService.class), notifications, mock(SeatAllocationService.class), audit,
-        trains, passengers);
+        trains, passengers, mock(ApplicationEventPublisher.class));
     com.southrail.reservation.entity.account.User user = new com.southrail.reservation.entity.account.User();
     user.setId(UUID.randomUUID());
     Booking booking = new Booking();
@@ -357,7 +358,8 @@ class BackendBlockerRegressionTest {
     SeatAllocationService allocation = mock(SeatAllocationService.class);
     RefundCalculationService refunds = mock(RefundCalculationService.class);
     BookingCancellationService service = new BookingCancellationService(bookings, users, refunds,
-        mock(NotificationService.class), allocation, mock(AuditLogService.class), trains, passengerRepository);
+        mock(NotificationService.class), allocation, mock(AuditLogService.class), trains,
+        passengerRepository, mock(ApplicationEventPublisher.class));
     com.southrail.reservation.entity.account.User user = new com.southrail.reservation.entity.account.User();
     user.setId(UUID.randomUUID());
     user.setEmail("user@example.com");
