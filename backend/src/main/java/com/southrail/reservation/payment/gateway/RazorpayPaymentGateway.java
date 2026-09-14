@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +22,7 @@ public class RazorpayPaymentGateway implements PaymentGateway {
   private final ObjectMapper json;
   private final HttpClient http;
 
+  @Autowired
   public RazorpayPaymentGateway(RazorpayProperties config, ObjectMapper json) {
     this(config, json, HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build());
   }
