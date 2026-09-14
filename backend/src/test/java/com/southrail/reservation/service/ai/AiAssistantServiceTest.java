@@ -1,18 +1,18 @@
 package com.southrail.reservation.service.ai;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.southrail.reservation.config.properties.SouthRailFeatureProperties;
 import com.southrail.reservation.dto.ai.AiDtos;
-import com.southrail.reservation.service.ai.GeminiClient;
+import com.southrail.reservation.exception.ai.AiException;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import com.southrail.reservation.config.properties.SouthRailFeatureProperties;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.never;
 
 class AiAssistantServiceTest {
   @Test
