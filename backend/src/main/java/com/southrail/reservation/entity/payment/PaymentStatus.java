@@ -3,10 +3,19 @@ package com.southrail.reservation.entity.payment;
 import java.util.EnumSet;
 
 public enum PaymentStatus {
-  CREATED, PENDING, AUTHORIZED, CAPTURED, FAILED, REFUND_PENDING, PARTIALLY_REFUNDED, REFUNDED;
+  CREATED,
+  PENDING,
+  AUTHORIZED,
+  CAPTURED,
+  FAILED,
+  REFUND_PENDING,
+  PARTIALLY_REFUNDED,
+  REFUNDED;
 
   public boolean canTransitionTo(PaymentStatus next) {
-    if (this == next) return true;
+    if (this == next) {
+      return true;
+    }
     return switch (this) {
       case CREATED -> next == PENDING || next == FAILED;
       case PENDING -> EnumSet.of(AUTHORIZED, CAPTURED, FAILED).contains(next);

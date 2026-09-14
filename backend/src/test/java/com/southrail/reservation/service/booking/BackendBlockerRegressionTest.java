@@ -328,7 +328,8 @@ class BackendBlockerRegressionTest {
     PassengerRepository passengers = mock(PassengerRepository.class);
     BookingCancellationService service = new BookingCancellationService(bookings, users,
         mock(RefundCalculationService.class), notifications, mock(SeatAllocationService.class), audit,
-        trains, passengers, mock(ApplicationEventPublisher.class));
+        trains, passengers, mock(ApplicationEventPublisher.class),
+        mock(com.southrail.reservation.payment.service.PaymentService.class));
     com.southrail.reservation.entity.account.User user = new com.southrail.reservation.entity.account.User();
     user.setId(UUID.randomUUID());
     Booking booking = new Booking();
@@ -359,7 +360,8 @@ class BackendBlockerRegressionTest {
     RefundCalculationService refunds = mock(RefundCalculationService.class);
     BookingCancellationService service = new BookingCancellationService(bookings, users, refunds,
         mock(NotificationService.class), allocation, mock(AuditLogService.class), trains,
-        passengerRepository, mock(ApplicationEventPublisher.class));
+        passengerRepository, mock(ApplicationEventPublisher.class),
+        mock(com.southrail.reservation.payment.service.PaymentService.class));
     com.southrail.reservation.entity.account.User user = new com.southrail.reservation.entity.account.User();
     user.setId(UUID.randomUUID());
     user.setEmail("user@example.com");

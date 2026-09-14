@@ -1,7 +1,10 @@
 package com.southrail.reservation.entity.payment;
 
 public enum RefundStatus {
-  REQUESTED, PROCESSING, PROCESSED, FAILED;
+  REQUESTED,
+  PROCESSING,
+  PROCESSED,
+  FAILED;
 
   public boolean canTransitionTo(RefundStatus next) {
     return this == next || switch (this) {

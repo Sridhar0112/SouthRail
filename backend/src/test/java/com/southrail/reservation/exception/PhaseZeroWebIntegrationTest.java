@@ -113,6 +113,27 @@ class PhaseZeroWebIntegrationTest {
   }
 
   @Test
+  void protectsPaymentApisButAllowsSignedWebhookAuthenticationBoundary() throws Exception {
+    String id = "00000000-0000-0000-0000-000000000001";
+    mockMvc.perform(post("/payments/bookings/" + id + "/orders")
+            .header("Idempotency-Key", "test-key"))
+        .andExpect(status().isUnauthorized());
+    mockMvc.perform(post("/payments/" + id + "/verify")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{}"))
+        .andExpect(status().isUnauthorized());
+    mockMvc.perform(get("/payments/" + id))
+        .andExpect(status().isUnauthorized());
+
+    mockMvc.perform(post("/payments/webhooks/razorpay")
+            .header("X-Razorpay-Signature", "invalid")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"event\":\"payment.captured\"}"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.errorCode").value("PAYMENT_SIGNATURE_INVALID"));
+  }
+
+  @Test
   void exposesCorrelationHeaderForAllowedCorsPreflight() throws Exception {
     mockMvc.perform(options("/bookings")
             .header("Origin", "http://localhost:5173")

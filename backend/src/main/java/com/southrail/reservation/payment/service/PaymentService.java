@@ -1,51 +1,219 @@
 package com.southrail.reservation.payment.service;
 
 import com.southrail.reservation.config.properties.RazorpayProperties;
-import com.southrail.reservation.entity.account.*; import com.southrail.reservation.entity.booking.Booking;
-import com.southrail.reservation.entity.payment.*; import com.southrail.reservation.exception.ApiException;
-import com.southrail.reservation.payment.dto.PaymentDtos.*; import com.southrail.reservation.payment.gateway.PaymentGateway;
-import com.southrail.reservation.repository.account.UserRepository; import com.southrail.reservation.repository.booking.BookingRepository; import com.southrail.reservation.repository.payment.*; import com.southrail.reservation.service.audit.AuditLogService;
-import java.math.*; import java.util.*; import org.springframework.http.HttpStatus; import org.springframework.stereotype.Service; import org.springframework.transaction.annotation.Transactional;
+import com.southrail.reservation.entity.booking.Booking;
+import com.southrail.reservation.entity.payment.Payment;
+import com.southrail.reservation.entity.payment.PaymentRefund;
+import com.southrail.reservation.entity.payment.PaymentStatus;
+import com.southrail.reservation.exception.ApiException;
+import com.southrail.reservation.payment.dto.PaymentDtos.CreatePaymentOrderResponse;
+import com.southrail.reservation.payment.dto.PaymentDtos.PaymentStatusResponse;
+import com.southrail.reservation.payment.dto.PaymentDtos.VerificationRequest;
+import com.southrail.reservation.payment.gateway.PaymentGateway;
+import com.southrail.reservation.repository.payment.PaymentRefundRepository;
+import com.southrail.reservation.repository.payment.PaymentRepository;
+import com.southrail.reservation.service.audit.AuditLogService;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PaymentService {
- private final PaymentRepository payments; private final PaymentRefundRepository refunds; private final BookingRepository bookings; private final UserRepository users; private final PaymentGateway gateway; private final RazorpayProperties config; private final AuditLogService audit;
- public PaymentService(PaymentRepository p,PaymentRefundRepository r,BookingRepository b,UserRepository u,PaymentGateway g,RazorpayProperties c,AuditLogService a){payments=p;refunds=r;bookings=b;users=u;gateway=g;config=c;audit=a;}
- public static long toMinorUnits(BigDecimal amount){try{return amount.setScale(2,RoundingMode.UNNECESSARY).movePointRight(2).longValueExact();}catch(ArithmeticException e){throw new IllegalArgumentException("Amount must have at most two decimal places");}}
+  private final PaymentRepository payments;
+  private final PaymentRefundRepository refunds;
+  private final PaymentGateway gateway;
+  private final RazorpayProperties config;
+  private final AuditLogService audit;
+  private final PaymentPersistenceService persistence;
 
- @Transactional
- public CreatePaymentOrderResponse createOrder(String email,UUID bookingId,String requestKey){
-  User user=user(email); Booking booking=bookings.findById(bookingId).orElseThrow(()->notFound()); own(user,booking);
-  if(requestKey==null||requestKey.isBlank()||requestKey.length()>128)throw new ApiException(HttpStatus.BAD_REQUEST,"INVALID_IDEMPOTENCY_KEY","A valid Idempotency-Key is required");
-  String key=user.getId()+":"+requestKey.trim(); Optional<Payment> old=payments.findByIdempotencyKey(key); if(old.isPresent())return order(old.get());
-  if(payments.findFirstByBookingIdAndStatusOrderByCreatedAtDesc(bookingId,PaymentStatus.CAPTURED).isPresent())throw new ApiException(HttpStatus.CONFLICT,"PAYMENT_ALREADY_COMPLETED","Booking is already paid");
-  Payment payment=payments.saveAndFlush(Payment.create(booking,key)); long amount=toMinorUnits(payment.getAmount());
-  var created=gateway.createOrder(amount,"INR",payment.getId().toString(),Map.of("booking_id",bookingId.toString(),"pnr",booking.getPnr()));
-  if(created.amount()!=amount||!"INR".equals(created.currency()))throw new ApiException(HttpStatus.BAD_GATEWAY,"PAYMENT_AMOUNT_MISMATCH","Provider order amount or currency did not match");
-  payment.orderCreated(created.id()); audit.log(user.getId(),email,"PAYMENT_ORDER_CREATED","PAYMENT","Payment "+payment.getId()+" order "+created.id()+" for PNR "+booking.getPnr()+" amount "+payment.getAmount());
-  return order(payment);
- }
- @Transactional
- public PaymentStatusResponse verify(String email,UUID id,VerificationRequest request){
-  Payment p=payments.findByIdForUpdate(id).orElseThrow(()->notFound()); User user=user(email); own(user,p.getBooking());
-  if(!Objects.equals(p.getProviderOrderId(),request.razorpayOrderId()))throw new ApiException(HttpStatus.BAD_REQUEST,"PAYMENT_ORDER_MISMATCH","Payment order does not match");
-  if(p.getStatus()==PaymentStatus.CAPTURED){if(Objects.equals(p.getProviderPaymentId(),request.razorpayPaymentId()))return status(p);throw new ApiException(HttpStatus.CONFLICT,"PAYMENT_ALREADY_COMPLETED","Payment is already completed");}
-  if(!RazorpaySignatures.verify(request.razorpayOrderId()+"|"+request.razorpayPaymentId(),request.razorpaySignature(),config.keySecret()))throw new ApiException(HttpStatus.BAD_REQUEST,"PAYMENT_SIGNATURE_INVALID","Payment signature is invalid");
-  payments.findByProviderPaymentId(request.razorpayPaymentId()).filter(other->!other.getId().equals(id)).ifPresent(other->{throw new ApiException(HttpStatus.CONFLICT,"PAYMENT_ALREADY_COMPLETED","Provider payment is already associated with another payment");});
-  var remote=gateway.fetchPayment(request.razorpayPaymentId()); validateRemote(p,remote);
-  if("authorized".equals(remote.status())) p.authorized(remote.id()); else if("captured".equals(remote.status())) p.captured(remote.id()); else throw new ApiException(HttpStatus.CONFLICT,"PAYMENT_NOT_CAPTURED","Provider has not captured this payment");
-  audit.log(user.getId(),email,p.getStatus()==PaymentStatus.CAPTURED?"PAYMENT_CAPTURED":"PAYMENT_VERIFIED","PAYMENT","Payment "+p.getId()+" verified for PNR "+p.getBooking().getPnr()); return status(p);
- }
- @Transactional(readOnly=true) public PaymentStatusResponse get(String email,UUID id){Payment p=payments.findById(id).orElseThrow(()->notFound());own(user(email),p.getBooking());return status(p);}
- @Transactional public PaymentRefund createRefundObligation(Booking booking,BigDecimal amount){
-  if(amount==null||amount.signum()<=0)return null; Payment p=payments.findFirstByBookingIdAndStatusOrderByCreatedAtDesc(booking.getId(),PaymentStatus.CAPTURED).orElse(null); if(p==null)return null;
-  String key="cancellation:"+booking.getId(); PaymentRefund existing=refunds.findByIdempotencyKey(key).orElse(null); if(existing!=null)return existing;
-  PaymentRefund r=refunds.save(PaymentRefund.request(p,amount,key,"SouthRail cancellation refund")); p.transition(PaymentStatus.REFUND_PENDING); audit.log(booking.getUser().getId(),booking.getUser().getEmail(),"REFUND_REQUESTED","PAYMENT","Refund "+r.getId()+" for PNR "+booking.getPnr()+" amount "+amount); return r;
- }
- private void validateRemote(Payment p,PaymentGateway.GatewayPayment r){if(!Objects.equals(r.orderId(),p.getProviderOrderId())||r.amount()!=toMinorUnits(p.getAmount())||!p.getCurrency().equals(r.currency()))throw new ApiException(HttpStatus.BAD_REQUEST,"PAYMENT_AMOUNT_MISMATCH","Provider payment details did not match the order");}
- private CreatePaymentOrderResponse order(Payment p){if(p.getProviderOrderId()==null)throw new ApiException(HttpStatus.CONFLICT,"PAYMENT_ORDER_PENDING","Previous order creation has not completed; retry later");return new CreatePaymentOrderResponse(p.getId(),p.getProviderOrderId(),config.keyId(),toMinorUnits(p.getAmount()),p.getCurrency());}
- private PaymentStatusResponse status(Payment p){return new PaymentStatusResponse(p.getId(),p.getBooking().getId(),p.getAmount(),p.getCurrency(),p.getStatus(),p.getProviderOrderId(),p.getProviderPaymentId());}
- private User user(String email){return users.findByEmailIgnoreCase(email).orElseThrow(()->new ApiException(HttpStatus.UNAUTHORIZED,"User not found"));}
- private void own(User user,Booking b){if(!b.getUser().getId().equals(user.getId())&&!user.getRoles().contains(RoleName.ROLE_ADMIN))throw new ApiException(HttpStatus.FORBIDDEN,"PAYMENT_ACCESS_DENIED","Payment does not belong to this user");}
- private ApiException notFound(){return new ApiException(HttpStatus.NOT_FOUND,"PAYMENT_NOT_FOUND","Payment was not found");}
+  public PaymentService(
+      PaymentRepository payments,
+      PaymentRefundRepository refunds,
+      PaymentGateway gateway,
+      RazorpayProperties config,
+      AuditLogService audit,
+      PaymentPersistenceService persistence) {
+    this.payments = payments;
+    this.refunds = refunds;
+    this.gateway = gateway;
+    this.config = config;
+    this.audit = audit;
+    this.persistence = persistence;
+  }
+
+  public static long toMinorUnits(BigDecimal amount) {
+    try {
+      return amount.setScale(2, RoundingMode.UNNECESSARY).movePointRight(2).longValueExact();
+    } catch (ArithmeticException exception) {
+      throw new IllegalArgumentException("Amount must have at most two decimal places");
+    }
+  }
+
+  public CreatePaymentOrderResponse createOrder(
+      String email, UUID bookingId, String requestKey) {
+    String idempotencyKey = normalizeIdempotencyKey(email, requestKey);
+    PaymentPersistenceService.PreparedPayment prepared;
+    try {
+      prepared = persistence.prepare(email, bookingId, idempotencyKey);
+    } catch (DataIntegrityViolationException duplicate) {
+      prepared = persistence.findPrepared(email, bookingId, idempotencyKey);
+    }
+
+    if (!prepared.created()) {
+      return existingOrder(prepared);
+    }
+
+    long amount = toMinorUnits(prepared.amount());
+    try {
+      PaymentGateway.GatewayOrder order = gateway.createOrder(
+          amount,
+          prepared.currency(),
+          prepared.id().toString(),
+          Map.of("booking_id", bookingId.toString(), "pnr", prepared.pnr()));
+      if (order.id() == null || order.id().isBlank()
+          || order.amount() != amount
+          || !prepared.currency().equals(order.currency())) {
+        persistence.failCreatedOrder(
+            prepared.id(), "PAYMENT_AMOUNT_MISMATCH", "Provider order amount or currency mismatch");
+        throw new ApiException(
+            HttpStatus.BAD_GATEWAY,
+            "PAYMENT_AMOUNT_MISMATCH",
+            "Provider order amount or currency did not match");
+      }
+      return response(persistence.completeOrder(prepared.id(), order.id()));
+    } catch (ApiException exception) {
+      persistence.failCreatedOrder(
+          prepared.id(), exception.errorCode(), "Provider order creation failed");
+      throw exception;
+    } catch (RuntimeException exception) {
+      persistence.failCreatedOrder(
+          prepared.id(), "RAZORPAY_UNAVAILABLE", "Provider order creation failed");
+      throw exception;
+    }
+  }
+
+  public PaymentStatusResponse verify(
+      String email, UUID paymentId, VerificationRequest request) {
+    PaymentPersistenceService.VerificationContext context =
+        persistence.verificationContext(email, paymentId);
+    if (!Objects.equals(context.providerOrderId(), request.razorpayOrderId())) {
+      throw new ApiException(
+          HttpStatus.BAD_REQUEST, "PAYMENT_ORDER_MISMATCH", "Payment order does not match");
+    }
+    if (context.status() == PaymentStatus.CAPTURED
+        && Objects.equals(context.providerPaymentId(), request.razorpayPaymentId())) {
+      return persistence.get(email, paymentId);
+    }
+    if (!RazorpaySignatures.verify(
+        request.razorpayOrderId() + "|" + request.razorpayPaymentId(),
+        request.razorpaySignature(),
+        config.keySecret())) {
+      throw new ApiException(
+          HttpStatus.BAD_REQUEST,
+          "PAYMENT_SIGNATURE_INVALID",
+          "Payment signature is invalid");
+    }
+
+    PaymentGateway.GatewayPayment remote = gateway.fetchPayment(request.razorpayPaymentId());
+    if (!request.razorpayPaymentId().equals(remote.id())) {
+      throw new ApiException(
+          HttpStatus.BAD_REQUEST,
+          "PAYMENT_PROVIDER_ID_MISMATCH",
+          "Provider returned a different payment ID");
+    }
+    return persistence.applyVerification(email, paymentId, request.razorpayPaymentId(), remote);
+  }
+
+  public PaymentStatusResponse get(String email, UUID paymentId) {
+    return persistence.get(email, paymentId);
+  }
+
+  @Transactional
+  public PaymentRefund createRefundObligation(Booking booking, BigDecimal amount) {
+    if (amount == null || amount.signum() <= 0) {
+      return null;
+    }
+    Optional<Payment> captured = payments.findFirstByBookingIdAndStatusOrderByCreatedAtDesc(
+        booking.getId(), PaymentStatus.CAPTURED);
+    if (captured.isEmpty()) {
+      return null;
+    }
+    String key = "cancellation:" + booking.getId();
+    Optional<PaymentRefund> existing = refunds.findByIdempotencyKey(key);
+    if (existing.isPresent()) {
+      return existing.get();
+    }
+    Payment payment = captured.get();
+    PaymentRefund refund = refunds.save(PaymentRefund.request(
+        payment, amount, key, "SouthRail cancellation refund"));
+    payment.transition(PaymentStatus.REFUND_PENDING);
+    audit.log(
+        booking.getUser().getId(),
+        booking.getUser().getEmail(),
+        "REFUND_REQUESTED",
+        "PAYMENT",
+        "Refund " + refund.getId() + " for PNR " + booking.getPnr() + " amount " + amount);
+    return refund;
+  }
+
+  private String normalizeIdempotencyKey(String email, String requestKey) {
+    if (requestKey == null || requestKey.isBlank() || requestKey.length() > 128) {
+      throw new ApiException(
+          HttpStatus.BAD_REQUEST,
+          "INVALID_IDEMPOTENCY_KEY",
+          "A valid Idempotency-Key is required");
+    }
+    String scopedKey = email.toLowerCase(Locale.ROOT) + ":" + requestKey.trim();
+    try {
+      return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
+          .digest(scopedKey.getBytes(StandardCharsets.UTF_8)));
+    } catch (NoSuchAlgorithmException exception) {
+      throw new IllegalStateException("SHA-256 is unavailable", exception);
+    }
+  }
+
+  private CreatePaymentOrderResponse existingOrder(
+      PaymentPersistenceService.PreparedPayment payment) {
+    if (payment.status() == PaymentStatus.CREATED) {
+      throw new ApiException(
+          HttpStatus.CONFLICT,
+          "PAYMENT_ORDER_PENDING",
+          "Payment order creation is already in progress; retry later");
+    }
+    if (payment.status() == PaymentStatus.FAILED) {
+      throw new ApiException(
+          HttpStatus.CONFLICT,
+          "PAYMENT_ORDER_FAILED",
+          "This payment attempt failed; retry with a new Idempotency-Key");
+    }
+    return response(payment);
+  }
+
+  private CreatePaymentOrderResponse response(
+      PaymentPersistenceService.PreparedPayment payment) {
+    if (payment.providerOrderId() == null) {
+      throw new ApiException(
+          HttpStatus.CONFLICT,
+          "PAYMENT_ORDER_PENDING",
+          "Payment order creation has not completed");
+    }
+    return new CreatePaymentOrderResponse(
+        payment.id(),
+        payment.providerOrderId(),
+        config.keyId(),
+        toMinorUnits(payment.amount()),
+        payment.currency());
+  }
 }

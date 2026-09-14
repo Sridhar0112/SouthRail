@@ -10,6 +10,7 @@ import com.southrail.reservation.entity.booking.BookingStatus;
 import com.southrail.reservation.entity.booking.Passenger;
 import com.southrail.reservation.entity.train.Train;
 import com.southrail.reservation.exception.ApiException;
+import com.southrail.reservation.payment.service.PaymentService;
 import com.southrail.reservation.repository.account.UserRepository;
 import com.southrail.reservation.repository.booking.BookingRepository;
 import com.southrail.reservation.repository.booking.PassengerRepository;
@@ -39,22 +40,29 @@ public class BookingCancellationService {
   private final TrainRepository trains;
   private final PassengerRepository passengers;
   private final ApplicationEventPublisher events;
-  @org.springframework.beans.factory.annotation.Autowired(required = false)
-  private com.southrail.reservation.payment.service.PaymentService paymentService;
+  private final PaymentService paymentService;
 
-  public BookingCancellationService(BookingRepository bookings, UserRepository users,
-      RefundCalculationService refundCalculationService, NotificationService notificationService,
-      SeatAllocationService seatAllocationService, AuditLogService auditLogService,
-      TrainRepository trains, PassengerRepository passengers, ApplicationEventPublisher events) {
+  public BookingCancellationService(
+      BookingRepository bookings,
+      UserRepository users,
+      RefundCalculationService refundCalculationService,
+      NotificationService notificationService,
+      SeatAllocationService seatAllocationService,
+      AuditLogService auditLogService,
+      TrainRepository trains,
+      PassengerRepository passengers,
+      ApplicationEventPublisher events,
+      PaymentService paymentService) {
     this.bookings = bookings;
     this.users = users;
     this.refundCalculationService = refundCalculationService;
     this.notificationService = notificationService;
     this.seatAllocationService = seatAllocationService;
-    this.auditLogService=auditLogService;
+    this.auditLogService = auditLogService;
     this.trains = trains;
     this.passengers = passengers;
     this.events = events;
+    this.paymentService = paymentService;
   }
 
   @Transactional(readOnly = true)
@@ -105,9 +113,7 @@ public class BookingCancellationService {
     bookings.flush();
     // The existing policy remains authoritative. This only records a durable
     // monetary obligation in the same local transaction; provider I/O is asynchronous.
-    if (paymentService != null) {
-      paymentService.createRefundObligation(booking, quote.getRefundAmount());
-    }
+    paymentService.createRefundObligation(booking, quote.getRefundAmount());
     rebalanceQueues(train, booking);
     auditLogService.log(
             bookingOwnerId,

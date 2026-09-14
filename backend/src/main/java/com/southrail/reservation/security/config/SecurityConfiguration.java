@@ -48,14 +48,19 @@ public class SecurityConfiguration {
         .exceptionHandling(exceptions -> exceptions
             .authenticationEntryPoint(authenticationEntryPoint)
             .accessDeniedHandler(accessDeniedHandler))
-            .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/auth/**", "/payments/webhooks/razorpay", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
-                    .requestMatchers("/actuator/health/liveness", "/actuator/health/readiness").permitAll()
-                    .requestMatchers("/actuator/**").hasRole("ADMIN")
-                    .requestMatchers("/trains/**").permitAll()
-                    .requestMatchers("/admin/**").hasRole("ADMIN")
-                    .anyRequest().authenticated()
-            )
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers(
+                "/auth/**",
+                "/payments/webhooks/razorpay",
+                "/swagger-ui/**",
+                "/swagger-ui.html",
+                "/v3/api-docs/**")
+            .permitAll()
+            .requestMatchers("/actuator/health/liveness", "/actuator/health/readiness").permitAll()
+            .requestMatchers("/actuator/**").hasRole("ADMIN")
+            .requestMatchers("/trains/**").permitAll()
+            .requestMatchers("/admin/**").hasRole("ADMIN")
+            .anyRequest().authenticated())
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
         .build();
   }
@@ -94,7 +99,8 @@ public class SecurityConfiguration {
     CorsConfiguration config = new CorsConfiguration();
     config.setAllowedOrigins(origins.stream().map(String::trim).collect(Collectors.toList()));
     config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-    config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Idempotency-Key", CorrelationIdFilter.HEADER_NAME));
+    config.setAllowedHeaders(Arrays.asList(
+        "Authorization", "Content-Type", "Idempotency-Key", CorrelationIdFilter.HEADER_NAME));
     config.setExposedHeaders(Arrays.asList(CorrelationIdFilter.HEADER_NAME));
     config.setAllowCredentials(true);
     config.setMaxAge(3600L);
