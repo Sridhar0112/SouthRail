@@ -1,17 +1,16 @@
 package com.southrail.reservation.service.train;
 
-import com.southrail.reservation.service.booking.SeatAllocationService;
-import com.southrail.reservation.service.booking.FareCalculationService;
-
 import com.southrail.reservation.dto.train.TrainDtos;
+import com.southrail.reservation.entity.booking.BookingStatus;
 import com.southrail.reservation.entity.train.RouteStop;
 import com.southrail.reservation.entity.train.Train;
-import com.southrail.reservation.entity.booking.BookingStatus;
-import com.southrail.reservation.repository.booking.BookingRepository;
 import com.southrail.reservation.exception.ApiException;
+import com.southrail.reservation.repository.booking.BookingRepository;
 import com.southrail.reservation.repository.train.RouteStopRepository;
 import com.southrail.reservation.repository.train.StationRepository;
 import com.southrail.reservation.repository.train.TrainRepository;
+import com.southrail.reservation.service.booking.FareCalculationService;
+import com.southrail.reservation.service.booking.SeatAllocationService;
 import com.southrail.reservation.util.train.RailwayTime;
 import java.math.BigDecimal;
 import java.time.Duration;
