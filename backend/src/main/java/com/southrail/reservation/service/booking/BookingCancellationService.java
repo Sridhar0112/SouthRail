@@ -9,6 +9,7 @@ import com.southrail.reservation.dto.booking.CancellationReviewResponse;
 import com.southrail.reservation.dto.booking.RefundQuoteDto;
 import com.southrail.reservation.entity.booking.Booking;
 import com.southrail.reservation.entity.booking.BookingStatus;
+import com.southrail.reservation.entity.booking.Passenger;
 import com.southrail.reservation.entity.account.RoleName;
 import com.southrail.reservation.entity.account.User;
 import com.southrail.reservation.exception.ApiException;

@@ -12,6 +12,7 @@ import com.southrail.reservation.exception.ApiException;
 import com.southrail.reservation.repository.train.RouteStopRepository;
 import com.southrail.reservation.repository.train.StationRepository;
 import com.southrail.reservation.repository.train.TrainRepository;
+import com.southrail.reservation.util.train.RailwayTime;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;

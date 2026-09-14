@@ -9,6 +9,7 @@ import com.southrail.reservation.service.audit.AuditLogService;
 import com.southrail.reservation.entity.booking.BookingSeat;
 import com.southrail.reservation.entity.booking.Booking;
 import com.southrail.reservation.entity.booking.BookingStatus;
+import com.southrail.reservation.entity.booking.Passenger;
 import com.southrail.reservation.repository.booking.BookingRepository;
 import com.southrail.reservation.repository.booking.PassengerRepository;
 import com.southrail.reservation.service.booking.SeatAllocationService;
