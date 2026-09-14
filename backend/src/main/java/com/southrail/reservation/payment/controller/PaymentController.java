@@ -1,8 +1,10 @@
 package com.southrail.reservation.payment.controller;
 
 import com.southrail.reservation.payment.dto.PaymentDtos.CreatePaymentOrderResponse;
+import com.southrail.reservation.payment.dto.PaymentDtos.PaymentBookingDetails;
 import com.southrail.reservation.payment.dto.PaymentDtos.PaymentStatusResponse;
 import com.southrail.reservation.payment.dto.PaymentDtos.VerificationRequest;
+import com.southrail.reservation.payment.service.PaymentBookingDetailsService;
 import com.southrail.reservation.payment.service.PaymentService;
 import com.southrail.reservation.payment.service.PaymentWebhookService;
 import jakarta.validation.Valid;
@@ -23,10 +25,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class PaymentController {
   private final PaymentService payments;
   private final PaymentWebhookService webhooks;
+  private final PaymentBookingDetailsService bookingDetails;
 
-  public PaymentController(PaymentService payments, PaymentWebhookService webhooks) {
+  public PaymentController(
+      PaymentService payments,
+      PaymentWebhookService webhooks,
+      PaymentBookingDetailsService bookingDetails) {
     this.payments = payments;
     this.webhooks = webhooks;
+    this.bookingDetails = bookingDetails;
+  }
+
+  @GetMapping("/bookings/{bookingId}/details")
+  PaymentBookingDetails bookingDetails(Principal principal, @PathVariable UUID bookingId) {
+    return bookingDetails.get(principal.getName(), bookingId);
   }
 
   @PostMapping("/bookings/{bookingId}/orders")

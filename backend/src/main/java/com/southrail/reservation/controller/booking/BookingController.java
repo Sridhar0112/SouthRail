@@ -10,7 +10,6 @@ import com.southrail.reservation.service.booking.TicketPdfService;
 import com.southrail.reservation.service.notification.NotificationService;
 import jakarta.validation.Valid;
 import java.security.Principal;
-import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -62,11 +61,6 @@ public class BookingController {
   @GetMapping("/bookings")
   Page<BookingDtos.BookingHistoryItem> history(Principal principal, Pageable pageable) {
     return bookingService.history(principal.getName(), pageable);
-  }
-
-  @GetMapping("/bookings/{bookingId}")
-  BookingDtos.BookingResponse booking(Principal principal, @PathVariable UUID bookingId) {
-    return bookingService.getById(principal.getName(), bookingId);
   }
 
   @GetMapping("/bookings/{pnr}/cancellation-review")

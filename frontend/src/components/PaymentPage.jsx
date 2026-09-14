@@ -37,13 +37,15 @@ import {
   UPI_OPTIONS,
   loadRazorpayScript,
   SectionCard,
-  DetailRow,
   FareRow,
   PaymentMethodOption,
   SuccessAnimation,
   PaymentSkeleton,
   formatRupees
 } from "./PaymentPageComponents.jsx"
+
+const PAYMENT_STATUS_POLL_INTERVAL_MS = 1500
+const PAYMENT_STATUS_POLL_TIMEOUT_MS = 30000
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -63,6 +65,8 @@ export default function PaymentPage() {
 
   const razorpayRef = useRef(null)
   const timeoutRef = useRef(null)
+  const pollTimerRef = useRef(null)
+  const pollingRef = useRef(false)
 
   // ── Fetch booking ──────────────────────────────────────────────────────────
 
@@ -73,17 +77,8 @@ export default function PaymentPage() {
     }
 
     setLoadingBooking(true)
-    api.get(`/bookings/${bookingId}`)
-      .then(({ data }) => setBooking({
-        ...data,
-        fare: data.fare || {
-          totalAmount: data.totalFare,
-          baseFare: data.totalFare,
-          reservationCharge: 0,
-          convenienceFee: 0
-        },
-        passengers: data.passengers || []
-      }))
+    api.get(`/payments/bookings/${bookingId}/details`)
+      .then(({ data }) => setBooking(data))
       .catch(() => setBookingError(
         "Unable to load booking details. Please go back and try again."
       ))
@@ -95,11 +90,54 @@ export default function PaymentPage() {
   useEffect(() => {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      if (pollTimerRef.current) clearTimeout(pollTimerRef.current)
+      pollingRef.current = false
       razorpayRef.current?.close()
     }
   }, [])
 
   // ── Payment flow ───────────────────────────────────────────────────────────
+
+  const pollPaymentStatus = useCallback((paymentId) => {
+    if (pollingRef.current) return
+    pollingRef.current = true
+    setPaymentState("verification_pending")
+    setErrorMessage(null)
+    const deadline = Date.now() + PAYMENT_STATUS_POLL_TIMEOUT_MS
+
+    const poll = async () => {
+      try {
+        const { data } = await api.get(`/payments/${paymentId}`)
+        if (!pollingRef.current) return
+        if (data.status === "CAPTURED") {
+          pollingRef.current = false
+          setTicketId(booking.pnr)
+          setPaymentState("success")
+          return
+        }
+        if (data.status === "FAILED") {
+          pollingRef.current = false
+          sessionStorage.removeItem(`payment-key:${booking.bookingId}`)
+          setErrorMessage("Payment failed. Please retry with a new payment attempt.")
+          setPaymentState("failed")
+          return
+        }
+      } catch {
+        // A transient status read failure is retried until the bounded deadline.
+      }
+
+      if (!pollingRef.current) return
+      if (Date.now() >= deadline) {
+        pollingRef.current = false
+        setErrorMessage("Payment is still processing. Please check again shortly.")
+        setPaymentState("verification_pending")
+        return
+      }
+      pollTimerRef.current = setTimeout(poll, PAYMENT_STATUS_POLL_INTERVAL_MS)
+    }
+
+    poll()
+  }, [booking])
 
   const handlePay = useCallback(async () => {
     if (!booking) return
@@ -184,6 +222,12 @@ export default function PaymentPage() {
           if (result.status === "CAPTURED") {
             setTicketId(booking.pnr)
             setPaymentState("success")
+          } else if (result.status === "AUTHORIZED" || result.status === "PENDING") {
+            pollPaymentStatus(orderData.paymentId)
+          } else if (result.status === "FAILED") {
+            sessionStorage.removeItem(`payment-key:${booking.bookingId}`)
+            setErrorMessage("Payment failed. Please retry with a new payment attempt.")
+            setPaymentState("failed")
           } else {
             throw new Error(
               "Payment verification failed. Contact support with your payment ID."
@@ -210,7 +254,7 @@ export default function PaymentPage() {
       setPaymentState("failed")
     })
     rzp.open()
-  }, [booking])
+  }, [booking, pollPaymentStatus])
 
   const handleRetry = useCallback(() => {
     setPaymentState("idle")
@@ -222,7 +266,8 @@ export default function PaymentPage() {
   const isProcessing = [
     "creating_order",
     "awaiting_payment",
-    "verifying"
+    "verifying",
+    "verification_pending"
   ].includes(paymentState)
   const primaryColor = theme.palette.primary.main
 
@@ -471,13 +516,14 @@ export default function PaymentPage() {
                         variant="outlined"
                       />
                       <Chip label={p.gender} size="small" variant="outlined" />
-                      <Chip
-                        label={p.seatPreference}
-                        size="small"
-                        variant="outlined"
-                      />
+                      {p.seatPreference && (
+                        <Chip
+                          label={p.seatPreference}
+                          size="small"
+                          variant="outlined"
+                        />
+                      )}
                     </Stack>
-                    <DetailRow label="Coach type" value={p.coachType} />
                   </Box>
                 ))}
               </SectionCard>
@@ -485,28 +531,15 @@ export default function PaymentPage() {
               {/* Fare breakdown */}
               <SectionCard
                 icon={<ReceiptLongIcon fontSize="small" />}
-                title="Fare breakdown"
+                title="Fare summary"
               >
                 <Stack spacing={0.25}>
-                  <FareRow label="Base fare" amount={booking.fare.baseFare} />
                   <FareRow
-                    label="Reservation charge"
-                    amount={booking.fare.reservationCharge}
+                    label="Total payable amount"
+                    amount={booking.totalFare}
+                    bold
+                    large
                   />
-                  <FareRow
-                    label="Convenience fee"
-                    amount={booking.fare.convenienceFee}
-                  />
-                  <FareRow label="GST" amount={booking.fare.gst} />
-                  <Box mt={1}>
-                    <Divider sx={{ mb: 1 }} />
-                    <FareRow
-                      label="Total payable amount"
-                      amount={booking.fare.totalAmount}
-                      bold
-                      large
-                    />
-                  </Box>
                 </Stack>
               </SectionCard>
             </Grid>
@@ -624,13 +657,20 @@ export default function PaymentPage() {
                   <Divider sx={{ mb: 2 }} />
 
                   {/* Error / timeout message */}
-                  <Collapse in={!!errorMessage || paymentState === "timeout"}>
+                  <Collapse in={(!!errorMessage && paymentState !== "verification_pending")
+                    || paymentState === "timeout"}>
                     <Alert
                       severity="error"
                       icon={<ErrorOutlineIcon />}
                       sx={{ mb: 2, fontSize: "0.78rem" }}
                     >
                       {errorMessage ?? "Payment session expired."}
+                    </Alert>
+                  </Collapse>
+
+                  <Collapse in={paymentState === "verification_pending"}>
+                    <Alert severity="info" sx={{ mb: 2, fontSize: "0.78rem" }}>
+                      {errorMessage || "Payment authorized. Waiting for capture…"}
                     </Alert>
                   </Collapse>
 
@@ -669,6 +709,8 @@ export default function PaymentPage() {
                               ? "Creating order…"
                               : paymentState === "verifying"
                               ? "Verifying…"
+                              : paymentState === "verification_pending"
+                              ? "Processing payment…"
                               : "Awaiting payment…"}
                           </span>
                         </Stack>
@@ -677,7 +719,7 @@ export default function PaymentPage() {
                           <LockIcon
                             sx={{ fontSize: 18, mr: 1, opacity: 0.85 }}
                           />
-                          Pay ₹{formatRupees(booking.fare.totalAmount)}
+                          Pay ₹{formatRupees(booking.totalFare)}
                         </>
                       )}
                     </Button>
