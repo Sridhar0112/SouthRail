@@ -217,6 +217,19 @@ public class BookingService {
             booking.getQueuePosition());
   }
 
+  @Transactional(readOnly = true)
+  public BookingDtos.BookingResponse getById(String email, UUID id) {
+    User user = users.findByEmailIgnoreCase(email)
+        .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "User not found"));
+    Booking booking = bookings.findById(id)
+        .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Booking not found"));
+    if (!booking.getUser().getId().equals(user.getId())
+        && !user.getRoles().contains(RoleName.ROLE_ADMIN)) {
+      throw new ApiException(HttpStatus.FORBIDDEN, "Booking does not belong to this user");
+    }
+    return toResponse(booking, Math.toIntExact(passengers.countByBooking(booking)));
+  }
+
   private String normalizeIdempotencyKey(String key) {
     if (key == null || key.isBlank()) return null;
     String normalized = key.trim();

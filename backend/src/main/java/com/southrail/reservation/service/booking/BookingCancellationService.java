@@ -39,6 +39,8 @@ public class BookingCancellationService {
   private final TrainRepository trains;
   private final PassengerRepository passengers;
   private final ApplicationEventPublisher events;
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  private com.southrail.reservation.payment.service.PaymentService paymentService;
 
   public BookingCancellationService(BookingRepository bookings, UserRepository users,
       RefundCalculationService refundCalculationService, NotificationService notificationService,
@@ -101,6 +103,11 @@ public class BookingCancellationService {
     booking.setQueuePosition(null);
     booking.setReservationLabel("CANCELLED");
     bookings.flush();
+    // The existing policy remains authoritative. This only records a durable
+    // monetary obligation in the same local transaction; provider I/O is asynchronous.
+    if (paymentService != null) {
+      paymentService.createRefundObligation(booking, quote.getRefundAmount());
+    }
     rebalanceQueues(train, booking);
     auditLogService.log(
             bookingOwnerId,

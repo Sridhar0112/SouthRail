@@ -120,3 +120,10 @@ gemini:
   default-model: ${GEMINI_DEFAULT_MODEL:gemini-2.5-flash}
   connect-timeout-millis: ${GEMINI_CONNECT_TIMEOUT:${GEMINI_CONNECT_TIMEOUT_MS:3000}}
   read-timeout-millis: ${GEMINI_READ_TIMEOUT:${GEMINI_READ_TIMEOUT_MS:10000}}
+
+razorpay:
+  enabled: ${RAZORPAY_ENABLED:false}
+  key-id: ${RAZORPAY_KEY_ID:}
+  key-secret: ${RAZORPAY_KEY_SECRET:}
+  webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:}
+  base-url: ${RAZORPAY_BASE_URL:https://api.razorpay.com/v1}
