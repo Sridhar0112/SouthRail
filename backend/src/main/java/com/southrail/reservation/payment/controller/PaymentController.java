@@ -1,5 +1,6 @@
 package com.southrail.reservation.payment.controller;
 
+import com.southrail.reservation.payment.dto.PaymentDtos.ActivePaymentResponse;
 import com.southrail.reservation.payment.dto.PaymentDtos.CreatePaymentOrderResponse;
 import com.southrail.reservation.payment.dto.PaymentDtos.PaymentBookingDetails;
 import com.southrail.reservation.payment.dto.PaymentDtos.PaymentStatusResponse;
@@ -48,6 +49,11 @@ public class PaymentController {
       @RequestHeader("Idempotency-Key") String key) {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(payments.createOrder(principal.getName(), bookingId, key));
+  }
+
+  @GetMapping("/bookings/{bookingId}/active")
+  ActivePaymentResponse active(Principal principal, @PathVariable UUID bookingId) {
+    return payments.getActive(principal.getName(), bookingId);
   }
 
   @PostMapping("/{paymentId}/verify")

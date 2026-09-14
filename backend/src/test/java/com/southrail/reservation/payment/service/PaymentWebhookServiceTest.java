@@ -12,6 +12,8 @@ import com.southrail.reservation.config.properties.RazorpayProperties;
 import com.southrail.reservation.entity.booking.Booking;
 import com.southrail.reservation.entity.payment.Payment;
 import com.southrail.reservation.entity.payment.PaymentStatus;
+import com.southrail.reservation.entity.payment.PaymentRefund;
+import com.southrail.reservation.entity.payment.RefundStatus;
 import com.southrail.reservation.exception.ApiException;
 import com.southrail.reservation.repository.payment.PaymentRefundRepository;
 import com.southrail.reservation.repository.payment.PaymentRepository;
@@ -41,12 +43,14 @@ class PaymentWebhookServiceTest {
 
   private PaymentWebhookEventRepository events;
   private PaymentRepository payments;
+  private PaymentRefundRepository refunds;
   private PaymentWebhookService service;
 
   @BeforeEach
   void setUp() {
     events = mock(PaymentWebhookEventRepository.class);
     payments = mock(PaymentRepository.class);
+    refunds = mock(PaymentRefundRepository.class);
     when(events.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
     TransactionTemplate transactions = mock(TransactionTemplate.class);
     org.mockito.Mockito.doAnswer(invocation -> {
@@ -60,7 +64,7 @@ class PaymentWebhookServiceTest {
         new ObjectMapper(),
         events,
         payments,
-        mock(PaymentRefundRepository.class),
+        refunds,
         mock(AuditLogService.class),
         transactions);
   }
@@ -127,6 +131,102 @@ class PaymentWebhookServiceTest {
     verify(events, org.mockito.Mockito.never()).saveAndFlush(any());
   }
 
+  @Test
+  void authorizedPaymentCanFailWithoutBecomingStuck() throws Exception {
+    Payment payment = pendingPayment(new BigDecimal("1000.00"), "order_1");
+    payment.authorized("pay_1");
+    when(payments.findByProviderOrderIdForUpdate("order_1")).thenReturn(Optional.of(payment));
+    String body = paymentEvent("payment.failed", "pay_1", 100000, "INR");
+
+    service.receive(bytes(body), signature(body), "event-authorized-failed");
+
+    assertThat(payment.getStatus()).isEqualTo(PaymentStatus.FAILED);
+    assertThat(payment.getProviderPaymentId()).isEqualTo("pay_1");
+  }
+
+  @Test
+  void authorizedPaymentIdMustMatchLaterCapture() throws Exception {
+    Payment payment = pendingPayment(new BigDecimal("1000.00"), "order_1");
+    payment.authorized("payment-A");
+    when(payments.findByProviderOrderIdForUpdate("order_1")).thenReturn(Optional.of(payment));
+    String matching = paymentEvent("payment.captured", "payment-A", 100000, "INR");
+
+    service.receive(bytes(matching), signature(matching), "event-matching-capture");
+
+    assertThat(payment.getStatus()).isEqualTo(PaymentStatus.CAPTURED);
+    assertThat(payment.getProviderPaymentId()).isEqualTo("payment-A");
+  }
+
+  @Test
+  void mismatchedCaptureCannotOverwriteAuthorizedPaymentId() throws Exception {
+    Payment payment = pendingPayment(new BigDecimal("1000.00"), "order_1");
+    payment.authorized("payment-A");
+    when(payments.findByProviderOrderIdForUpdate("order_1")).thenReturn(Optional.of(payment));
+    String mismatched = paymentEvent("payment.captured", "payment-B", 100000, "INR");
+
+    assertThatThrownBy(() -> service.receive(
+        bytes(mismatched), signature(mismatched), "event-mismatched-capture"))
+        .isInstanceOf(ApiException.class);
+    assertThat(payment.getStatus()).isEqualTo(PaymentStatus.AUTHORIZED);
+    assertThat(payment.getProviderPaymentId()).isEqualTo("payment-A");
+  }
+
+  @Test
+  void providerPaymentIdBelongingToAnotherPaymentIsRejected() throws Exception {
+    Payment payment = pendingPayment(new BigDecimal("1000.00"), "order_1");
+    Payment other = pendingPayment(new BigDecimal("1000.00"), "order_2");
+    when(payments.findByProviderOrderIdForUpdate("order_1")).thenReturn(Optional.of(payment));
+    when(payments.findByProviderPaymentId("pay_1")).thenReturn(Optional.of(other));
+    String body = paymentEvent("payment.authorized", "pay_1", 100000, "INR");
+
+    assertThatThrownBy(() -> service.receive(bytes(body), signature(body), "event-reused-id"))
+        .isInstanceOf(ApiException.class);
+    assertThat(payment.getProviderPaymentId()).isNull();
+    assertThat(payment.getStatus()).isEqualTo(PaymentStatus.PENDING);
+  }
+
+  @Test
+  void processedRefundIgnoresDuplicateAndStaleFailedEvents() throws Exception {
+    Payment payment = pendingPayment(new BigDecimal("1000.00"), "order_1");
+    payment.captured("pay_1");
+    payment.transition(PaymentStatus.REFUND_PENDING);
+    PaymentRefund refund = PaymentRefund.request(
+        payment, new BigDecimal("1000.00"), "refund-key", "Cancellation");
+    refund.processing();
+    refund.providerAccepted("refund_1");
+    when(refunds.findByProviderRefundIdForUpdate("refund_1")).thenReturn(Optional.of(refund));
+    String processed = refundEvent("refund.processed", "refund_1");
+    String failed = refundEvent("refund.failed", "refund_1");
+
+    service.receive(bytes(processed), signature(processed), "refund-processed-1");
+    service.receive(bytes(processed), signature(processed), "refund-processed-duplicate");
+    service.receive(bytes(failed), signature(failed), "refund-failed-stale");
+
+    assertThat(refund.getStatus()).isEqualTo(RefundStatus.PROCESSED);
+    assertThat(payment.getStatus()).isEqualTo(PaymentStatus.REFUNDED);
+  }
+
+  @Test
+  void laterProcessedRefundOverridesEarlierFailedDelivery() throws Exception {
+    Payment payment = pendingPayment(new BigDecimal("1000.00"), "order_1");
+    payment.captured("pay_1");
+    payment.transition(PaymentStatus.REFUND_PENDING);
+    PaymentRefund refund = PaymentRefund.request(
+        payment, new BigDecimal("750.00"), "refund-key", "Cancellation");
+    refund.processing();
+    refund.providerAccepted("refund_1");
+    when(refunds.findByProviderRefundIdForUpdate("refund_1")).thenReturn(Optional.of(refund));
+    String failed = refundEvent("refund.failed", "refund_1");
+    String processed = refundEvent("refund.processed", "refund_1");
+
+    service.receive(bytes(failed), signature(failed), "refund-failed-first");
+    service.receive(bytes(failed), signature(failed), "refund-failed-duplicate");
+    service.receive(bytes(processed), signature(processed), "refund-processed-final");
+
+    assertThat(refund.getStatus()).isEqualTo(RefundStatus.PROCESSED);
+    assertThat(payment.getStatus()).isEqualTo(PaymentStatus.PARTIALLY_REFUNDED);
+  }
+
   private Payment pendingPayment(BigDecimal amount, String orderId) {
     Booking booking = new Booking();
     booking.setTotalFare(amount);
@@ -136,9 +236,18 @@ class PaymentWebhookServiceTest {
   }
 
   private String paymentEvent(String type, long amount, String currency) {
+    return paymentEvent(type, "pay_1", amount, currency);
+  }
+
+  private String paymentEvent(String type, String paymentId, long amount, String currency) {
     return "{\"event\":\"" + type + "\",\"payload\":{\"payment\":{\"entity\":{"
-        + "\"id\":\"pay_1\",\"order_id\":\"order_1\",\"amount\":" + amount
+        + "\"id\":\"" + paymentId + "\",\"order_id\":\"order_1\",\"amount\":" + amount
         + ",\"currency\":\"" + currency + "\"}}}}";
+  }
+
+  private String refundEvent(String type, String refundId) {
+    return "{\"event\":\"" + type + "\",\"payload\":{\"refund\":{\"entity\":{"
+        + "\"id\":\"" + refundId + "\"}}}}";
   }
 
   private byte[] bytes(String value) {

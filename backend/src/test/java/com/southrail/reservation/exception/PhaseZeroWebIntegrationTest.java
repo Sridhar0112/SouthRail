@@ -126,6 +126,8 @@ class PhaseZeroWebIntegrationTest {
         .andExpect(status().isUnauthorized());
     mockMvc.perform(get("/payments/bookings/" + id + "/details"))
         .andExpect(status().isUnauthorized());
+    mockMvc.perform(get("/payments/bookings/" + id + "/active"))
+        .andExpect(status().isUnauthorized());
 
     mockMvc.perform(post("/payments/webhooks/razorpay")
             .header("X-Razorpay-Signature", "invalid")

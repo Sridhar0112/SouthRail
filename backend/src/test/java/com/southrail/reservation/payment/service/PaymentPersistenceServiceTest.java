@@ -90,6 +90,26 @@ class PaymentPersistenceServiceTest {
   }
 
   @Test
+  void lostClientIdempotencyCanRecoverActivePendingAttempt() {
+    when(bookings.findById(booking.getId())).thenReturn(Optional.of(booking));
+    when(payments.findFirstByBookingIdAndStatusInOrderByCreatedAtDesc(
+        booking.getId(),
+        List.of(
+            PaymentStatus.CREATED,
+            PaymentStatus.PENDING,
+            PaymentStatus.AUTHORIZED,
+            PaymentStatus.CAPTURED)))
+        .thenReturn(Optional.of(payment));
+
+    PaymentPersistenceService.PreparedPayment recovered = persistence.getActive(
+        "user@example.com", booking.getId());
+
+    assertThat(recovered.status()).isEqualTo(PaymentStatus.PENDING);
+    assertThat(recovered.providerOrderId()).isEqualTo("order_1");
+    assertThat(recovered.bookingId()).isEqualTo(booking.getId());
+  }
+
+  @Test
   void wrongProviderOrderCannotCapture() {
     assertMismatch(new PaymentGateway.GatewayPayment(
         "pay_1", "order_other", 100000, "INR", "captured"));

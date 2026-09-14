@@ -218,6 +218,25 @@ public class PaymentPersistenceService {
     return status(payment);
   }
 
+  @Transactional(readOnly = true)
+  public PreparedPayment getActive(String email, UUID bookingId) {
+    User user = user(email);
+    Booking booking = bookings.findById(bookingId).orElseThrow(this::notFound);
+    requireOwnership(user, booking);
+    return payments.findFirstByBookingIdAndStatusInOrderByCreatedAtDesc(
+            bookingId,
+            List.of(
+                PaymentStatus.CREATED,
+                PaymentStatus.PENDING,
+                PaymentStatus.AUTHORIZED,
+                PaymentStatus.CAPTURED))
+        .map(payment -> prepared(payment, false))
+        .orElseThrow(() -> new ApiException(
+            HttpStatus.NOT_FOUND,
+            "ACTIVE_PAYMENT_NOT_FOUND",
+            "No recoverable payment attempt exists for this booking"));
+  }
+
   private void validateRemote(Payment payment, GatewayPayment remote) {
     if (!Objects.equals(remote.id(), payment.getProviderPaymentId())
         && payment.getProviderPaymentId() != null) {

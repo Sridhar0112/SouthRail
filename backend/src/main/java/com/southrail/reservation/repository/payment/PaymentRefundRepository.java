@@ -16,7 +16,10 @@ import org.springframework.data.repository.query.Param;
 public interface PaymentRefundRepository extends JpaRepository<PaymentRefund, UUID> {
   Optional<PaymentRefund> findByIdempotencyKey(String key);
 
-  Optional<PaymentRefund> findByProviderRefundId(String id);
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("select r from PaymentRefund r join fetch r.payment p join fetch r.booking b "
+      + "join fetch b.user where r.providerRefundId = :id")
+  Optional<PaymentRefund> findByProviderRefundIdForUpdate(@Param("id") String id);
 
   Optional<PaymentRefund> findByPaymentId(UUID paymentId);
 

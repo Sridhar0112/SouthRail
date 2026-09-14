@@ -62,6 +62,7 @@ export default function PaymentPage() {
   const [paymentState, setPaymentState] = useState("idle")
   const [errorMessage, setErrorMessage] = useState(null)
   const [ticketId, setTicketId] = useState()
+  const [recoverablePaymentId, setRecoverablePaymentId] = useState(null)
 
   const razorpayRef = useRef(null)
   const timeoutRef = useRef(null)
@@ -101,6 +102,7 @@ export default function PaymentPage() {
   const pollPaymentStatus = useCallback((paymentId) => {
     if (pollingRef.current) return
     pollingRef.current = true
+    setRecoverablePaymentId(paymentId)
     setPaymentState("verification_pending")
     setErrorMessage(null)
     const deadline = Date.now() + PAYMENT_STATUS_POLL_TIMEOUT_MS
@@ -130,7 +132,7 @@ export default function PaymentPage() {
       if (Date.now() >= deadline) {
         pollingRef.current = false
         setErrorMessage("Payment is still processing. Please check again shortly.")
-        setPaymentState("verification_pending")
+        setPaymentState("status_check_available")
         return
       }
       pollTimerRef.current = setTimeout(poll, PAYMENT_STATUS_POLL_INTERVAL_MS)
@@ -167,15 +169,47 @@ export default function PaymentPage() {
       )
       orderData = createdOrder
     } catch (err) {
-      if (err.response?.data?.errorCode === "PAYMENT_ORDER_FAILED") {
-        sessionStorage.removeItem(`payment-key:${booking.bookingId}`)
+      if (err.response?.data?.errorCode === "PAYMENT_ATTEMPT_ACTIVE") {
+        try {
+          const { data: activePayment } = await api.get(
+            `/payments/bookings/${booking.bookingId}/active`
+          )
+          setRecoverablePaymentId(activePayment.paymentId)
+          if (activePayment.status === "CAPTURED") {
+            setTicketId(booking.pnr)
+            setPaymentState("success")
+            return
+          }
+          if (activePayment.status === "AUTHORIZED"
+              || activePayment.status === "CREATED") {
+            pollPaymentStatus(activePayment.paymentId)
+            return
+          }
+          if (activePayment.status === "PENDING" && activePayment.razorpayOrderId) {
+            orderData = activePayment
+          } else {
+            pollPaymentStatus(activePayment.paymentId)
+            return
+          }
+        } catch (recoveryError) {
+          setErrorMessage(
+            recoveryError.response?.data?.message
+              ?? "The active payment attempt could not be recovered. Please try again shortly."
+          )
+          setPaymentState("failed")
+          return
+        }
+      } else {
+        if (err.response?.data?.errorCode === "PAYMENT_ORDER_FAILED") {
+          sessionStorage.removeItem(`payment-key:${booking.bookingId}`)
+        }
+        setErrorMessage(
+          err.response?.data?.message ??
+            (err instanceof Error ? err.message : "Could not initiate payment. Try again.")
+        )
+        setPaymentState("failed")
+        return
       }
-      setErrorMessage(
-        err.response?.data?.message ??
-          (err instanceof Error ? err.message : "Could not initiate payment. Try again.")
-      )
-      setPaymentState("failed")
-      return
     }
 
     // 3. Start payment timeout watchdog
@@ -260,6 +294,33 @@ export default function PaymentPage() {
     setPaymentState("idle")
     setErrorMessage(null)
   }, [])
+
+  const handleCheckStatus = useCallback(async () => {
+    if (!recoverablePaymentId || pollingRef.current) return
+    setErrorMessage(null)
+    try {
+      const { data } = await api.get(`/payments/${recoverablePaymentId}`)
+      if (data.status === "CAPTURED") {
+        setTicketId(booking.pnr)
+        setPaymentState("success")
+      } else if (data.status === "FAILED") {
+        sessionStorage.removeItem(`payment-key:${booking.bookingId}`)
+        setErrorMessage("Payment failed. Please retry with a new payment attempt.")
+        setPaymentState("failed")
+      } else if (data.status === "PENDING" && data.providerOrderId) {
+        // handlePay recovers the existing active order; the backend constraint
+        // prevents this status check from creating another payable attempt.
+        await handlePay()
+      } else {
+        pollPaymentStatus(recoverablePaymentId)
+      }
+    } catch (err) {
+      setErrorMessage(
+        err.response?.data?.message ?? "Payment status could not be checked. Please try again."
+      )
+      setPaymentState("status_check_available")
+    }
+  }, [booking, handlePay, pollPaymentStatus, recoverablePaymentId])
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
@@ -657,7 +718,9 @@ export default function PaymentPage() {
                   <Divider sx={{ mb: 2 }} />
 
                   {/* Error / timeout message */}
-                  <Collapse in={(!!errorMessage && paymentState !== "verification_pending")
+                  <Collapse in={(!!errorMessage
+                    && paymentState !== "verification_pending"
+                    && paymentState !== "status_check_available")
                     || paymentState === "timeout"}>
                     <Alert
                       severity="error"
@@ -668,7 +731,8 @@ export default function PaymentPage() {
                     </Alert>
                   </Collapse>
 
-                  <Collapse in={paymentState === "verification_pending"}>
+                  <Collapse in={paymentState === "verification_pending"
+                    || paymentState === "status_check_available"}>
                     <Alert severity="info" sx={{ mb: 2, fontSize: "0.78rem" }}>
                       {errorMessage || "Payment authorized. Waiting for capture…"}
                     </Alert>
@@ -685,7 +749,18 @@ export default function PaymentPage() {
                   </Collapse>
 
                   {/* Pay button */}
-                  {paymentState !== "failed" && paymentState !== "timeout" ? (
+                  {paymentState === "status_check_available" ? (
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      size="large"
+                      onClick={handleCheckStatus}
+                      disabled={!recoverablePaymentId}
+                      sx={{ py: 1.5, fontWeight: 800, borderRadius: 2, minHeight: 52 }}
+                    >
+                      Check payment status
+                    </Button>
+                  ) : paymentState !== "failed" && paymentState !== "timeout" ? (
                     <Button
                       fullWidth
                       variant="contained"
