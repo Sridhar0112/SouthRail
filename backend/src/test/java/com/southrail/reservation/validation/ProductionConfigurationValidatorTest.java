@@ -7,6 +7,7 @@ import com.southrail.reservation.config.ai.GeminiConfiguration;
 import com.southrail.reservation.config.properties.SouthRailCorsProperties;
 import com.southrail.reservation.config.properties.SouthRailFeatureProperties;
 import com.southrail.reservation.config.properties.SouthRailSecurityProperties;
+import com.southrail.reservation.config.properties.RazorpayProperties;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 
@@ -95,7 +96,8 @@ class ProductionConfigurationValidatorTest {
     GeminiConfiguration gemini = new GeminiConfiguration();
     gemini.setApiKey(geminiKey);
     return new ProductionConfigurationValidator(databaseUrl, "db-user", "db-password", smtpUser,
-        smtpUser.length() == 0 ? "" : "smtp-password", security, cors, features, gemini);
+        smtpUser.length() == 0 ? "" : "smtp-password", security, cors, features, gemini,
+        disabledRazorpay());
   }
 
   private String strongSecret() {
@@ -115,6 +117,11 @@ class ProductionConfigurationValidatorTest {
     features.setEmailEnabled(true);
     GeminiConfiguration gemini = new GeminiConfiguration();
     return new ProductionConfigurationValidator("jdbc:postgresql://db/southrail", databaseUsername,
-        databasePassword, "smtp-user", "smtp-password", security, cors, features, gemini);
+        databasePassword, "smtp-user", "smtp-password", security, cors, features, gemini,
+        disabledRazorpay());
+  }
+
+  private RazorpayProperties disabledRazorpay() {
+    return new RazorpayProperties(false, "", "", "", "https://api.razorpay.com/v1");
   }
 }

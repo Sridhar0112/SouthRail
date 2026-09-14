@@ -76,7 +76,12 @@ export default function PaymentPage() {
     api.get(`/bookings/${bookingId}`)
       .then(({ data }) => setBooking({
         ...data,
-        fare: data.fare || { totalAmount: data.totalFare, baseFare: data.totalFare, reservationCharge: 0, convenienceFee: 0 },
+        fare: data.fare || {
+          totalAmount: data.totalFare,
+          baseFare: data.totalFare,
+          reservationCharge: 0,
+          convenienceFee: 0
+        },
         passengers: data.passengers || []
       }))
       .catch(() => setBookingError(
@@ -115,7 +120,8 @@ export default function PaymentPage() {
     try {
       // 2. Create order on backend
       // The server derives the authoritative amount from the booking.
-      const idempotencyKey = sessionStorage.getItem(`payment-key:${booking.bookingId}`) || crypto.randomUUID()
+      const idempotencyKey = sessionStorage.getItem(`payment-key:${booking.bookingId}`)
+        || window.crypto.randomUUID()
       sessionStorage.setItem(`payment-key:${booking.bookingId}`, idempotencyKey)
       const { data: createdOrder } = await api.post(
         `/payments/bookings/${booking.bookingId}/orders`, {},

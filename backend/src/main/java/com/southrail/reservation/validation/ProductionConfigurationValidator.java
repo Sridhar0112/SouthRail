@@ -1,6 +1,7 @@
 package com.southrail.reservation.validation;
 
 import com.southrail.reservation.config.ai.GeminiConfiguration;
+import com.southrail.reservation.config.properties.RazorpayProperties;
 import com.southrail.reservation.config.properties.SouthRailCorsProperties;
 import com.southrail.reservation.config.properties.SouthRailFeatureProperties;
 import com.southrail.reservation.config.properties.SouthRailSecurityProperties;
@@ -26,19 +27,39 @@ public class ProductionConfigurationValidator {
   private final SouthRailCorsProperties cors;
   private final SouthRailFeatureProperties features;
   private final GeminiConfiguration gemini;
-  @org.springframework.beans.factory.annotation.Autowired(required = false)
-  private com.southrail.reservation.config.properties.RazorpayProperties razorpay;
+  private final RazorpayProperties razorpay;
 
-  public ProductionConfigurationValidator(Environment environment, SouthRailSecurityProperties security,
-      SouthRailCorsProperties cors, SouthRailFeatureProperties features, GeminiConfiguration gemini) {
-    this(environment.getProperty("spring.datasource.url"), environment.getProperty("spring.datasource.username"),
-        environment.getProperty("spring.datasource.password"), environment.getProperty("spring.mail.username"),
-        environment.getProperty("spring.mail.password"), security, cors, features, gemini);
+  public ProductionConfigurationValidator(
+      Environment environment,
+      SouthRailSecurityProperties security,
+      SouthRailCorsProperties cors,
+      SouthRailFeatureProperties features,
+      GeminiConfiguration gemini,
+      RazorpayProperties razorpay) {
+    this(
+        environment.getProperty("spring.datasource.url"),
+        environment.getProperty("spring.datasource.username"),
+        environment.getProperty("spring.datasource.password"),
+        environment.getProperty("spring.mail.username"),
+        environment.getProperty("spring.mail.password"),
+        security,
+        cors,
+        features,
+        gemini,
+        razorpay);
   }
 
-  ProductionConfigurationValidator(String databaseUrl, String databaseUsername, String databasePassword,
-      String mailUsername, String mailPassword, SouthRailSecurityProperties security,
-      SouthRailCorsProperties cors, SouthRailFeatureProperties features, GeminiConfiguration gemini) {
+  ProductionConfigurationValidator(
+      String databaseUrl,
+      String databaseUsername,
+      String databasePassword,
+      String mailUsername,
+      String mailPassword,
+      SouthRailSecurityProperties security,
+      SouthRailCorsProperties cors,
+      SouthRailFeatureProperties features,
+      GeminiConfiguration gemini,
+      RazorpayProperties razorpay) {
     this.databaseUrl = databaseUrl;
     this.databaseUsername = databaseUsername;
     this.databasePassword = databasePassword;
@@ -48,6 +69,7 @@ public class ProductionConfigurationValidator {
     this.cors = cors;
     this.features = features;
     this.gemini = gemini;
+    this.razorpay = razorpay;
   }
 
   @PostConstruct
@@ -77,7 +99,7 @@ public class ProductionConfigurationValidator {
     if (features.isAiEnabled()) {
       require("GEMINI_API_KEY", gemini.getApiKey());
     }
-    if (razorpay != null && razorpay.enabled()) {
+    if (razorpay.enabled()) {
       require("RAZORPAY_KEY_ID", razorpay.keyId());
       require("RAZORPAY_KEY_SECRET", razorpay.keySecret());
       require("RAZORPAY_WEBHOOK_SECRET", razorpay.webhookSecret());

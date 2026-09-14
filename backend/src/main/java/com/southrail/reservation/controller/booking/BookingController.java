@@ -6,23 +6,23 @@ import com.southrail.reservation.dto.booking.CancellationReviewResponse;
 import com.southrail.reservation.dto.notification.NotificationDtos;
 import com.southrail.reservation.service.booking.BookingCancellationService;
 import com.southrail.reservation.service.booking.BookingService;
-import com.southrail.reservation.service.notification.NotificationService;
 import com.southrail.reservation.service.booking.TicketPdfService;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import com.southrail.reservation.service.notification.NotificationService;
 import jakarta.validation.Valid;
 import java.security.Principal;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -33,7 +33,11 @@ public class BookingController {
   private final NotificationService notificationService;
   private final TicketPdfService ticketPdfService;
 
-  public BookingController(BookingService bookingService, BookingCancellationService bookingCancellationService, NotificationService notificationService, TicketPdfService ticketPdfService) {
+  public BookingController(
+      BookingService bookingService,
+      BookingCancellationService bookingCancellationService,
+      NotificationService notificationService,
+      TicketPdfService ticketPdfService) {
     this.bookingService = bookingService;
     this.bookingCancellationService = bookingCancellationService;
     this.notificationService = notificationService;
@@ -42,13 +46,12 @@ public class BookingController {
 
   @PostMapping("/bookings")
   ResponseEntity<BookingDtos.BookingResponse> create(
-          Principal principal,
-          @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
-          @Valid @RequestBody BookingDtos.BookingRequest request) {
+      Principal principal,
+      @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+      @Valid @RequestBody BookingDtos.BookingRequest request) {
 
-    return ResponseEntity
-            .status(HttpStatus.CREATED)
-            .body(bookingService.create(principal.getName(), idempotencyKey, request));
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(bookingService.create(principal.getName(), idempotencyKey, request));
   }
 
   @PostMapping("/bookings/review")
@@ -77,7 +80,8 @@ public class BookingController {
   }
 
   @GetMapping("/notifications")
-  java.util.List<NotificationDtos.NotificationView> notifications(Principal principal, Pageable pageable) {
+  java.util.List<NotificationDtos.NotificationView> notifications(
+      Principal principal, Pageable pageable) {
     return notificationService.list(principal.getName(), pageable);
   }
 
@@ -90,6 +94,7 @@ public class BookingController {
   CancellationResponse cancelByPnr(Principal principal, @PathVariable String pnr) {
     return bookingCancellationService.cancel(principal.getName(), pnr);
   }
+
   @GetMapping("/bookings/{pnr}/ticket")
   ResponseEntity<byte[]> downloadTicket(
           Principal principal,
