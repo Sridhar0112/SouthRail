@@ -36,10 +36,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          # Test the submitted commit rather than GitHub's synthetic PR merge ref.
-          # This also makes the revision reported by git-commit-id unambiguous.
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
+
+      - name: Validate package architecture
+        run: python3 scripts/validate_package_architecture.py
 
       - name: Set up Java 21
         uses: actions/setup-java@v4
