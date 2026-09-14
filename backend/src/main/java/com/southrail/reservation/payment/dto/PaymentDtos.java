@@ -3,6 +3,9 @@ package com.southrail.reservation.payment.dto;
 import com.southrail.reservation.entity.payment.PaymentStatus;
 import jakarta.validation.constraints.NotBlank;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 import java.util.UUID;
 
 public final class PaymentDtos {
@@ -28,4 +31,22 @@ public final class PaymentDtos {
       PaymentStatus status,
       String providerOrderId,
       String providerPaymentId) {}
+
+  public record PaymentBookingDetails(
+      UUID bookingId,
+      String pnr,
+      String trainNumber,
+      String trainName,
+      String sourceCode,
+      String destinationCode,
+      LocalDate journeyDate,
+      LocalTime departureTime,
+      LocalTime arrivalTime,
+      String travelClass,
+      String quota,
+      BigDecimal totalFare,
+      List<PaymentPassenger> passengers) {}
+
+  public record PaymentPassenger(
+      String name, int age, String gender, String seatPreference) {}
 }
