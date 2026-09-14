@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import com.southrail.reservation.entity.account.RoleName;
 import com.southrail.reservation.entity.account.User;
 import com.southrail.reservation.entity.booking.Booking;
+import com.southrail.reservation.entity.booking.BookingStatus;
 import com.southrail.reservation.entity.payment.Payment;
 import com.southrail.reservation.entity.payment.PaymentStatus;
 import com.southrail.reservation.exception.ApiException;
@@ -15,8 +16,10 @@ import com.southrail.reservation.payment.gateway.PaymentGateway;
 import com.southrail.reservation.repository.account.UserRepository;
 import com.southrail.reservation.repository.booking.BookingRepository;
 import com.southrail.reservation.repository.payment.PaymentRepository;
+import com.southrail.reservation.repository.payment.PaymentRefundRepository;
 import com.southrail.reservation.service.audit.AuditLogService;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +29,9 @@ class PaymentPersistenceServiceTest {
   private final UUID paymentId = UUID.randomUUID();
   private Payment payment;
   private PaymentPersistenceService persistence;
+  private PaymentRepository payments;
+  private BookingRepository bookings;
+  private Booking booking;
 
   @BeforeEach
   void setUp() {
@@ -33,24 +39,54 @@ class PaymentPersistenceServiceTest {
     user.setId(UUID.randomUUID());
     user.setEmail("user@example.com");
     user.getRoles().add(RoleName.ROLE_USER);
-    Booking booking = new Booking();
+    booking = new Booking();
     booking.setId(UUID.randomUUID());
     booking.setPnr("1234567890");
     booking.setUser(user);
     booking.setTotalFare(new BigDecimal("1000.00"));
+    booking.setStatus(BookingStatus.CONFIRMED);
     payment = Payment.create(booking, "key");
     payment.orderCreated("order_1");
 
-    PaymentRepository payments = mock(PaymentRepository.class);
+    payments = mock(PaymentRepository.class);
+    bookings = mock(BookingRepository.class);
     UserRepository users = mock(UserRepository.class);
     when(payments.findByIdForUpdate(paymentId)).thenReturn(Optional.of(payment));
     when(payments.findByProviderPaymentId("pay_1")).thenReturn(Optional.empty());
     when(users.findByEmailIgnoreCase("user@example.com")).thenReturn(Optional.of(user));
     persistence = new PaymentPersistenceService(
         payments,
-        mock(BookingRepository.class),
+        bookings,
         users,
-        mock(AuditLogService.class));
+        mock(AuditLogService.class),
+        mock(PaymentRefundRepository.class));
+  }
+
+  @Test
+  void cancelledBookingCannotCreatePaymentAttempt() {
+    booking.setStatus(BookingStatus.CANCELLED);
+    when(bookings.findById(booking.getId())).thenReturn(Optional.of(booking));
+
+    assertThatThrownBy(() -> persistence.prepare(
+        "user@example.com", booking.getId(), "idempotency-key"))
+        .isInstanceOf(ApiException.class)
+        .satisfies(exception -> assertThat(((ApiException) exception).errorCode())
+            .isEqualTo("BOOKING_CANCELLED"));
+  }
+
+  @Test
+  void differentKeyCannotCreateSecondActiveAttempt() {
+    when(bookings.findById(booking.getId())).thenReturn(Optional.of(booking));
+    when(payments.findFirstByBookingIdAndStatusInOrderByCreatedAtDesc(
+        booking.getId(),
+        List.of(PaymentStatus.CREATED, PaymentStatus.PENDING, PaymentStatus.AUTHORIZED)))
+        .thenReturn(Optional.of(payment));
+
+    assertThatThrownBy(() -> persistence.prepare(
+        "user@example.com", booking.getId(), "different-key"))
+        .isInstanceOf(ApiException.class)
+        .satisfies(exception -> assertThat(((ApiException) exception).errorCode())
+            .isEqualTo("PAYMENT_ATTEMPT_ACTIVE"));
   }
 
   @Test

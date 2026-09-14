@@ -18,6 +18,8 @@ public interface PaymentRefundRepository extends JpaRepository<PaymentRefund, UU
 
   Optional<PaymentRefund> findByProviderRefundId(String id);
 
+  Optional<PaymentRefund> findByPaymentId(UUID paymentId);
+
   List<PaymentRefund> findTop20ByStatusInOrderByCreatedAt(Collection<RefundStatus> statuses);
 
   @Query("select r from PaymentRefund r where r.status in :statuses "
