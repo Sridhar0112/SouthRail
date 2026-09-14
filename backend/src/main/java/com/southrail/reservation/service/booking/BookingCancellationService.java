@@ -22,10 +22,10 @@ import java.time.Instant;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.context.ApplicationEventPublisher;
 
 @Service
 public class BookingCancellationService {
@@ -39,15 +39,7 @@ public class BookingCancellationService {
   private final TrainRepository trains;
   private final PassengerRepository passengers;
   private final ApplicationEventPublisher events;
-  public BookingCancellationService(BookingRepository bookings, UserRepository users,
-      RefundCalculationService refundCalculationService, NotificationService notificationService,
-      SeatAllocationService seatAllocationService, AuditLogService auditLogService,
-      TrainRepository trains, PassengerRepository passengers) {
-    this(bookings, users, refundCalculationService, notificationService, seatAllocationService,
-        auditLogService, trains, passengers, event -> { });
-  }
 
-  @org.springframework.beans.factory.annotation.Autowired
   public BookingCancellationService(BookingRepository bookings, UserRepository users,
       RefundCalculationService refundCalculationService, NotificationService notificationService,
       SeatAllocationService seatAllocationService, AuditLogService auditLogService,
@@ -205,7 +197,7 @@ public class BookingCancellationService {
         passengers.findByBooking(waiting).forEach(passenger -> passenger.setStatus(BookingStatus.RAC));
         racVacancies -= partySize;
         auditLogService.log(waiting.getUser().getId(), waiting.getUser().getEmail(),
-            "WAITLIST_PROMOTED", "BOOKING",
+            "WAITLIST_ADVANCED", "BOOKING",
             "Waitlist booking promoted to " + waiting.getReservationLabel()
                 + "; PNR: " + waiting.getPnr());
         changed = true;

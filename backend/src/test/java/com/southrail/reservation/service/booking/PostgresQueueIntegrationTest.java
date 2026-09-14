@@ -406,6 +406,30 @@ class PostgresQueueIntegrationTest {
     assertThat(jdbc.queryForObject(
         "select count(*) from booking_seats where passenger_id in (?, ?) and status = 'BOOKED'",
         Integer.class, waitingOne.getId(), waitingTwo.getId())).isEqualTo(2);
+    assertThat(jdbc.queryForObject(
+        "select count(*) from audit_logs where action = 'WAITLIST_PROMOTED' "
+            + "and (description like ? or description like ?)",
+        Integer.class, "%" + waitlistOne.getPnr() + "%", "%" + waitlistTwo.getPnr() + "%"))
+        .isEqualTo(2);
+    assertThat(jdbc.queryForList(
+        "select description from audit_logs where action = 'WAITLIST_PROMOTED' "
+            + "and (description like ? or description like ?)",
+        String.class, "%" + waitlistOne.getPnr() + "%", "%" + waitlistTwo.getPnr() + "%"))
+        .allSatisfy(description -> assertThat(description).contains("promoted to CONFIRMED"));
+    for (Booking promoted : List.of(waitlistOne, waitlistTwo)) {
+      assertThat(jdbc.queryForObject(
+          "select count(*) from audit_logs where action = 'WAITLIST_PROMOTED' and description like ?",
+          Integer.class, "%" + promoted.getPnr() + "%")).isEqualTo(1);
+      assertThat(jdbc.queryForObject(
+          "select count(*) from notifications where user_id = ? "
+              + "and title = 'Waitlist booking confirmed' and message like ?",
+          Integer.class, customer.getId(), "%" + promoted.getPnr() + "%")).isEqualTo(1);
+    }
+    assertThat(jdbc.queryForObject(
+        "select count(*) from notifications where user_id = ? "
+            + "and title = 'Waitlist booking confirmed' and (message like ? or message like ?)",
+        Integer.class, customer.getId(), "%" + waitlistOne.getPnr() + "%",
+        "%" + waitlistTwo.getPnr() + "%")).isEqualTo(2);
   }
 
   @Test
