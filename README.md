@@ -1,5 +1,7 @@
 # SouthRail
 
+SouthRail includes a provider-isolated **Razorpay Test Mode payment and refund integration** with authenticated order creation, server-side payment verification, signed/idempotent webhooks, and durable cancellation refund obligations. See [the payment operations guide](docs/PAYMENTS.md). Live Mode readiness is not claimed.
+
 **A production-oriented, full-stack railway reservation platform built as a Java/Spring Boot modular monolith with a React client.**
 
 [![Backend CI](https://github.com/Sridhar0112/SouthRail/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/Sridhar0112/SouthRail/actions/workflows/backend-ci.yml)

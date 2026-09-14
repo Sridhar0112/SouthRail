@@ -26,6 +26,8 @@ public class ProductionConfigurationValidator {
   private final SouthRailCorsProperties cors;
   private final SouthRailFeatureProperties features;
   private final GeminiConfiguration gemini;
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  private com.southrail.reservation.config.properties.RazorpayProperties razorpay;
 
   public ProductionConfigurationValidator(Environment environment, SouthRailSecurityProperties security,
       SouthRailCorsProperties cors, SouthRailFeatureProperties features, GeminiConfiguration gemini) {
@@ -74,6 +76,11 @@ public class ProductionConfigurationValidator {
     }
     if (features.isAiEnabled()) {
       require("GEMINI_API_KEY", gemini.getApiKey());
+    }
+    if (razorpay != null && razorpay.enabled()) {
+      require("RAZORPAY_KEY_ID", razorpay.keyId());
+      require("RAZORPAY_KEY_SECRET", razorpay.keySecret());
+      require("RAZORPAY_WEBHOOK_SECRET", razorpay.webhookSecret());
     }
     if (!features.isEmailEnabled()) {
       throw new IllegalStateException(

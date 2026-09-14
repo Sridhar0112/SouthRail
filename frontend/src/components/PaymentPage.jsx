@@ -74,7 +74,11 @@ export default function PaymentPage() {
 
     setLoadingBooking(true)
     api.get(`/bookings/${bookingId}`)
-      .then(({ data }) => setBooking(data))
+      .then(({ data }) => setBooking({
+        ...data,
+        fare: data.fare || { totalAmount: data.totalFare, baseFare: data.totalFare, reservationCharge: 0, convenienceFee: 0 },
+        passengers: data.passengers || []
+      }))
       .catch(() => setBookingError(
         "Unable to load booking details. Please go back and try again."
       ))
@@ -110,11 +114,13 @@ export default function PaymentPage() {
     let orderData
     try {
       // 2. Create order on backend
-      // Amount in paise (backend expects paise)
-      const { data: createdOrder } = await api.post("/payment/create-order", {
-        bookingId: booking.bookingId,
-        amount: booking.fare.totalAmount * 100
-      })
+      // The server derives the authoritative amount from the booking.
+      const idempotencyKey = sessionStorage.getItem(`payment-key:${booking.bookingId}`) || crypto.randomUUID()
+      sessionStorage.setItem(`payment-key:${booking.bookingId}`, idempotencyKey)
+      const { data: createdOrder } = await api.post(
+        `/payments/bookings/${booking.bookingId}/orders`, {},
+        { headers: { "Idempotency-Key": idempotencyKey } }
+      )
       orderData = createdOrder
     } catch (err) {
       setErrorMessage(
@@ -136,12 +142,12 @@ export default function PaymentPage() {
     setPaymentState("awaiting_payment")
 
     const options = {
-      key: orderData.razorpayKey,
+      key: orderData.keyId,
       amount: orderData.amount,
       currency: orderData.currency,
       name: "South Rail",
       description: `${booking.trainName} · ${booking.sourceCode} → ${booking.destinationCode}`,
-      order_id: orderData.orderId,
+      order_id: orderData.razorpayOrderId,
       prefill: {
         name: booking.passengers[0]?.name
       },
@@ -160,15 +166,14 @@ export default function PaymentPage() {
 
         try {
           // 5. Verify signature on backend
-          const { data: result } = await api.post("/payment/verify", {
+          const { data: result } = await api.post(`/payments/${orderData.paymentId}/verify`, {
             razorpayPaymentId: response.razorpay_payment_id,
             razorpayOrderId: response.razorpay_order_id,
-            razorpaySignature: response.razorpay_signature,
-            bookingId: booking.bookingId
+            razorpaySignature: response.razorpay_signature
           })
 
-          if (result.success) {
-            setTicketId(result.ticketId)
+          if (result.status === "CAPTURED") {
+            setTicketId(booking.pnr)
             setPaymentState("success")
           } else {
             throw new Error(
