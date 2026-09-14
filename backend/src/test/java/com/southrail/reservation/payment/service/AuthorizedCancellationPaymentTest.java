@@ -24,11 +24,15 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 class AuthorizedCancellationPaymentTest {
-  @Test
-  void authorizedCancellationCreatesObligationActivatedByLaterCapture() {
+  @ParameterizedTest
+  @EnumSource(
+      value = PaymentStatus.class,
+      names = {"PENDING", "AUTHORIZED", "CAPTURED"})
+  void cancellationCreatesObligationForEveryPayableTiming(PaymentStatus initialStatus) {
     User user = new User();
     user.setId(UUID.randomUUID());
     user.setEmail("user@example.com");
@@ -41,13 +45,18 @@ class AuthorizedCancellationPaymentTest {
     booking.setTotalFare(new BigDecimal("1000.00"));
     Payment payment = Payment.create(booking, "payment-key");
     payment.orderCreated("order_1");
-    payment.authorized("pay_1");
+    if (initialStatus == PaymentStatus.AUTHORIZED) {
+      payment.authorized("pay_1");
+    } else if (initialStatus == PaymentStatus.CAPTURED) {
+      payment.captured("pay_1");
+    }
 
     PaymentRepository payments = mock(PaymentRepository.class);
     PaymentRefundRepository refunds = mock(PaymentRefundRepository.class);
     AuditLogService audit = mock(AuditLogService.class);
     when(payments.findFinancialPaymentForUpdate(
-        booking.getId(), List.of(PaymentStatus.AUTHORIZED, PaymentStatus.CAPTURED)))
+        booking.getId(),
+        List.of(PaymentStatus.PENDING, PaymentStatus.AUTHORIZED, PaymentStatus.CAPTURED)))
         .thenReturn(Optional.of(payment));
     when(refunds.findByIdempotencyKey("cancellation:" + booking.getId()))
         .thenReturn(Optional.empty());
@@ -65,8 +74,14 @@ class AuthorizedCancellationPaymentTest {
 
     assertThat(obligation).isNotNull();
     assertThat(obligation.getAmount()).isEqualByComparingTo(calculatedRefund);
-    assertThat(payment.getStatus()).isEqualTo(PaymentStatus.AUTHORIZED);
+    assertThat(payment.getStatus()).isEqualTo(
+        initialStatus == PaymentStatus.CAPTURED
+            ? PaymentStatus.REFUND_PENDING : initialStatus);
     verify(refunds).save(obligation);
+
+    if (initialStatus == PaymentStatus.CAPTURED) {
+      return;
+    }
 
     UUID paymentId = UUID.randomUUID();
     UserRepository users = mock(UserRepository.class);

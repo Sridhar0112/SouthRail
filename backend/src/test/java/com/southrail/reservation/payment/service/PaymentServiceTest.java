@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import com.southrail.reservation.config.properties.RazorpayProperties;
 import com.southrail.reservation.entity.payment.PaymentStatus;
 import com.southrail.reservation.exception.ApiException;
+import com.southrail.reservation.payment.dto.PaymentDtos.ActivePaymentResponse;
 import com.southrail.reservation.payment.dto.PaymentDtos.CreatePaymentOrderResponse;
 import com.southrail.reservation.payment.dto.PaymentDtos.PaymentStatusResponse;
 import com.southrail.reservation.payment.dto.PaymentDtos.VerificationRequest;
@@ -159,6 +160,25 @@ class PaymentServiceTest {
         org.mockito.ArgumentMatchers.eq("user@example.com"),
         org.mockito.ArgumentMatchers.eq(bookingId),
         org.mockito.ArgumentMatchers.anyString());
+  }
+
+  @Test
+  void recoversAuthorizedAttemptWithoutCreatingAnotherOrder() {
+    UUID paymentId = UUID.randomUUID();
+    UUID bookingId = UUID.randomUUID();
+    when(persistence.getActive("user@example.com", bookingId)).thenReturn(
+        prepared(paymentId, bookingId, PaymentStatus.AUTHORIZED, "order_1", false));
+
+    ActivePaymentResponse result = service.getActive("user@example.com", bookingId);
+
+    assertThat(result.paymentId()).isEqualTo(paymentId);
+    assertThat(result.razorpayOrderId()).isEqualTo("order_1");
+    assertThat(result.status()).isEqualTo(PaymentStatus.AUTHORIZED);
+    verify(gateway, never()).createOrder(
+        org.mockito.ArgumentMatchers.anyLong(),
+        org.mockito.ArgumentMatchers.anyString(),
+        org.mockito.ArgumentMatchers.anyString(),
+        org.mockito.ArgumentMatchers.anyMap());
   }
 
   private void verificationContext(

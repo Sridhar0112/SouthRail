@@ -6,6 +6,7 @@ import com.southrail.reservation.entity.payment.Payment;
 import com.southrail.reservation.entity.payment.PaymentRefund;
 import com.southrail.reservation.entity.payment.PaymentStatus;
 import com.southrail.reservation.exception.ApiException;
+import com.southrail.reservation.payment.dto.PaymentDtos.ActivePaymentResponse;
 import com.southrail.reservation.payment.dto.PaymentDtos.CreatePaymentOrderResponse;
 import com.southrail.reservation.payment.dto.PaymentDtos.PaymentStatusResponse;
 import com.southrail.reservation.payment.dto.PaymentDtos.VerificationRequest;
@@ -141,13 +142,25 @@ public class PaymentService {
     return persistence.get(email, paymentId);
   }
 
+  public ActivePaymentResponse getActive(String email, UUID bookingId) {
+    PaymentPersistenceService.PreparedPayment payment = persistence.getActive(email, bookingId);
+    return new ActivePaymentResponse(
+        payment.id(),
+        payment.providerOrderId(),
+        config.keyId(),
+        toMinorUnits(payment.amount()),
+        payment.currency(),
+        payment.status());
+  }
+
   @Transactional
   public PaymentRefund createRefundObligation(Booking booking, BigDecimal amount) {
     if (amount == null || amount.signum() <= 0) {
       return null;
     }
     Optional<Payment> financialPayment = payments.findFinancialPaymentForUpdate(
-        booking.getId(), List.of(PaymentStatus.AUTHORIZED, PaymentStatus.CAPTURED));
+        booking.getId(),
+        List.of(PaymentStatus.PENDING, PaymentStatus.AUTHORIZED, PaymentStatus.CAPTURED));
     if (financialPayment.isEmpty()) {
       return null;
     }

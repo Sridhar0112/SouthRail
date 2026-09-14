@@ -18,8 +18,12 @@ Payments transition `CREATED -> PENDING -> AUTHORIZED/CAPTURED/FAILED`, `AUTHORI
 
 Order creation and status/verification APIs require JWT and enforce booking ownership (existing administrators retain their RBAC access). `Idempotency-Key` is required and persisted as a user-scoped hash. Checkout signatures use constant-time HMAC-SHA256 validation, followed by a server-side provider fetch and amount/currency/order checks. Webhooks validate the signature over exact raw bytes and validate payload order, amount, and currency. Provider event IDs (or a body hash fallback) are uniquely persisted, making redelivery harmless; row locks serialize callback/webhook races. Razorpay network calls run between short database transactions rather than while a database lock is held.
 
+An interrupted client can recover the single active attempt through `GET /api/payments/bookings/{bookingId}/active`. `PENDING` orders resume checkout, while `CREATED` and `AUTHORIZED` attempts use bounded status polling. A timed-out poll exposes an explicit status-check action and never creates a replacement order automatically.
+
 ## Refunds and limitations
 
 Cancellation first uses the unchanged `RefundCalculationService` and records the refund obligation in the local cancellation transaction. A scheduled worker claims each obligation in a short transaction, calls Razorpay after commit, and persists the result in another short transaction. Processing leases and provider/local idempotency make worker recovery safe, while signed webhooks reconcile completion. Broader scheduled reconciliation of payments that receive neither a browser callback nor webhook remains operational follow-up work. A publicly reachable HTTPS webhook, Razorpay dashboard Test Mode configuration, and test credentials are required for end-to-end testing.
+
+Cancellation records that obligation for `PENDING`, `AUTHORIZED`, or `CAPTURED` attempts. The dispatcher will not claim it before capture; a later valid capture atomically advances the payment to `REFUND_PENDING`. Refund webhook mutations are row-locked, and stale `refund.failed` deliveries cannot regress a processed refund.
 
 Run `mvn test` in `backend`, then `npm ci`, `npm run lint`, and `npm run build` in `frontend`. Tests never call Razorpay.

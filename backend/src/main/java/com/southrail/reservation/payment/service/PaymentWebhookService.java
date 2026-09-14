@@ -131,6 +131,7 @@ public class PaymentWebhookService {
     }
     validatePaymentPayload(payment, node);
     String paymentId = node.path("id").asText();
+    validateProviderPaymentId(payment, paymentId);
     if ("payment.captured".equals(eventType)
         && (payment.getStatus() == PaymentStatus.PENDING
             || payment.getStatus() == PaymentStatus.AUTHORIZED)) {
@@ -140,12 +141,32 @@ public class PaymentWebhookService {
         && payment.getStatus() == PaymentStatus.PENDING) {
       payment.authorized(paymentId);
     } else if ("payment.failed".equals(eventType)
-        && payment.getStatus() == PaymentStatus.PENDING) {
+        && (payment.getStatus() == PaymentStatus.PENDING
+            || payment.getStatus() == PaymentStatus.AUTHORIZED)) {
       payment.failed(
           node.path("error_code").asText(null),
           node.path("error_description").asText(null));
     }
     return true;
+  }
+
+  private void validateProviderPaymentId(Payment payment, String incomingPaymentId) {
+    if (payment.getProviderPaymentId() != null
+        && !payment.getProviderPaymentId().equals(incomingPaymentId)) {
+      throw new ApiException(
+          HttpStatus.CONFLICT,
+          "PAYMENT_PROVIDER_ID_MISMATCH",
+          "Webhook payment ID did not match the existing payment association");
+    }
+    payments.findByProviderPaymentId(incomingPaymentId)
+        .filter(existing -> existing != payment
+            && (payment.getId() == null || !payment.getId().equals(existing.getId())))
+        .ifPresent(existing -> {
+          throw new ApiException(
+              HttpStatus.CONFLICT,
+              "PAYMENT_PROVIDER_ID_ALREADY_USED",
+              "Provider payment ID is already associated with another payment");
+        });
   }
 
   private void activateRefundAfterCapture(Payment payment) {
@@ -173,7 +194,8 @@ public class PaymentWebhookService {
   }
 
   private boolean handleRefund(String eventType, JsonNode node) {
-    PaymentRefund refund = refunds.findByProviderRefundId(node.path("id").asText()).orElse(null);
+    PaymentRefund refund = refunds.findByProviderRefundIdForUpdate(
+        node.path("id").asText()).orElse(null);
     if (refund == null) {
       return false;
     }
@@ -185,7 +207,8 @@ public class PaymentWebhookService {
             ? PaymentStatus.REFUNDED : PaymentStatus.PARTIALLY_REFUNDED);
       }
     } else if ("refund.failed".equals(eventType)
-        && refund.getStatus() != RefundStatus.FAILED) {
+        && refund.getStatus() != RefundStatus.FAILED
+        && refund.getStatus() != RefundStatus.PROCESSED) {
       refund.failed();
     }
     return true;

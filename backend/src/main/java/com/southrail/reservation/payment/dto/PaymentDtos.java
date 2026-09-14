@@ -32,6 +32,14 @@ public final class PaymentDtos {
       String providerOrderId,
       String providerPaymentId) {}
 
+  public record ActivePaymentResponse(
+      UUID paymentId,
+      String razorpayOrderId,
+      String keyId,
+      long amount,
+      String currency,
+      PaymentStatus status) {}
+
   public record PaymentBookingDetails(
       UUID bookingId,
       String pnr,
