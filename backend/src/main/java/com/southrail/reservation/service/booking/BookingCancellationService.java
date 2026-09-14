@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
 
 @Service
 public class BookingCancellationService {
@@ -37,10 +38,20 @@ public class BookingCancellationService {
   private final AuditLogService auditLogService;
   private final TrainRepository trains;
   private final PassengerRepository passengers;
+  private final ApplicationEventPublisher events;
   public BookingCancellationService(BookingRepository bookings, UserRepository users,
       RefundCalculationService refundCalculationService, NotificationService notificationService,
       SeatAllocationService seatAllocationService, AuditLogService auditLogService,
       TrainRepository trains, PassengerRepository passengers) {
+    this(bookings, users, refundCalculationService, notificationService, seatAllocationService,
+        auditLogService, trains, passengers, event -> { });
+  }
+
+  @org.springframework.beans.factory.annotation.Autowired
+  public BookingCancellationService(BookingRepository bookings, UserRepository users,
+      RefundCalculationService refundCalculationService, NotificationService notificationService,
+      SeatAllocationService seatAllocationService, AuditLogService auditLogService,
+      TrainRepository trains, PassengerRepository passengers, ApplicationEventPublisher events) {
     this.bookings = bookings;
     this.users = users;
     this.refundCalculationService = refundCalculationService;
@@ -49,6 +60,7 @@ public class BookingCancellationService {
     this.auditLogService=auditLogService;
     this.trains = trains;
     this.passengers = passengers;
+    this.events = events;
   }
 
   @Transactional(readOnly = true)
@@ -85,6 +97,8 @@ public class BookingCancellationService {
     java.util.UUID bookingOwnerId = bookingOwner.getId();
     String bookingOwnerEmail = bookingOwner.getEmail();
     String cancelledPnr = booking.getPnr();
+    BookingStatus previousBookingStatus = booking.getStatus();
+    String previousReservationLabel = booking.getReservationLabel();
 
     RefundQuoteDto quote = refundCalculationService.calculate(booking);
     booking.setStatus(BookingStatus.CANCELLED);
@@ -103,6 +117,11 @@ public class BookingCancellationService {
             "BOOKING",
             "Ticket cancelled successfully with PNR: " + cancelledPnr
     );
+    if (previousBookingStatus == BookingStatus.WAITLISTED) {
+      auditLogService.log(bookingOwnerId, bookingOwnerEmail, "WAITLIST_CANCELLED", "BOOKING",
+          "Waitlist booking cancelled; PNR: " + cancelledPnr
+              + "; previous status: " + previousReservationLabel);
+    }
     try {
       notificationService.notifyBookingCancelled(
           bookingOwnerId, cancelledPnr, quote.getRefundAmount());
@@ -125,6 +144,9 @@ public class BookingCancellationService {
     java.util.UUID trainId = train.getId();
     java.time.LocalDate journeyDate = cancelledBooking.getJourneyDate();
     String travelClass = cancelledBooking.getTravelClass();
+    log.info("waitlist_promotion_started train={} journey_date={} class={}",
+        trainId, journeyDate, travelClass);
+    java.util.Map<java.util.UUID, String> previousQueueLabels = new java.util.HashMap<>();
     boolean changed;
     do {
       changed = false;
@@ -140,11 +162,24 @@ public class BookingCancellationService {
         // Allocate while this party is still RAC. Marking it confirmed first makes
         // the legacy-inventory fallback count its passengers as already occupying
         // anonymous seats, so findAvailableSeats can reject otherwise free capacity.
-        seatAllocationService.allocateSeats(next, queuedPassengers);
+        String previousStatus = previousQueueLabels.getOrDefault(next.getId(), next.getReservationLabel());
+        List<com.southrail.reservation.entity.booking.BookingSeat> assigned =
+            seatAllocationService.allocateSeats(next, queuedPassengers);
         next.setStatus(BookingStatus.CONFIRMED);
         next.setQueuePosition(null);
         next.setReservationLabel("CNF");
         queuedPassengers.forEach(passenger -> passenger.setStatus(BookingStatus.CONFIRMED));
+        String seatSummary = assigned.stream()
+            .map(seat -> seat.getCoachCode() + "/" + seat.getSeatNumber())
+            .collect(java.util.stream.Collectors.joining(", "));
+        events.publishEvent(new WaitlistPromotionEvent(
+            next.getUser().getId(), next.getPnr(), previousStatus, seatSummary));
+        auditLogService.log(next.getUser().getId(), next.getUser().getEmail(),
+            "WAITLIST_PROMOTED", "BOOKING",
+            "Queue booking promoted to CONFIRMED; PNR: " + next.getPnr()
+                + "; previous status: " + previousStatus + "; seat: " + seatSummary);
+        log.info("waitlist_promotion_completed pnr={} previous_status={} seats={}",
+            next.getPnr(), previousStatus, seatSummary);
         availableSeats -= queuedPassengers.size();
         changed = true;
       }
@@ -163,11 +198,16 @@ public class BookingCancellationService {
         if (partySize > racVacancies) {
           break; // FIFO, and bookings are the indivisible queue unit in the current model.
         }
+        previousQueueLabels.put(waiting.getId(), waiting.getReservationLabel());
         waiting.setQueuePosition(nextRacPosition++);
         waiting.setReservationLabel("RAC " + waiting.getQueuePosition());
         waiting.setStatus(BookingStatus.RAC);
         passengers.findByBooking(waiting).forEach(passenger -> passenger.setStatus(BookingStatus.RAC));
         racVacancies -= partySize;
+        auditLogService.log(waiting.getUser().getId(), waiting.getUser().getEmail(),
+            "WAITLIST_PROMOTED", "BOOKING",
+            "Waitlist booking promoted to " + waiting.getReservationLabel()
+                + "; PNR: " + waiting.getPnr());
         changed = true;
       }
       bookings.flush();

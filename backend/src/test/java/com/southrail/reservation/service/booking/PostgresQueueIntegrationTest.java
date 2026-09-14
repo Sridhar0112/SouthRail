@@ -354,6 +354,61 @@ class PostgresQueueIntegrationTest {
   }
 
   @Test
+  void concurrentCancellationsPromoteDistinctWaitlistedPartiesToDistinctSeats() throws Exception {
+    User customer = user("concurrent-promotion@southrail.invalid", RoleName.ROLE_USER);
+    Train train = train("PG4406");
+    Station source = station("CSRC");
+    Station destination = station("CDST");
+    LocalDate date = LocalDate.now().plusDays(35);
+    ensureBookableRoute(train, source, destination);
+    Coach coach = coach(train, "C1", 2);
+
+    Booking confirmedOne = queuedBooking(customer, train, source, destination, date,
+        "CC-CNF-0001", BookingStatus.CONFIRMED, 0);
+    confirmedOne.setQueuePosition(null);
+    confirmedOne.setReservationLabel("CNF");
+    bookings.saveAndFlush(confirmedOne);
+    bookedSeat(confirmedOne, passenger(confirmedOne, BookingStatus.CONFIRMED, "Confirmed One"), coach, 1);
+    Booking confirmedTwo = queuedBooking(customer, train, source, destination, date,
+        "CC-CNF-0002", BookingStatus.CONFIRMED, 0);
+    confirmedTwo.setQueuePosition(null);
+    confirmedTwo.setReservationLabel("CNF");
+    bookings.saveAndFlush(confirmedTwo);
+    bookedSeat(confirmedTwo, passenger(confirmedTwo, BookingStatus.CONFIRMED, "Confirmed Two"), coach, 2);
+
+    Booking waitlistOne = queuedBooking(customer, train, source, destination, date,
+        "CC-WL-00001", BookingStatus.WAITLISTED, 1);
+    Passenger waitingOne = passenger(waitlistOne, BookingStatus.WAITLISTED, "Waiting One");
+    Booking waitlistTwo = queuedBooking(customer, train, source, destination, date,
+        "CC-WL-00002", BookingStatus.WAITLISTED, 2);
+    Passenger waitingTwo = passenger(waitlistTwo, BookingStatus.WAITLISTED, "Waiting Two");
+    executeSql("../database/006_queue_and_token_concurrency.sql");
+
+    java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(2);
+    try {
+      java.util.concurrent.Future<?> first = executor.submit(
+          () -> cancellations.cancel(customer.getEmail(), confirmedOne.getPnr()));
+      java.util.concurrent.Future<?> second = executor.submit(
+          () -> cancellations.cancel(customer.getEmail(), confirmedTwo.getPnr()));
+      first.get(20, java.util.concurrent.TimeUnit.SECONDS);
+      second.get(20, java.util.concurrent.TimeUnit.SECONDS);
+    } finally {
+      executor.shutdownNow();
+    }
+
+    assertThat(jdbc.queryForList(
+        "select status from bookings where id in (?, ?)", String.class,
+        waitlistOne.getId(), waitlistTwo.getId())).containsOnly("CONFIRMED");
+    assertThat(jdbc.queryForObject(
+        "select count(distinct coach_id || ':' || seat_number) from booking_seats "
+            + "where passenger_id in (?, ?) and status = 'BOOKED'",
+        Integer.class, waitingOne.getId(), waitingTwo.getId())).isEqualTo(2);
+    assertThat(jdbc.queryForObject(
+        "select count(*) from booking_seats where passenger_id in (?, ?) and status = 'BOOKED'",
+        Integer.class, waitingOne.getId(), waitingTwo.getId())).isEqualTo(2);
+  }
+
+  @Test
   void deletedAccountCannotUsePreviouslyIssuedPasswordResetToken() throws Exception {
     executeSql("../database/006_queue_and_token_concurrency.sql");
     User deleted = user("deleted-reset@southrail.invalid", RoleName.ROLE_USER);
