@@ -3,6 +3,8 @@ package com.southrail.reservation.security.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.southrail.reservation.entity.account.User;
+import com.southrail.reservation.repository.account.UserRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
