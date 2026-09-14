@@ -180,5 +180,18 @@ public final class BookingDtos {
     private BigDecimal totalFare;
     private String reservationLabel;
     private Integer queuePosition;
+    /** Structured, backward-compatible passenger details for seat and waitlist display. */
+    private List<PnrPassenger> passengers;
+  }
+
+  @Getter
+  @Setter
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class PnrPassenger {
+    private String name;
+    private String status;
+    private Integer waitlistPosition;
+    private String seatNumber;
   }
 }

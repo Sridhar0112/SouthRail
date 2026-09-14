@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 
 @Service
 public class NotificationService {
@@ -49,6 +50,20 @@ public class NotificationService {
     notification.setTitle("Booking cancelled");
     notification.setMessage("Your booking PNR " + pnr
         + " has been cancelled. Refund amount: Rs " + refundAmount + ".");
+    notification.setReadFlag(false);
+    notifications.save(notification);
+  }
+
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void notifyWaitlistPromoted(UUID userId, String pnr, String previousStatus, String seat) {
+    User user = users.findById(userId)
+        .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Booking owner not found"));
+    Notification notification = new Notification();
+    notification.setUser(user);
+    notification.setChannel("IN_APP");
+    notification.setTitle("Waitlist booking confirmed");
+    notification.setMessage("Your SouthRail booking has been confirmed. PNR: " + pnr
+        + ". Previous status: " + previousStatus + ". Seat: " + seat + ".");
     notification.setReadFlag(false);
     notifications.save(notification);
   }

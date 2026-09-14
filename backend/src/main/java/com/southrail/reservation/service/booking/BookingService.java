@@ -187,6 +187,11 @@ public class BookingService {
             "Ticket booked with status " + booking.getReservationLabel()
                     + " and PNR: " + booking.getPnr()
     );
+    if (bookingStatus == BookingStatus.WAITLISTED) {
+      auditLogService.log(user.getId(), user.getEmail(), "WAITLIST_CREATED", "BOOKING",
+          "Waitlist booking created; PNR: " + booking.getPnr()
+              + "; status: " + booking.getReservationLabel());
+    }
     if (bookingStatus == BookingStatus.CONFIRMED) {
       accountEmailService.sendBookingConfirmation(
               booking,
@@ -303,6 +308,18 @@ public class BookingService {
         && !booking.getUser().getId().equals(currentUser.getId())) {
       throw new ApiException(HttpStatus.FORBIDDEN, "You are not allowed to access this booking");
     }
+    List<Passenger> bookingPassengers = passengers.findByBooking(booking);
+    java.util.Map<UUID, BookingSeat> seatsByPassenger = seatAllocationService
+        .bookedSeatsForBooking(booking).stream()
+        .collect(Collectors.toMap(seat -> seat.getPassenger().getId(), seat -> seat));
+    List<BookingDtos.PnrPassenger> passengerDetails = bookingPassengers.stream().map(passenger -> {
+      BookingSeat seat = seatsByPassenger.get(passenger.getId());
+      return new BookingDtos.PnrPassenger(
+          passenger.getFullName(),
+          passenger.getStatus().name(),
+          passenger.getStatus() == BookingStatus.WAITLISTED ? booking.getQueuePosition() : null,
+          seat == null ? null : seat.getCoachCode() + "/" + seat.getSeatNumber());
+    }).collect(Collectors.toList());
     return new BookingDtos.PnrStatus(
         booking.getPnr(),
         booking.getTrain().getNumber(),
@@ -315,11 +332,11 @@ public class BookingService {
         booking.getTravelClass(),
         booking.getQuota(),
         booking.getStatus().name(),
-        passengers.findByBooking(booking).stream().map(passenger -> passenger.getFullName() + " - " + passenger.getStatus()).collect(Collectors.toList()),
+        bookingPassengers.stream().map(passenger -> passenger.getFullName() + " - " + passenger.getStatus()).collect(Collectors.toList()),
         booking.getStatus() == BookingStatus.CANCELLED && booking.getRefundAmount() != null
             ? booking.getRefundAmount() : BigDecimal.ZERO,
-        booking.getTotalFare(),booking.getReservationLabel(),
-            booking.getQueuePosition());
+        booking.getTotalFare(), booking.getReservationLabel(),
+        booking.getQueuePosition(), passengerDetails);
   }
 
   @Transactional(readOnly = true)

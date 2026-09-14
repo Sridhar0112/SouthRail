@@ -131,6 +131,13 @@ public class SeatAllocationService {
     bookingSeats.saveAll(allocations);
   }
 
+  @Transactional(readOnly = true)
+  public List<BookingSeat> bookedSeatsForBooking(Booking booking) {
+    return bookingSeats.findByBooking(booking).stream()
+        .filter(seat -> seat.getStatus() == BookingSeatStatus.BOOKED)
+        .collect(Collectors.toList());
+  }
+
   private List<SeatCandidate> buildSeatCandidates(Train train, String travelClass) {
     return coaches.findByTrainAndTravelClassOrderByCoachCode(train, travelClass).stream()
         .flatMap(coach -> java.util.stream.IntStream.rangeClosed(1, coach.getCapacity())

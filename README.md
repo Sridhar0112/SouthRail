@@ -29,6 +29,7 @@ SouthRail combines train discovery, multi-passenger booking, PNR lookup, cancell
 - **Accounts and authentication:** registration, email verification, access/refresh tokens, password reset, lockout/unlock, profile management and account deletion.
 - **Rail travel:** station and train discovery, route-aware search and cached train reads.
 - **Reservations:** booking review, passenger and seat allocation, PNR lookup, booking history, cancellation/refund estimates and PDF tickets.
+- **Waitlist:** inventory-scoped RAC/waitlist queues, deterministic positions and automatic promotion after cancellation. See [the waitlist design](docs/WAITLIST.md).
 - **Operations:** role-protected administration, support-ticket conversations, persisted notifications and audit-log access.
 - **Assistance:** Google Gemini chat and model discovery through a provider-isolated AI service.
 
