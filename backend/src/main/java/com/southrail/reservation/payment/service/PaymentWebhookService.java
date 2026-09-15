@@ -23,6 +23,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
+import com.southrail.reservation.service.booking.ReservationHoldFinalizationService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 public class PaymentWebhookService {
@@ -35,6 +37,7 @@ public class PaymentWebhookService {
   private final PaymentRefundRepository refunds;
   private final AuditLogService audit;
   private final TransactionTemplate transactions;
+  private ReservationHoldFinalizationService holdFinalizer;
 
   public PaymentWebhookService(
       RazorpayProperties config,
@@ -52,6 +55,9 @@ public class PaymentWebhookService {
     this.audit = audit;
     this.transactions = transactions;
   }
+
+  @Autowired
+  void setHoldFinalizer(ReservationHoldFinalizationService holdFinalizer) { this.holdFinalizer = holdFinalizer; }
 
   public void receive(byte[] raw, String signature, String suppliedId) {
     String body = new String(raw, StandardCharsets.UTF_8);
@@ -137,6 +143,7 @@ public class PaymentWebhookService {
             || payment.getStatus() == PaymentStatus.AUTHORIZED)) {
       payment.captured(paymentId);
       activateRefundAfterCapture(payment);
+      if (holdFinalizer != null && payment.getReservationHold() != null) holdFinalizer.finalizeCaptured(payment);
     } else if ("payment.authorized".equals(eventType)
         && payment.getStatus() == PaymentStatus.PENDING) {
       payment.authorized(paymentId);

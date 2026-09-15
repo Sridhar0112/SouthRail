@@ -106,6 +106,33 @@ public class PaymentService {
     }
   }
 
+  public CreatePaymentOrderResponse createHoldOrder(String email, UUID holdId, String requestKey) {
+    String key = normalizeIdempotencyKey(email, requestKey);
+    PaymentPersistenceService.PreparedPayment prepared;
+    try { prepared = persistence.prepareHold(email, holdId, key); }
+    catch (DataIntegrityViolationException duplicate) { prepared = persistence.resolveHoldCreateConflict(email, holdId, key); }
+    if (!prepared.created()) return existingOrder(prepared);
+    long amount = toMinorUnits(prepared.amount());
+    try {
+      PaymentGateway.GatewayOrder order = gateway.createOrder(amount, prepared.currency(), prepared.id().toString(),
+          Map.of("reservation_hold_id", holdId.toString()));
+      if (order.id() == null || order.id().isBlank() || order.amount() != amount || !prepared.currency().equals(order.currency())) {
+        persistence.failCreatedOrder(prepared.id(), "PAYMENT_AMOUNT_MISMATCH", "Provider order mismatch");
+        throw new ApiException(HttpStatus.BAD_GATEWAY, "PAYMENT_AMOUNT_MISMATCH", "Provider order amount or currency did not match");
+      }
+      return response(persistence.completeOrder(prepared.id(), order.id()));
+    } catch (RuntimeException ex) {
+      persistence.failCreatedOrder(prepared.id(), ex instanceof ApiException a ? a.errorCode() : "RAZORPAY_UNAVAILABLE", "Provider order creation failed");
+      throw ex;
+    }
+  }
+
+  public ActivePaymentResponse getActiveHold(String email, UUID holdId) {
+    var payment = persistence.getActiveHold(email, holdId);
+    return new ActivePaymentResponse(payment.id(), payment.providerOrderId(), config.keyId(),
+        toMinorUnits(payment.amount()), payment.currency(), payment.status());
+  }
+
   public PaymentStatusResponse verify(
       String email, UUID paymentId, VerificationRequest request) {
     PaymentPersistenceService.VerificationContext context =

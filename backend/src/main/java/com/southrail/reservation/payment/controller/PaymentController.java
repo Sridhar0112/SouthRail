@@ -51,6 +51,17 @@ public class PaymentController {
         .body(payments.createOrder(principal.getName(), bookingId, key));
   }
 
+  @PostMapping("/reservation-holds/{holdId}/orders")
+  ResponseEntity<CreatePaymentOrderResponse> createForHold(Principal principal, @PathVariable UUID holdId,
+      @RequestHeader("Idempotency-Key") String key) {
+    return ResponseEntity.status(HttpStatus.CREATED).body(payments.createHoldOrder(principal.getName(), holdId, key));
+  }
+
+  @GetMapping("/reservation-holds/{holdId}/active")
+  ActivePaymentResponse activeForHold(Principal principal, @PathVariable UUID holdId) {
+    return payments.getActiveHold(principal.getName(), holdId);
+  }
+
   @GetMapping("/bookings/{bookingId}/active")
   ActivePaymentResponse active(Principal principal, @PathVariable UUID bookingId) {
     return payments.getActive(principal.getName(), bookingId);

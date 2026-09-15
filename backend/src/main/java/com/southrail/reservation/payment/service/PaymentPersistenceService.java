@@ -14,6 +14,12 @@ import com.southrail.reservation.repository.booking.BookingRepository;
 import com.southrail.reservation.repository.payment.PaymentRefundRepository;
 import com.southrail.reservation.repository.payment.PaymentRepository;
 import com.southrail.reservation.service.audit.AuditLogService;
+import com.southrail.reservation.entity.booking.ReservationHold;
+import com.southrail.reservation.entity.booking.ReservationHoldStatus;
+import com.southrail.reservation.repository.booking.ReservationHoldRepository;
+import com.southrail.reservation.service.booking.ReservationHoldFinalizationService;
+import java.time.Instant;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
@@ -31,6 +37,8 @@ public class PaymentPersistenceService {
   private final UserRepository users;
   private final AuditLogService audit;
   private final PaymentRefundRepository refunds;
+  private ReservationHoldRepository holds;
+  private ReservationHoldFinalizationService holdFinalizer;
 
   public PaymentPersistenceService(
       PaymentRepository payments,
@@ -43,6 +51,55 @@ public class PaymentPersistenceService {
     this.users = users;
     this.audit = audit;
     this.refunds = refunds;
+  }
+
+  @Autowired
+  void configureHolds(ReservationHoldRepository holds, ReservationHoldFinalizationService holdFinalizer) {
+    this.holds = holds;
+    this.holdFinalizer = holdFinalizer;
+  }
+
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public PreparedPayment prepareHold(String email, UUID holdId, String idempotencyKey) {
+    User user = user(email);
+    ReservationHold hold = holds.findByIdForUpdate(holdId).orElseThrow(this::holdNotFound);
+    requireOwnership(user, hold);
+    if (hold.getStatus() == ReservationHoldStatus.CONFIRMED) {
+      throw new ApiException(HttpStatus.CONFLICT, "HOLD_ALREADY_CONFIRMED", "Reservation is already confirmed");
+    }
+    if (hold.getStatus() != ReservationHoldStatus.ACTIVE || !Instant.now().isBefore(hold.getExpiresAt())) {
+      if (hold.getStatus() == ReservationHoldStatus.ACTIVE) hold.setStatus(ReservationHoldStatus.EXPIRED);
+      throw new ApiException(HttpStatus.CONFLICT, "HOLD_EXPIRED", "Reservation hold has expired");
+    }
+    Optional<Payment> existing = payments.findByIdempotencyKey(idempotencyKey);
+    if (existing.isPresent()) {
+      if (existing.get().getReservationHold() == null || !existing.get().getReservationHold().getId().equals(holdId))
+        throw new ApiException(HttpStatus.CONFLICT, "IDEMPOTENCY_KEY_REUSED", "Idempotency-Key has already been used");
+      return prepared(existing.get(), false);
+    }
+    if (payments.findFirstByReservationHoldIdAndStatusInOrderByCreatedAtDesc(holdId,
+        List.of(PaymentStatus.CREATED, PaymentStatus.PENDING, PaymentStatus.AUTHORIZED, PaymentStatus.CAPTURED)).isPresent())
+      throw activeAttempt();
+    return prepared(payments.saveAndFlush(Payment.create(hold, idempotencyKey)), true);
+  }
+
+  @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
+  public PreparedPayment resolveHoldCreateConflict(String email, UUID holdId, String idempotencyKey) {
+    Payment payment = payments.findByIdempotencyKey(idempotencyKey).orElseThrow(this::notFound);
+    requireOwnership(user(email), payment.getReservationHold());
+    if (payment.getReservationHold() == null || !payment.getReservationHold().getId().equals(holdId))
+      throw new ApiException(HttpStatus.CONFLICT, "IDEMPOTENCY_KEY_REUSED", "Idempotency-Key has already been used");
+    return prepared(payment, false);
+  }
+
+  @Transactional(readOnly = true)
+  public PreparedPayment getActiveHold(String email, UUID holdId) {
+    ReservationHold hold = holds.findById(holdId).orElseThrow(this::holdNotFound);
+    requireOwnership(user(email), hold);
+    return payments.findFirstByReservationHoldIdAndStatusInOrderByCreatedAtDesc(holdId,
+        List.of(PaymentStatus.CREATED, PaymentStatus.PENDING, PaymentStatus.AUTHORIZED, PaymentStatus.CAPTURED,
+            PaymentStatus.REFUND_PENDING)).map(p -> prepared(p, false)).orElseThrow(() ->
+        new ApiException(HttpStatus.NOT_FOUND, "ACTIVE_PAYMENT_NOT_FOUND", "No recoverable payment attempt exists"));
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -118,12 +175,12 @@ public class PaymentPersistenceService {
     if (payment.getStatus() == PaymentStatus.CREATED) {
       payment.orderCreated(providerOrderId);
       audit.log(
-          payment.getBooking().getUser().getId(),
-          payment.getBooking().getUser().getEmail(),
+          paymentUser(payment).getId(),
+          paymentUser(payment).getEmail(),
           "PAYMENT_ORDER_CREATED",
           "PAYMENT",
           "Payment " + payment.getId() + " order " + providerOrderId
-              + " for PNR " + payment.getBooking().getPnr()
+              + " for " + paymentReference(payment)
               + " amount " + payment.getAmount());
     } else if (!Objects.equals(payment.getProviderOrderId(), providerOrderId)) {
       throw new ApiException(
@@ -146,7 +203,7 @@ public class PaymentPersistenceService {
   @Transactional(readOnly = true)
   public VerificationContext verificationContext(String email, UUID paymentId) {
     Payment payment = payments.findById(paymentId).orElseThrow(this::notFound);
-    requireOwnership(user(email), payment.getBooking());
+    requireOwnership(user(email), payment);
     return new VerificationContext(
         payment.getId(),
         payment.getProviderOrderId(),
@@ -161,7 +218,7 @@ public class PaymentPersistenceService {
       String email, UUID paymentId, String requestedPaymentId, GatewayPayment remote) {
     Payment payment = payments.findByIdForUpdate(paymentId).orElseThrow(this::notFound);
     User user = user(email);
-    requireOwnership(user, payment.getBooking());
+    requireOwnership(user, payment);
     if (payment.getStatus() == PaymentStatus.CAPTURED) {
       if (Objects.equals(payment.getProviderPaymentId(), requestedPaymentId)) {
         return status(payment);
@@ -183,6 +240,7 @@ public class PaymentPersistenceService {
     } else if ("captured".equals(remote.status())) {
       payment.captured(remote.id());
       activateRefundAfterCapture(payment);
+      if (holdFinalizer != null && payment.getReservationHold() != null) holdFinalizer.finalizeCaptured(payment);
     } else {
       throw new ApiException(
           HttpStatus.CONFLICT, "PAYMENT_NOT_CAPTURED", "Provider has not captured this payment");
@@ -193,7 +251,7 @@ public class PaymentPersistenceService {
         payment.getStatus() == PaymentStatus.CAPTURED
             ? "PAYMENT_CAPTURED" : "PAYMENT_VERIFIED",
         "PAYMENT",
-        "Payment " + payment.getId() + " verified for PNR " + payment.getBooking().getPnr());
+        "Payment " + payment.getId() + " verified for " + paymentReference(payment));
     return status(payment);
   }
 
@@ -214,7 +272,7 @@ public class PaymentPersistenceService {
   @Transactional(readOnly = true)
   public PaymentStatusResponse get(String email, UUID paymentId) {
     Payment payment = payments.findById(paymentId).orElseThrow(this::notFound);
-    requireOwnership(user(email), payment.getBooking());
+    requireOwnership(user(email), payment);
     return status(payment);
   }
 
@@ -252,8 +310,8 @@ public class PaymentPersistenceService {
   private PreparedPayment prepared(Payment payment, boolean created) {
     return new PreparedPayment(
         payment.getId(),
-        payment.getBooking().getId(),
-        payment.getBooking().getPnr(),
+        payment.getBooking() == null ? null : payment.getBooking().getId(),
+        payment.getBooking() == null ? null : payment.getBooking().getPnr(),
         payment.getAmount(),
         payment.getCurrency(),
         payment.getStatus(),
@@ -265,7 +323,7 @@ public class PaymentPersistenceService {
   private PaymentStatusResponse status(Payment payment) {
     return new PaymentStatusResponse(
         payment.getId(),
-        payment.getBooking().getId(),
+        payment.getBooking() == null ? null : payment.getBooking().getId(),
         payment.getAmount(),
         payment.getCurrency(),
         payment.getStatus(),
@@ -285,6 +343,24 @@ public class PaymentPersistenceService {
           HttpStatus.FORBIDDEN, "PAYMENT_ACCESS_DENIED", "Payment does not belong to this user");
     }
   }
+
+  private void requireOwnership(User user, ReservationHold hold) {
+    if (hold == null || !hold.getUser().getId().equals(user.getId()))
+      throw new ApiException(HttpStatus.FORBIDDEN, "PAYMENT_ACCESS_DENIED", "Payment does not belong to this user");
+  }
+
+  private void requireOwnership(User user, Payment payment) {
+    if (payment.getBooking() != null) requireOwnership(user, payment.getBooking());
+    else requireOwnership(user, payment.getReservationHold());
+  }
+
+  private String paymentReference(Payment payment) {
+    return payment.getBooking() == null ? "hold " + payment.getReservationHold().getId() : "PNR " + payment.getBooking().getPnr();
+  }
+
+  private User paymentUser(Payment payment) { return payment.getBooking() == null ? payment.getReservationHold().getUser() : payment.getBooking().getUser(); }
+
+  private ApiException holdNotFound() { return new ApiException(HttpStatus.NOT_FOUND, "HOLD_NOT_FOUND", "Reservation hold was not found"); }
 
   private ApiException notFound() {
     return new ApiException(HttpStatus.NOT_FOUND, "PAYMENT_NOT_FOUND", "Payment was not found");

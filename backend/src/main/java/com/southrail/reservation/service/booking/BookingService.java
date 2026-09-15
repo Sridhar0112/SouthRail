@@ -432,4 +432,9 @@ public class BookingService {
   }
 
   private record JourneyStops(RouteStop source, RouteStop destination) {}
+
+  @Transactional(readOnly = true)
+  public Booking findById(UUID id) {
+    return bookings.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Booking not found"));
+  }
 }
