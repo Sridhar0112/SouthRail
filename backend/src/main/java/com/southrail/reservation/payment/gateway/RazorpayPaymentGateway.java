@@ -11,7 +11,9 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.StreamSupport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -57,6 +59,19 @@ public class RazorpayPaymentGateway implements PaymentGateway {
         response.path("amount").asLong(),
         response.path("currency").asText(),
         response.path("status").asText());
+  }
+
+  @Override
+  public List<GatewayPayment> fetchPaymentsForOrder(String orderId) {
+    JsonNode response = call("GET", "/orders/" + orderId + "/payments", null, null);
+    return StreamSupport.stream(response.path("items").spliterator(), false)
+        .map(item -> new GatewayPayment(
+            item.path("id").asText(),
+            item.path("order_id").asText(),
+            item.path("amount").asLong(),
+            item.path("currency").asText(),
+            item.path("status").asText()))
+        .toList();
   }
 
   @Override

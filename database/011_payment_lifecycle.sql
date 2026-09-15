@@ -7,6 +7,8 @@ CREATE TABLE payments (
  created_at TIMESTAMPTZ NOT NULL, updated_at TIMESTAMPTZ NOT NULL
 );
 CREATE INDEX idx_payments_booking ON payments(booking_id);
+CREATE INDEX idx_payments_reconciliation ON payments(status, updated_at, created_at)
+ WHERE status IN ('CREATED','PENDING','AUTHORIZED');
 CREATE UNIQUE INDEX uq_payments_order ON payments(provider_order_id) WHERE provider_order_id IS NOT NULL;
 CREATE UNIQUE INDEX uq_payments_provider_payment ON payments(provider_payment_id) WHERE provider_payment_id IS NOT NULL;
 CREATE UNIQUE INDEX uq_payments_idempotency ON payments(idempotency_key);

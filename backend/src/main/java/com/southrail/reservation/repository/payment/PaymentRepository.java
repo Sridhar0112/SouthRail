@@ -3,9 +3,12 @@ package com.southrail.reservation.repository.payment;
 import com.southrail.reservation.entity.payment.Payment;
 import com.southrail.reservation.entity.payment.PaymentStatus;
 import jakarta.persistence.LockModeType;
+import java.time.Instant;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -17,6 +20,17 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
   Optional<Payment> findByProviderOrderId(String id);
 
   Optional<Payment> findByProviderPaymentId(String id);
+
+  @Query("select p.id from Payment p where "
+      + "(p.status = com.southrail.reservation.entity.payment.PaymentStatus.CREATED "
+      + "and p.createdAt < :creationExpiredBefore) or "
+      + "(p.status in :providerStatuses and p.updatedAt < :providerStaleBefore) "
+      + "order by p.createdAt")
+  List<UUID> findReconciliationCandidates(
+      @Param("creationExpiredBefore") Instant creationExpiredBefore,
+      @Param("providerStatuses") Collection<PaymentStatus> providerStatuses,
+      @Param("providerStaleBefore") Instant providerStaleBefore,
+      Pageable pageable);
 
   Optional<Payment> findFirstByBookingIdAndStatusOrderByCreatedAtDesc(
       UUID bookingId, PaymentStatus status);

@@ -127,3 +127,9 @@ razorpay:
   key-secret: ${RAZORPAY_KEY_SECRET:}
   webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:}
   base-url: ${RAZORPAY_BASE_URL:https://api.razorpay.com/v1}
+  reconciliation:
+    enabled: ${RAZORPAY_RECONCILIATION_ENABLED:true}
+    delay: ${RAZORPAY_RECONCILIATION_DELAY:PT1M}
+    stale-after: ${RAZORPAY_RECONCILIATION_STALE_AFTER:PT5M}
+    creation-expiry: ${RAZORPAY_CREATION_EXPIRY:PT30M}
+    batch-size: ${RAZORPAY_RECONCILIATION_BATCH_SIZE:20}
