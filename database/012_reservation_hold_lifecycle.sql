@@ -1,5 +1,5 @@
 CREATE TABLE reservation_holds (
- id UUID PRIMARY KEY, user_id UUID NOT NULL REFERENCES users(id), train_id UUID NOT NULL REFERENCES trains(id),
+ id UUID PRIMARY KEY, user_id UUID NOT NULL REFERENCES app_users(id), train_id UUID NOT NULL REFERENCES trains(id),
  source_station_id UUID NOT NULL REFERENCES stations(id), destination_station_id UUID NOT NULL REFERENCES stations(id),
  journey_date DATE NOT NULL, travel_class VARCHAR(5) NOT NULL, quota VARCHAR(20) NOT NULL,
  total_fare NUMERIC(10,2) NOT NULL CHECK (total_fare > 0), status VARCHAR(20) NOT NULL,
