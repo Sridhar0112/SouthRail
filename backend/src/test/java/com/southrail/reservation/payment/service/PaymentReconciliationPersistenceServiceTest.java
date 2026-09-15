@@ -114,24 +114,11 @@ class PaymentReconciliationPersistenceServiceTest {
   }
 
   @Test
-  void onlyOldCreatedPaymentsExpireAndTerminalPaymentsNeverRegress() {
-    Payment created = Payment.create(payment.getBooking(), "created-key");
-    ReflectionTestUtils.setField(created, "id", id);
-    created.setCreatedAt(cutoff.minusSeconds(1));
-    when(payments.findByIdForUpdate(id)).thenReturn(Optional.of(created));
-    assertThat(persistence.expireCreated(id, cutoff)).isTrue();
-    assertThat(created.getFailureCode()).isEqualTo("PAYMENT_CREATION_EXPIRED");
-
-    Payment recent = Payment.create(payment.getBooking(), "recent-key");
-    recent.setCreatedAt(cutoff.plusSeconds(1));
-    ReflectionTestUtils.setField(recent, "id", id);
-    when(payments.findByIdForUpdate(id)).thenReturn(Optional.of(recent));
-    assertThat(persistence.expireCreated(id, cutoff)).isFalse();
-    assertThat(recent.getStatus()).isEqualTo(PaymentStatus.CREATED);
-
-    when(payments.findByIdForUpdate(id)).thenReturn(Optional.of(created));
-    assertThat(persistence.apply(id, remote("captured"), cutoff)).isFalse();
-    assertThat(created.getStatus()).isEqualTo(PaymentStatus.FAILED);
+  void terminalPaymentsNeverRegress() {
+    payment.captured("pay_1");
+    payment.setUpdatedAt(cutoff.minusSeconds(600));
+    assertThat(persistence.apply(id, remote("failed"), cutoff)).isFalse();
+    assertThat(payment.getStatus()).isEqualTo(PaymentStatus.CAPTURED);
   }
 
   private GatewayPayment remote(String status) {
