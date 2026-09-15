@@ -25,6 +25,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.southrail.reservation.repository.booking.ReservationHoldRepository;
 
 @Service
 public class SeatAllocationService {
@@ -37,11 +39,17 @@ public class SeatAllocationService {
   private final CoachRepository coaches;
   private final BookingSeatRepository bookingSeats;
   private final PassengerRepository passengers;
+  private ReservationHoldRepository reservationHolds;
 
   public SeatAllocationService(CoachRepository coaches, BookingSeatRepository bookingSeats, PassengerRepository passengers) {
     this.coaches = coaches;
     this.bookingSeats = bookingSeats;
     this.passengers = passengers;
+  }
+
+  @Autowired
+  void setReservationHolds(ReservationHoldRepository reservationHolds) {
+    this.reservationHolds = reservationHolds;
   }
 
   @Transactional(readOnly = true)
@@ -50,7 +58,9 @@ public class SeatAllocationService {
     long allocatedSeats = bookingSeats.countActiveBookedSeats(
         train.getId(), journeyDate, travelClass, BookingSeatStatus.BOOKED, ACTIVE_BOOKING_STATUSES);
     long legacyPassengers = countLegacyPassengersWithoutSeat(train.getId(), journeyDate, travelClass);
-    long occupiedSeats = allocatedSeats + legacyPassengers;
+    long heldPassengers = reservationHolds == null ? 0 : reservationHolds.countConfirmedHeldPassengers(
+        train.getId(), journeyDate, travelClass, java.time.Instant.now());
+    long occupiedSeats = allocatedSeats + legacyPassengers + heldPassengers;
     return Math.max(0, capacity - Math.toIntExact(Math.min(occupiedSeats, Integer.MAX_VALUE)));
   }
 
@@ -77,7 +87,9 @@ public class SeatAllocationService {
         .collect(Collectors.toCollection(ArrayList::new));
 
     long legacyPassengers = countLegacyPassengersWithoutSeat(train.getId(), journeyDate, travelClass);
-    int anonymousHeldSeats = Math.toIntExact(Math.min(legacyPassengers, available.size()));
+    long reservationPassengers = reservationHolds == null ? 0 : reservationHolds.countConfirmedHeldPassengers(
+        train.getId(), journeyDate, travelClass, java.time.Instant.now());
+    int anonymousHeldSeats = Math.toIntExact(Math.min(legacyPassengers + reservationPassengers, available.size()));
     if (anonymousHeldSeats == 0) {
       return available;
     }

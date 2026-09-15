@@ -64,11 +64,11 @@ public class RefundPersistenceService {
       payment.transition(refund.getAmount().compareTo(payment.getAmount()) >= 0
           ? PaymentStatus.REFUNDED : PaymentStatus.PARTIALLY_REFUNDED);
       audit.log(
-          refund.getBooking().getUser().getId(),
-          refund.getBooking().getUser().getEmail(),
+          paymentUser(refund).getId(),
+          paymentUser(refund).getEmail(),
           "REFUND_PROCESSED",
           "PAYMENT",
-          "Refund " + refund.getId() + " processed for PNR " + refund.getBooking().getPnr());
+          "Refund " + refund.getId() + " processed for " + reference(refund));
     } else {
       refund.providerAccepted(providerRefundId);
     }
@@ -82,11 +82,20 @@ public class RefundPersistenceService {
     }
     refund.failed();
     audit.log(
-        refund.getBooking().getUser().getId(),
-        refund.getBooking().getUser().getEmail(),
+        paymentUser(refund).getId(),
+        paymentUser(refund).getEmail(),
         "REFUND_FAILED",
         "PAYMENT",
         "Refund " + refund.getId() + " remains retryable");
+  }
+
+  private com.southrail.reservation.entity.account.User paymentUser(PaymentRefund refund) {
+    return refund.getBooking() == null ? refund.getPayment().getReservationHold().getUser() : refund.getBooking().getUser();
+  }
+
+  private String reference(PaymentRefund refund) {
+    return refund.getBooking() == null ? "reservation hold " + refund.getPayment().getReservationHold().getId()
+        : "PNR " + refund.getBooking().getPnr();
   }
 
   public record RefundCommand(

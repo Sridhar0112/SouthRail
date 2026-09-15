@@ -9,8 +9,8 @@ import RouteIcon from '@mui/icons-material/Route';
 import TrainIcon from '@mui/icons-material/Train';
 
 const notes = [
-  'Verify passenger details before confirming.',
-  'Passenger name, age, and gender cannot be changed after booking.',
+  'Verify passenger details before proceeding to payment.',
+  'Passenger details are held temporarily while payment is completed.',
   'Booking is subject to availability.',
   'RAC/Waitlist may be assigned based on availability.',
   'Cancellation/refund rules apply.'
@@ -31,9 +31,9 @@ export default function ReviewBookingPage({ train, values, review, reviewIsCurre
           <Stack spacing={1} sx={{ minWidth: 0 }}>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'flex-start' }}>
               <Stack spacing={1} sx={{ minWidth: 0, maxWidth: 820 }}>
-                <Chip icon={<ConfirmationNumberIcon />} color="primary" label="Final confirmation" sx={{ width: 'fit-content', fontWeight: 800 }} />
+                <Chip icon={<ConfirmationNumberIcon />} color="primary" label="Payment review" sx={{ width: 'fit-content', fontWeight: 800 }} />
                 <Typography variant="h4" fontWeight={900} sx={{ fontSize: { xs: '1.18rem', md: '1.35rem' }, letterSpacing: -0.8 }}>Review booking</Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ fontSize: { xs: '0.84rem', md: '0.88rem' }, lineHeight: 1.45 }}>Confirm journey, passengers, fare, and availability before SouthRail issues this ticket.</Typography>
+                <Typography variant="body1" color="text.secondary" sx={{ fontSize: { xs: '0.84rem', md: '0.88rem' }, lineHeight: 1.45 }}>Confirm journey, passengers, fare, and availability before SouthRail temporarily reserves this selection for payment. A ticket and PNR are issued only after payment is captured.</Typography>
               </Stack>
               <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ justifyContent: { xs: 'flex-start', md: 'flex-end' }, maxWidth: '100%' }}>
                 <Chip variant="outlined" label={`${passengerCount} passenger${passengerCount === 1 ? '' : 's'}`} sx={{ fontWeight: 800 }} />
@@ -152,7 +152,7 @@ export default function ReviewBookingPage({ train, values, review, reviewIsCurre
                 <Stack spacing={1.1} sx={{ '& .MuiButton-root': { width: '100%', py: 0.45 } }}>
                   <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={onBackToEdit} disabled={submitting}>Back/Edit</Button>
                   <Button variant="contained" startIcon={<ConfirmationNumberIcon />} onClick={onConfirmBooking} disabled={!canConfirm}>
-                    {submitting ? 'Processing...' : 'Confirm Booking'}
+                    {submitting ? 'Processing...' : 'Proceed to Payment'}
                   </Button>
                 </Stack>
               </Stack>

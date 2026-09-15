@@ -206,3 +206,8 @@ Contributions are welcome. Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before open
 ## License
 
 No open-source license file is currently present. Until the owner selects and adds a license, the source remains all rights reserved; viewing the repository does not grant reuse or redistribution rights.
+
+### Reservation hold lifecycle
+
+The checkout boundary is server-authoritative: `REVIEW → HOLD → PAY → CAPTURE → FINAL BOOKING`.
+An unpaid selection follows `HOLD → TIMEOUT → EXPIRE → RELEASE`; no PNR is issued until a captured payment is atomically finalized. Configure the hold window with `southrail.reservation-hold.duration` (environment variable `RESERVATION_HOLD_DURATION`, default `PT10M`).

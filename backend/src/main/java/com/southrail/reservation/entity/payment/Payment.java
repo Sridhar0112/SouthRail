@@ -1,6 +1,7 @@
 package com.southrail.reservation.entity.payment;
 
 import com.southrail.reservation.entity.booking.Booking;
+import com.southrail.reservation.entity.booking.ReservationHold;
 import com.southrail.reservation.entity.common.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,9 +27,13 @@ public class Payment extends BaseEntity {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "booking_id")
   private Booking booking;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "reservation_hold_id")
+  private ReservationHold reservationHold;
 
   @Column(nullable = false, length = 20)
   private String provider;
@@ -72,6 +77,19 @@ public class Payment extends BaseEntity {
     payment.idempotencyKey = key;
     return payment;
   }
+
+  public static Payment create(ReservationHold hold, String key) {
+    Payment payment = new Payment();
+    payment.reservationHold = hold;
+    payment.provider = "RAZORPAY";
+    payment.amount = hold.getTotalFare();
+    payment.currency = "INR";
+    payment.status = PaymentStatus.CREATED;
+    payment.idempotencyKey = key;
+    return payment;
+  }
+
+  public void attachBooking(Booking booking) { this.booking = booking; }
 
   public void orderCreated(String orderId) {
     providerOrderId = orderId;

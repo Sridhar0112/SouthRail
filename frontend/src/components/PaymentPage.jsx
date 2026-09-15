@@ -52,7 +52,7 @@ const PAYMENT_STATUS_POLL_TIMEOUT_MS = 30000
 export default function PaymentPage() {
   const theme = useTheme()
   const navigate = useNavigate()
-  const { bookingId } = useParams()
+  const { holdId } = useParams()
 
   const [booking, setBooking] = useState(null)
   const [loadingBooking, setLoadingBooking] = useState(true)
@@ -63,6 +63,7 @@ export default function PaymentPage() {
   const [errorMessage, setErrorMessage] = useState(null)
   const [ticketId, setTicketId] = useState()
   const [recoverablePaymentId, setRecoverablePaymentId] = useState(null)
+  const [secondsRemaining, setSecondsRemaining] = useState(null)
 
   const razorpayRef = useRef(null)
   const timeoutRef = useRef(null)
@@ -72,19 +73,55 @@ export default function PaymentPage() {
   // ── Fetch booking ──────────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (!bookingId) {
+    if (!holdId) {
       navigate("/")
       return
     }
 
     setLoadingBooking(true)
-    api.get(`/payments/bookings/${bookingId}/details`)
-      .then(({ data }) => setBooking(data))
+    api.get(`/reservation-holds/${holdId}`)
+      .then(({ data }) => {
+        setBooking(data)
+        if (data.status === "CONFIRMED") {
+          setTicketId(data.pnr)
+          setPaymentState("success")
+        } else if (data.status === "EXPIRED") {
+          setPaymentState("expired")
+          setErrorMessage("Your reservation hold has expired. The seats have been released. Please search again to continue booking.")
+        }
+      })
       .catch(() => setBookingError(
         "Unable to load booking details. Please go back and try again."
       ))
       .finally(() => setLoadingBooking(false))
-  }, [bookingId, navigate])
+  }, [holdId, navigate])
+
+  const refreshConfirmedHold = useCallback(async () => {
+    const { data } = await api.get(`/reservation-holds/${holdId}`)
+    setBooking(data)
+    if (data.status === "CONFIRMED" && data.pnr) {
+      setTicketId(data.pnr)
+      return true
+    }
+    if (data.status === "EXPIRED") {
+      razorpayRef.current?.close()
+      setPaymentState("expired")
+      setErrorMessage("Your reservation hold has expired. The seats have been released. Please search again to continue booking.")
+    }
+    return false
+  }, [holdId])
+
+  useEffect(() => {
+    if (!booking?.expiresAt || booking.status !== "ACTIVE") return undefined
+    const update = () => {
+      const remaining = Math.max(0, Math.ceil((new Date(booking.expiresAt).getTime() - Date.now()) / 1000))
+      setSecondsRemaining(remaining)
+      if (remaining === 0) refreshConfirmedHold()
+    }
+    update()
+    const timer = setInterval(update, 1000)
+    return () => clearInterval(timer)
+  }, [booking?.expiresAt, booking?.status, refreshConfirmedHold])
 
   // ── Cleanup on unmount ─────────────────────────────────────────────────────
 
@@ -113,13 +150,13 @@ export default function PaymentPage() {
         if (!pollingRef.current) return
         if (data.status === "CAPTURED") {
           pollingRef.current = false
-          setTicketId(booking.pnr)
+          await refreshConfirmedHold()
           setPaymentState("success")
           return
         }
         if (data.status === "FAILED") {
           pollingRef.current = false
-          sessionStorage.removeItem(`payment-key:${booking.bookingId}`)
+          sessionStorage.removeItem(`payment-key:${booking.holdId}`)
           setErrorMessage("Payment failed. Please retry with a new payment attempt.")
           setPaymentState("failed")
           return
@@ -139,7 +176,7 @@ export default function PaymentPage() {
     }
 
     poll()
-  }, [booking])
+  }, [booking, refreshConfirmedHold])
 
   const handlePay = useCallback(async () => {
     if (!booking) return
@@ -160,11 +197,11 @@ export default function PaymentPage() {
     try {
       // 2. Create order on backend
       // The server derives the authoritative amount from the booking.
-      const idempotencyKey = sessionStorage.getItem(`payment-key:${booking.bookingId}`)
+      const idempotencyKey = sessionStorage.getItem(`payment-key:${booking.holdId}`)
         || window.crypto.randomUUID()
-      sessionStorage.setItem(`payment-key:${booking.bookingId}`, idempotencyKey)
+      sessionStorage.setItem(`payment-key:${booking.holdId}`, idempotencyKey)
       const { data: createdOrder } = await api.post(
-        `/payments/bookings/${booking.bookingId}/orders`, {},
+        `/payments/reservation-holds/${booking.holdId}/orders`, {},
         { headers: { "Idempotency-Key": idempotencyKey } }
       )
       orderData = createdOrder
@@ -172,11 +209,11 @@ export default function PaymentPage() {
       if (err.response?.data?.errorCode === "PAYMENT_ATTEMPT_ACTIVE") {
         try {
           const { data: activePayment } = await api.get(
-            `/payments/bookings/${booking.bookingId}/active`
+            `/payments/reservation-holds/${booking.holdId}/active`
           )
           setRecoverablePaymentId(activePayment.paymentId)
           if (activePayment.status === "CAPTURED") {
-            setTicketId(booking.pnr)
+            await refreshConfirmedHold()
             setPaymentState("success")
             return
           }
@@ -201,7 +238,7 @@ export default function PaymentPage() {
         }
       } else {
         if (err.response?.data?.errorCode === "PAYMENT_ORDER_FAILED") {
-          sessionStorage.removeItem(`payment-key:${booking.bookingId}`)
+          sessionStorage.removeItem(`payment-key:${booking.holdId}`)
         }
         setErrorMessage(
           err.response?.data?.message ??
@@ -254,12 +291,12 @@ export default function PaymentPage() {
           })
 
           if (result.status === "CAPTURED") {
-            setTicketId(booking.pnr)
+            await refreshConfirmedHold()
             setPaymentState("success")
           } else if (result.status === "AUTHORIZED" || result.status === "PENDING") {
             pollPaymentStatus(orderData.paymentId)
           } else if (result.status === "FAILED") {
-            sessionStorage.removeItem(`payment-key:${booking.bookingId}`)
+            sessionStorage.removeItem(`payment-key:${booking.holdId}`)
             setErrorMessage("Payment failed. Please retry with a new payment attempt.")
             setPaymentState("failed")
           } else {
@@ -281,14 +318,14 @@ export default function PaymentPage() {
     razorpayRef.current = rzp
     rzp.on("payment.failed", () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
-      sessionStorage.removeItem(`payment-key:${booking.bookingId}`)
+      sessionStorage.removeItem(`payment-key:${booking.holdId}`)
       setErrorMessage(
         "Payment was declined. Please try a different payment method."
       )
       setPaymentState("failed")
     })
     rzp.open()
-  }, [booking, pollPaymentStatus])
+  }, [booking, pollPaymentStatus, refreshConfirmedHold])
 
   const handleRetry = useCallback(() => {
     setPaymentState("idle")
@@ -301,10 +338,10 @@ export default function PaymentPage() {
     try {
       const { data } = await api.get(`/payments/${recoverablePaymentId}`)
       if (data.status === "CAPTURED") {
-        setTicketId(booking.pnr)
+        await refreshConfirmedHold()
         setPaymentState("success")
       } else if (data.status === "FAILED") {
-        sessionStorage.removeItem(`payment-key:${booking.bookingId}`)
+        sessionStorage.removeItem(`payment-key:${booking.holdId}`)
         setErrorMessage("Payment failed. Please retry with a new payment attempt.")
         setPaymentState("failed")
       } else if (data.status === "PENDING" && data.providerOrderId) {
@@ -320,7 +357,7 @@ export default function PaymentPage() {
       )
       setPaymentState("status_check_available")
     }
-  }, [booking, handlePay, pollPaymentStatus, recoverablePaymentId])
+  }, [booking, handlePay, pollPaymentStatus, recoverablePaymentId, refreshConfirmedHold])
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
@@ -426,6 +463,9 @@ export default function PaymentPage() {
                 icon={<TrainIcon fontSize="small" />}
                 title="Journey summary"
               >
+                <Alert severity={paymentState === "expired" ? "error" : "info"} sx={{ mb: 1.5 }}>
+                  {paymentState === "expired" ? errorMessage : `Seats reserved for ${formatCountdown(secondsRemaining)}`}
+                </Alert>
                 {/* Route strip */}
                 <Box
                   sx={{
@@ -577,9 +617,9 @@ export default function PaymentPage() {
                         variant="outlined"
                       />
                       <Chip label={p.gender} size="small" variant="outlined" />
-                      {p.seatPreference && (
+                      {p.berthPreference && (
                         <Chip
-                          label={p.seatPreference}
+                          label={p.berthPreference}
                           size="small"
                           variant="outlined"
                         />
@@ -749,7 +789,11 @@ export default function PaymentPage() {
                   </Collapse>
 
                   {/* Pay button */}
-                  {paymentState === "status_check_available" ? (
+                  {paymentState === "expired" ? (
+                    <Button fullWidth variant="contained" size="large" onClick={() => navigate("/")}>
+                      Search trains again
+                    </Button>
+                  ) : paymentState === "status_check_available" ? (
                     <Button
                       fullWidth
                       variant="contained"
@@ -819,7 +863,7 @@ export default function PaymentPage() {
 
                   {/* Timeout extra action */}
                   <Collapse
-                    in={paymentState === "timeout" || paymentState === "failed"}
+                    in={paymentState === "timeout" || paymentState === "failed" || paymentState === "expired"}
                   >
                     <Stack
                       direction="row"
@@ -831,7 +875,7 @@ export default function PaymentPage() {
                         sx={{ fontSize: 14, color: "text.secondary" }}
                       />
                       <Typography variant="caption" color="text.secondary">
-                        Your booking is held for 10 minutes.
+                        The server controls reservation expiry; this countdown is informational.
                       </Typography>
                     </Stack>
                   </Collapse>
@@ -882,4 +926,11 @@ export default function PaymentPage() {
       </Container>
     </Box>
   )
+}
+
+function formatCountdown(seconds) {
+  if (seconds == null) return "--:--"
+  const minutes = Math.floor(seconds / 60).toString().padStart(2, "0")
+  const remainder = (seconds % 60).toString().padStart(2, "0")
+  return `${minutes}:${remainder}`
 }

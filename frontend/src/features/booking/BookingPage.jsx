@@ -88,14 +88,16 @@ export default function BookingPage() {
     if (!review || reviewedSignature !== JSON.stringify(values)) { setError('Please review the latest booking details before confirming.'); return; }
     setSubmitting(true);
     try {
-      const { data } = await api.post('/bookings', values);
+      const idempotencyKey = sessionStorage.getItem(`hold-key:${currentSignature}`) || window.crypto.randomUUID();
+      sessionStorage.setItem(`hold-key:${currentSignature}`, idempotencyKey);
+      const { data } = await api.post('/reservation-holds', values, { headers: { 'Idempotency-Key': idempotencyKey } });
       setResponse(data);
-      navigate(`/payment/${data.bookingId}`);
+      navigate(`/payment/${data.holdId}`);
       setShowReview(false);
     } catch (apiError) {
       setSubmitError(isAuthError(apiError)
         ? 'Please login again to continue booking.'
-        : getApiErrorMessage(apiError, 'Booking could not be completed. Please retry.'));
+        : getApiErrorMessage(apiError, 'Reservation could not be held. Please retry.'));
     } finally { setSubmitting(false); }
   };
 
@@ -148,7 +150,7 @@ export default function BookingPage() {
           <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid', borderColor: 'var(--southrail-card-border)' }} role="status" aria-live="polite">
             <Stack spacing={1.5}>
               <LinearProgress sx={{ borderRadius: 999 }} aria-hidden="true" />
-              <Typography fontWeight={800}>Processing your booking...</Typography>
+              <Typography fontWeight={800}>Reserving your selection...</Typography>
               <Typography color="text.secondary" variant="body2">Please wait. Do not refresh or submit again.</Typography>
             </Stack>
           </Paper>
@@ -272,7 +274,7 @@ export default function BookingPage() {
                       </Button>
                       <Button type="submit" variant="contained" startIcon={<ConfirmationNumberIcon />}
                         disabled={!reviewIsCurrent || review?.availableSeats === 0 || submitting} sx={{ borderRadius: 2 }}>
-                        {submitting ? 'Processing...' : 'Confirm booking'}
+                        {submitting ? 'Processing...' : 'Proceed to payment'}
                       </Button>
                     </Stack>
                   </Stack>

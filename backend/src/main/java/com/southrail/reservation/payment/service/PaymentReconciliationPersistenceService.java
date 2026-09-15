@@ -15,12 +15,15 @@ import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.southrail.reservation.service.booking.ReservationHoldFinalizationService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 public class PaymentReconciliationPersistenceService {
   private final PaymentRepository payments;
   private final PaymentRefundRepository refunds;
   private final AuditLogService audit;
+  private ReservationHoldFinalizationService holdFinalizer;
 
   public PaymentReconciliationPersistenceService(
       PaymentRepository payments, PaymentRefundRepository refunds, AuditLogService audit) {
@@ -28,6 +31,9 @@ public class PaymentReconciliationPersistenceService {
     this.refunds = refunds;
     this.audit = audit;
   }
+
+  @Autowired
+  void setHoldFinalizer(ReservationHoldFinalizationService holdFinalizer) { this.holdFinalizer = holdFinalizer; }
 
   @Transactional(readOnly = true)
   public Optional<ReconciliationContext> context(UUID id, Instant staleBefore) {
@@ -64,6 +70,7 @@ public class PaymentReconciliationPersistenceService {
         if (refunds.findByPaymentId(payment.getId()).isPresent()) {
           payment.transition(PaymentStatus.REFUND_PENDING);
         }
+        if (holdFinalizer != null && payment.getReservationHold() != null) holdFinalizer.finalizeCaptured(payment);
       }
       case "failed" -> payment.failed(
           "PROVIDER_PAYMENT_FAILED", "Provider reported that payment failed");
@@ -107,11 +114,11 @@ public class PaymentReconciliationPersistenceService {
 
   private void audit(Payment payment, String action) {
     audit.log(
-        payment.getBooking().getUser().getId(),
-        payment.getBooking().getUser().getEmail(),
+        payment.getBooking() == null ? payment.getReservationHold().getUser().getId() : payment.getBooking().getUser().getId(),
+        payment.getBooking() == null ? payment.getReservationHold().getUser().getEmail() : payment.getBooking().getUser().getEmail(),
         action,
         "PAYMENT",
-        "Payment " + payment.getId() + " for PNR " + payment.getBooking().getPnr());
+        "Payment " + payment.getId() + (payment.getBooking() == null ? " for reservation hold " + payment.getReservationHold().getId() : " for PNR " + payment.getBooking().getPnr()));
   }
 
   public record ReconciliationContext(

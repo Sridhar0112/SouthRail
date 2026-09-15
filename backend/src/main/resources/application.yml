@@ -62,6 +62,10 @@ app:
     from: ${MAIL_FROM:noreply@localhost}
 
 southrail:
+  reservation-hold:
+    duration: ${RESERVATION_HOLD_DURATION:PT10M}
+    expiry-delay: ${RESERVATION_HOLD_EXPIRY_DELAY:PT15S}
+    batch-size: ${RESERVATION_HOLD_EXPIRY_BATCH_SIZE:50}
   features:
     ai-enabled: ${AI_ENABLED:false}
     email-enabled: ${EMAIL_ENABLED:false}
