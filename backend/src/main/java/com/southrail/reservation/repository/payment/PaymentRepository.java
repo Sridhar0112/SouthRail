@@ -22,12 +22,9 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
   Optional<Payment> findByProviderPaymentId(String id);
 
   @Query("select p.id from Payment p where "
-      + "(p.status = com.southrail.reservation.entity.payment.PaymentStatus.CREATED "
-      + "and p.createdAt < :creationExpiredBefore) or "
-      + "(p.status in :providerStatuses and p.updatedAt < :providerStaleBefore) "
+      + "p.status in :providerStatuses and p.updatedAt < :providerStaleBefore "
       + "order by p.createdAt")
   List<UUID> findReconciliationCandidates(
-      @Param("creationExpiredBefore") Instant creationExpiredBefore,
       @Param("providerStatuses") Collection<PaymentStatus> providerStatuses,
       @Param("providerStaleBefore") Instant providerStaleBefore,
       Pageable pageable);
