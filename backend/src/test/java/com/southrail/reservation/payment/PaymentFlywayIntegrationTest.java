@@ -39,10 +39,10 @@ class PaymentFlywayIntegrationTest {
 
   @Test
   void migratesFreshDatabaseThroughPaymentLifecycle() {
-    Integer version = jdbc.queryForObject(
-        "select max(cast(version as integer)) from flyway_schema_history where success",
+    Integer v12Count = jdbc.queryForObject(
+        "select count(*) from flyway_schema_history where version = '12' and success",
         Integer.class);
-    assertThat(version).isEqualTo(12);
+    assertThat(v12Count).isEqualTo(1);
 
     List<String> tables = jdbc.queryForList(
         "select table_name from information_schema.tables "
