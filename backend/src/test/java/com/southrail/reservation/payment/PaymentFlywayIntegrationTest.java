@@ -42,7 +42,7 @@ class PaymentFlywayIntegrationTest {
     Integer version = jdbc.queryForObject(
         "select max(cast(version as integer)) from flyway_schema_history where success",
         Integer.class);
-    assertThat(version).isEqualTo(11);
+    assertThat(version).isEqualTo(12);
 
     List<String> tables = jdbc.queryForList(
         "select table_name from information_schema.tables "
@@ -58,6 +58,7 @@ class PaymentFlywayIntegrationTest {
         "uq_payments_provider_payment",
         "uq_payments_idempotency",
         "uq_payments_one_successful_booking",
+        "idx_payments_reconciliation",
         "uq_refunds_provider_id",
         "uq_refunds_idempotency");
 
@@ -100,5 +101,14 @@ class PaymentFlywayIntegrationTest {
             + "'PENDING','key-two',now(),now())",
         "90000000-0000-4000-9000-000000000004", bookingId))
         .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+
+    jdbc.update("update payments set status = 'FAILED', failure_code = "
+        + "'PAYMENT_CREATION_EXPIRED', failed_at = now() where id = ?::uuid",
+        "90000000-0000-4000-9000-000000000003");
+    assertThat(jdbc.update(
+        "insert into payments (id,booking_id,provider,amount,currency,status,idempotency_key,"
+            + "created_at,updated_at) values (?::uuid,?::uuid,'RAZORPAY',1000.00,'INR',"
+            + "'CREATED','key-two',now(),now())",
+        "90000000-0000-4000-9000-000000000004", bookingId)).isEqualTo(1);
   }
 }

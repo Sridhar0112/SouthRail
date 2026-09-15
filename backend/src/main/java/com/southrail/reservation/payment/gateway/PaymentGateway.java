@@ -1,5 +1,6 @@
 package com.southrail.reservation.payment.gateway;
 
+import java.util.List;
 import java.util.Map;
 
 public interface PaymentGateway {
@@ -12,6 +13,8 @@ public interface PaymentGateway {
   GatewayOrder createOrder(long amount, String currency, String receipt, Map<String, String> notes);
 
   GatewayPayment fetchPayment(String paymentId);
+
+  List<GatewayPayment> fetchPaymentsForOrder(String orderId);
 
   GatewayRefund initiateRefund(String paymentId, long amount, String idempotencyKey);
 }
