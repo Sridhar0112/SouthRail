@@ -49,7 +49,7 @@ class PaymentReconciliationServiceTest {
     service(false).reconcileStalePayments();
     verify(payments, never()).findReconciliationCandidates(
         org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
-        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+        org.mockito.ArgumentMatchers.any());
   }
 
   @Test
