@@ -8,6 +8,7 @@ import com.southrail.reservation.repository.payment.PaymentRefundRepository;
 import com.southrail.reservation.repository.payment.PaymentRepository;
 import com.southrail.reservation.service.audit.AuditLogService;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,8 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PaymentReconciliationPersistenceService {
-  static final String CREATION_EXPIRED = "PAYMENT_CREATION_EXPIRED";
-
   private final PaymentRepository payments;
   private final PaymentRefundRepository refunds;
   private final AuditLogService audit;
@@ -41,18 +40,6 @@ public class PaymentReconciliationPersistenceService {
         .map(payment -> new ReconciliationContext(
             payment.getId(), payment.getProviderOrderId(), payment.getProviderPaymentId(),
             PaymentService.toMinorUnits(payment.getAmount()), payment.getCurrency()));
-  }
-
-  @Transactional
-  public boolean expireCreated(UUID id, Instant expiredBefore) {
-    Payment payment = payments.findByIdForUpdate(id).orElse(null);
-    if (payment == null || payment.getStatus() != PaymentStatus.CREATED
-        || !payment.getCreatedAt().isBefore(expiredBefore)) {
-      return false;
-    }
-    payment.failed(CREATION_EXPIRED, "Provider order creation did not complete before expiry");
-    audit(payment, CREATION_EXPIRED);
-    return true;
   }
 
   @Transactional
@@ -102,7 +89,9 @@ public class PaymentReconciliationPersistenceService {
     if (remote.amount() != PaymentService.toMinorUnits(payment.getAmount())) {
       throw mismatch("Provider amount did not match");
     }
-    if (!Objects.equals(payment.getCurrency(), remote.currency())) {
+    String remoteCurrency = remote.currency() == null
+        ? null : remote.currency().toUpperCase(Locale.ROOT);
+    if (!Objects.equals(payment.getCurrency(), remoteCurrency)) {
       throw mismatch("Provider currency did not match");
     }
     payments.findByProviderPaymentId(remote.id())
