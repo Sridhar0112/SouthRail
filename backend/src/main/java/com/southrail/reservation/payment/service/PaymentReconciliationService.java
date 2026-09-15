@@ -8,6 +8,7 @@ import com.southrail.reservation.repository.payment.PaymentRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,22 +58,16 @@ public class PaymentReconciliationService {
     if (!razorpay.enabled() || !config.enabled()) {
       return;
     }
-    Instant now = clock.instant();
-    Instant staleBefore = now.minus(config.staleAfter());
-    Instant creationExpiredBefore = now.minus(config.creationExpiry());
+    Instant staleBefore = clock.instant().minus(config.staleAfter());
     List<UUID> candidates = payments.findReconciliationCandidates(
-        creationExpiredBefore,
         List.of(PaymentStatus.PENDING, PaymentStatus.AUTHORIZED),
         staleBefore,
         PageRequest.of(0, config.batchSize()));
-    candidates.forEach(id -> reconcile(id, staleBefore, creationExpiredBefore));
+    candidates.forEach(id -> reconcile(id, staleBefore, null));
   }
 
-  void reconcile(UUID id, Instant staleBefore, Instant creationExpiredBefore) {
+  void reconcile(UUID id, Instant staleBefore, Instant ignoredCreationExpiry) {
     try {
-      if (persistence.expireCreated(id, creationExpiredBefore)) {
-        return;
-      }
       persistence.context(id, staleBefore).ifPresent(context -> {
         try {
           PaymentGateway.GatewayPayment remote = remotePayment(context);
@@ -99,9 +94,15 @@ public class PaymentReconciliationService {
         .fetchPaymentsForOrder(context.providerOrderId()).stream()
         .filter(remote -> context.providerOrderId().equals(remote.orderId()))
         .filter(remote -> context.amount() == remote.amount())
-        .filter(remote -> context.currency().equals(remote.currency()))
+        .filter(remote -> context.currency().equals(
+            remote.currency() == null ? null : remote.currency().toUpperCase(Locale.ROOT)))
         .filter(remote -> List.of("authorized", "captured", "failed").contains(remote.status()))
         .toList();
+    if (matching.size() > 1) {
+      log.error("payment_reconciliation_ambiguous paymentId={} providerOrderId={} matches={}",
+          context.paymentId(), context.providerOrderId(), matching.size());
+      return null;
+    }
     return matching.size() == 1 ? matching.getFirst() : null;
   }
 }
