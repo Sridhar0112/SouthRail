@@ -7,7 +7,9 @@
     { "key": "baseUrl", "value": "http://localhost:8080/api" },
     { "key": "accessToken", "value": "" },
     { "key": "refreshToken", "value": "" },
-    { "key": "pnr", "value": "" }
+    { "key": "pnr", "value": "" },
+    { "key": "holdId", "value": "" },
+    { "key": "paymentId", "value": "" }
   ],
   "item": [
     {
@@ -107,15 +109,51 @@
           }
         },
         {
-          "name": "Create booking",
+          "name": "Create reservation hold",
           "request": {
             "method": "POST",
             "header": [
               { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
             ],
-            "url": "{{baseUrl}}/bookings",
+            "url": "{{baseUrl}}/reservation-holds",
             "body": { "mode": "raw", "raw": "{\"trainId\":\"8ddad0c4-0000-4000-9000-000000000001\",\"sourceStationCode\":\"SBC\",\"destinationStationCode\":\"MAS\",\"journeyDate\":\"2026-06-08\",\"travelClass\":\"3A\",\"quota\":\"GENERAL\",\"passengers\":[{\"fullName\":\"Arun Kumar\",\"age\":31,\"gender\":\"Male\",\"berthPreference\":\"LOWER\"}]}" }
+          }
+        },
+        {
+          "name": "Get reservation hold",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/reservation-holds/{{holdId}}"
+          }
+        },
+        {
+          "name": "Create payment order for hold",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "url": "{{baseUrl}}/payments/reservation-holds/{{holdId}}/orders"
+          }
+        },
+        {
+          "name": "Get active payment for hold",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/payments/reservation-holds/{{holdId}}/active"
+          }
+        },
+        {
+          "name": "Get payment status",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/payments/{{paymentId}}"
           }
         },
         {
