@@ -62,7 +62,10 @@ function refreshAccessToken() {
 }
 
 function isAuthRequest(url = '') {
-  return url.includes('/auth/login') || url.includes('/auth/register') || url.includes('/auth/refresh');
+  return url.includes('/auth/login')
+    || url.includes('/auth/register')
+    || url.includes('/auth/refresh')
+    || url.includes('/auth/oauth/exchange');
 }
 
 export function clearAuthStorage() {
