@@ -15,4 +15,5 @@ public interface UserRepository extends JpaRepository<User, UUID> {
   @Query("select u from User u where lower(u.email) = lower(:email)")
   Optional<User> findByEmailIgnoreCaseForUpdate(@Param("email") String email);
   boolean existsByEmailIgnoreCase(String email);
+  Optional<User> findByAuthProviderAndProviderSubject(String authProvider, String providerSubject);
 }

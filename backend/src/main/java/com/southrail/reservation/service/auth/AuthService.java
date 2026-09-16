@@ -28,6 +28,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 public class AuthService {
@@ -41,6 +42,7 @@ public class AuthService {
   private final UserRepository users;
   private final RefreshTokenRepository refreshTokens;
   private final AccountTokenRepository accountTokens;
+  private final com.southrail.reservation.repository.auth.OAuthLoginCodeRepository oauthLoginCodes;
   private final PasswordEncoder passwordEncoder;
   private final AuthenticationManager authenticationManager;
   private final JwtService jwtService;
@@ -48,19 +50,31 @@ public class AuthService {
   private final long refreshDays;
   private final AuditLogService auditLogService;
 
+  @Autowired
   public AuthService(UserRepository users, RefreshTokenRepository refreshTokens, AccountTokenRepository accountTokens,
                      PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService,
+                     com.southrail.reservation.repository.auth.OAuthLoginCodeRepository oauthLoginCodes,
                      EmailNotificationService accountEmailService,
                      SouthRailSecurityProperties securityProperties, AuditLogService auditLogService) {
     this.users = users;
     this.refreshTokens = refreshTokens;
     this.accountTokens = accountTokens;
+    this.oauthLoginCodes = oauthLoginCodes;
     this.passwordEncoder = passwordEncoder;
     this.authenticationManager = authenticationManager;
     this.jwtService = jwtService;
     this.accountEmailService = accountEmailService;
     this.refreshDays = securityProperties.getRefreshTokenDays();
     this.auditLogService=auditLogService;
+  }
+
+  /** Retains source compatibility for existing local-authentication tests and integrations. */
+  public AuthService(UserRepository users, RefreshTokenRepository refreshTokens, AccountTokenRepository accountTokens,
+                     PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService,
+                     EmailNotificationService accountEmailService, SouthRailSecurityProperties securityProperties,
+                     AuditLogService auditLogService) {
+    this(users, refreshTokens, accountTokens, passwordEncoder, authenticationManager, jwtService, null,
+        accountEmailService, securityProperties, auditLogService);
   }
 
   @Transactional
@@ -223,6 +237,22 @@ public class AuthService {
     }
 
   @Transactional(noRollbackFor = ApiException.class)
+  public AuthDtos.AuthResponse exchangeOAuthCode(String rawCode) {
+    com.southrail.reservation.entity.auth.OAuthLoginCode code = oauthLoginCodes
+        .findOpenForUpdate(hash(rawCode))
+        .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "OAuth exchange code is invalid"));
+    code.setUsedAt(Instant.now());
+    if (code.getExpiresAt().isBefore(Instant.now())) {
+      throw new ApiException(HttpStatus.UNAUTHORIZED, "OAuth exchange code expired");
+    }
+    User user = code.getUser();
+    if (user.isDeleted() || !user.isEnabled() || !user.isEmailVerified()) {
+      throw new ApiException(HttpStatus.FORBIDDEN, "Account is not eligible for authentication");
+    }
+    return issueTokens(user);
+  }
+
+  @Transactional(noRollbackFor = ApiException.class)
   public AuthDtos.AuthResponse refresh(AuthDtos.RefreshRequest request) {
     RefreshToken token = refreshTokens.findActiveByTokenHashForUpdate(hash(request.getRefreshToken()))
             .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Refresh token is invalid"));
@@ -340,7 +370,8 @@ public class AuthService {
     accountEmailService.sendEmailVerification(user, token);
   }
 
-  private AuthDtos.AuthResponse issueTokens(User user) {
+  @Transactional
+  public AuthDtos.AuthResponse issueTokens(User user) {
     String refresh = UUID.randomUUID() + "." + UUID.randomUUID();
     RefreshToken refreshToken = new RefreshToken();
     refreshToken.setUser(user);

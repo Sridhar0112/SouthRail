@@ -11,6 +11,7 @@ import GppBadOutlinedIcon from "@mui/icons-material/GppBadOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import TrainIcon from "@mui/icons-material/Train";
 import { login } from "./authSlice.js";
+import GoogleSignInButton from "./GoogleSignInButton.jsx";
 import api from "../../services/api.js";
 import { getApiErrorMessage } from "../../utils/apiErrors.js";
 import {
@@ -199,6 +200,7 @@ export default function LoginPage() {
             <Button type="submit" variant="contained" startIcon={loading ? null : <LoginIcon />} disabled={loading} fullWidth sx={{ py: 1.4, borderRadius: 2 }}>
               {loading ? "Logging in\u2026" : "Sign in"}
             </Button>
+            <GoogleSignInButton />
             <Stack direction="row" spacing={1} justifyContent="center">
               <Button component={Link} to="/forgot-password" variant="text" size="small" sx={{ fontSize: '0.8rem' }}>
                 Forgot password

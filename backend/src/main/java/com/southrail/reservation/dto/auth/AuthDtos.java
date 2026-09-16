@@ -55,6 +55,12 @@ public final class AuthDtos {
     private String refreshToken;
   }
 
+  @Getter @Setter @NoArgsConstructor @AllArgsConstructor
+  public static class OAuthExchangeRequest {
+    @NotBlank
+    private String code;
+  }
+
   @Getter
   @Setter
   @NoArgsConstructor
