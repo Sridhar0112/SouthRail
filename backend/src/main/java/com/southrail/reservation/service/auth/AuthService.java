@@ -28,7 +28,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 public class AuthService {
@@ -50,7 +49,6 @@ public class AuthService {
   private final long refreshDays;
   private final AuditLogService auditLogService;
 
-  @Autowired
   public AuthService(UserRepository users, RefreshTokenRepository refreshTokens, AccountTokenRepository accountTokens,
                      PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService,
                      com.southrail.reservation.repository.auth.OAuthLoginCodeRepository oauthLoginCodes,
@@ -66,15 +64,6 @@ public class AuthService {
     this.accountEmailService = accountEmailService;
     this.refreshDays = securityProperties.getRefreshTokenDays();
     this.auditLogService=auditLogService;
-  }
-
-  /** Retains source compatibility for existing local-authentication tests and integrations. */
-  public AuthService(UserRepository users, RefreshTokenRepository refreshTokens, AccountTokenRepository accountTokens,
-                     PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtService jwtService,
-                     EmailNotificationService accountEmailService, SouthRailSecurityProperties securityProperties,
-                     AuditLogService auditLogService) {
-    this(users, refreshTokens, accountTokens, passwordEncoder, authenticationManager, jwtService, null,
-        accountEmailService, securityProperties, auditLogService);
   }
 
   @Transactional
@@ -170,6 +159,9 @@ public class AuthService {
               HttpStatus.FORBIDDEN,
               "Account is disabled");
     }
+    if (user.getPasswordHash() == null) {
+      throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
+    }
         // Check account lock before authentication
         if (user.getAccountLockedUntil() != null &&
                 user.getAccountLockedUntil().isAfter(Instant.now())) {
@@ -240,14 +232,17 @@ public class AuthService {
   public AuthDtos.AuthResponse exchangeOAuthCode(String rawCode) {
     com.southrail.reservation.entity.auth.OAuthLoginCode code = oauthLoginCodes
         .findOpenForUpdate(hash(rawCode))
-        .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "OAuth exchange code is invalid"));
+        .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "OAUTH_EXCHANGE_INVALID",
+            "OAuth exchange code is invalid"));
     code.setUsedAt(Instant.now());
     if (code.getExpiresAt().isBefore(Instant.now())) {
-      throw new ApiException(HttpStatus.UNAUTHORIZED, "OAuth exchange code expired");
+      throw new ApiException(HttpStatus.UNAUTHORIZED, "OAUTH_EXCHANGE_EXPIRED",
+          "OAuth exchange code expired");
     }
     User user = code.getUser();
     if (user.isDeleted() || !user.isEnabled() || !user.isEmailVerified()) {
-      throw new ApiException(HttpStatus.FORBIDDEN, "Account is not eligible for authentication");
+      throw new ApiException(HttpStatus.FORBIDDEN, "OAUTH_ACCOUNT_DISABLED",
+          "Account is not eligible for authentication");
     }
     return issueTokens(user);
   }
@@ -281,7 +276,7 @@ public class AuthService {
   @Transactional
   public void forgotPassword(AuthDtos.ForgotPasswordRequest request) {
     users.findByEmailIgnoreCaseForUpdate(request.getEmail()).ifPresent(user -> {
-      if (user.isDeleted() || !user.isEnabled()) {
+      if (user.isDeleted() || !user.isEnabled() || user.getPasswordHash() == null) {
         return;
       }
       AccountToken latestToken =
@@ -305,7 +300,7 @@ public class AuthService {
   public void resetPassword(AuthDtos.ResetPasswordRequest request) {
     AccountToken token = consumeAccountToken(request.getToken(), RESET_PASSWORD);
       User user = token.getUser();
-      if (user.isDeleted() || !user.isEnabled()) {
+      if (user.isDeleted() || !user.isEnabled() || user.getPasswordHash() == null) {
         throw new ApiException(HttpStatus.FORBIDDEN, "Account is not eligible for password reset");
       }
 

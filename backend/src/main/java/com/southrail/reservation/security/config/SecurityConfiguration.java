@@ -21,6 +21,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.NullSecurityContextRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -47,6 +48,9 @@ public class SecurityConfiguration {
         .csrf(csrf -> csrf.disable())
         .cors(cors -> {})
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+        // OAuth state uses a temporary HTTP session, but authenticated SecurityContexts are never
+        // persisted there; normal SouthRail requests remain JWT-authenticated by jwtFilter.
+        .securityContext(context -> context.securityContextRepository(new NullSecurityContextRepository()))
         .oauth2Login(oauth -> oauth.successHandler(oauthSuccessHandler).failureHandler(oauthFailureHandler))
         .exceptionHandling(exceptions -> exceptions
             .authenticationEntryPoint(authenticationEntryPoint)
@@ -75,7 +79,7 @@ public class SecurityConfiguration {
     return email -> users.findByEmailIgnoreCase(email)
         .map(user -> org.springframework.security.core.userdetails.User
             .withUsername(user.getEmail())
-            .password(user.getPasswordHash())
+            .password(user.getPasswordHash() == null ? "{noop}oauth-only-account" : user.getPasswordHash())
             .disabled(!user.isEnabled())
             .authorities(user.getRoles().stream().map(Enum::name).toArray(String[]::new))
             .build())

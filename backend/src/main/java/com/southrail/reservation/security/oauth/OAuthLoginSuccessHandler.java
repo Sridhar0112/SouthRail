@@ -28,10 +28,12 @@ public class OAuthLoginSuccessHandler implements AuthenticationSuccessHandler {
       if (request.getSession(false) != null) request.getSession(false).invalidate();
       response.sendRedirect(frontendUrl + "/oauth/callback?code="
           + URLEncoder.encode(code, StandardCharsets.UTF_8));
+    } catch (OAuthLoginException ex) {
+      if (request.getSession(false) != null) request.getSession(false).invalidate();
+      response.sendRedirect(frontendUrl + "/oauth/callback?error=" + ex.reason().redirectValue());
     } catch (RuntimeException ex) {
       if (request.getSession(false) != null) request.getSession(false).invalidate();
-      String reason = ex.getMessage() != null && ex.getMessage().startsWith("This email") ? "account_conflict" : "authentication_failed";
-      response.sendRedirect(frontendUrl + "/oauth/callback?error=" + reason);
+      response.sendRedirect(frontendUrl + "/oauth/callback?error=authentication_failed");
     }
   }
 }

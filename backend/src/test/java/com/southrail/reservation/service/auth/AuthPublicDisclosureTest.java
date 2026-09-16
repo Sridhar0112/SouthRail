@@ -29,6 +29,6 @@ class AuthPublicDisclosureTest {
   assertThatCode(()->service.sendUnlockEmail(new AuthDtos.SendUnlockEmailRequest("unknown@example.com"))).doesNotThrowAnyException();
   assertThatCode(()->service.sendUnlockEmail(new AuthDtos.SendUnlockEmailRequest("unlocked@example.com"))).doesNotThrowAnyException();
  }
- private AuthService service(UserRepository users){ SouthRailSecurityProperties s=new SouthRailSecurityProperties(); s.setRefreshTokenDays(14); return new AuthService(users,mock(RefreshTokenRepository.class),mock(AccountTokenRepository.class),mock(PasswordEncoder.class),mock(AuthenticationManager.class),mock(JwtService.class),mock(EmailNotificationService.class),s,mock(AuditLogService.class)); }
+ private AuthService service(UserRepository users){ SouthRailSecurityProperties s=new SouthRailSecurityProperties(); s.setRefreshTokenDays(14); return new AuthService(users,mock(RefreshTokenRepository.class),mock(AccountTokenRepository.class),mock(PasswordEncoder.class),mock(AuthenticationManager.class),mock(JwtService.class),mock(OAuthLoginCodeRepository.class),mock(EmailNotificationService.class),s,mock(AuditLogService.class)); }
  private User user(boolean verified,boolean deleted,boolean enabled,Instant lock){User u=new User();u.setEmailVerified(verified);u.setDeleted(deleted);u.setEnabled(enabled);u.setAccountLockedUntil(lock);return u;}
 }

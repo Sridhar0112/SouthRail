@@ -58,6 +58,7 @@ public final class AuthDtos {
   @Getter @Setter @NoArgsConstructor @AllArgsConstructor
   public static class OAuthExchangeRequest {
     @NotBlank
+    @Size(max = 100)
     private String code;
   }
 
