@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Container, Stack, Typography } from '@mui/material';
+import { Box, Button, Container, Stack, Typography } from '@mui/material';
 import { isRouteErrorResponse, Link, useRouteError } from 'react-router-dom';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import HomeIcon from '@mui/icons-material/Home';
@@ -11,7 +11,9 @@ export function ErrorBoundary() {
     title = `${error.status} ${error.statusText}`;
     message = error.data?.message || message;
   } else if (error instanceof Error) {
-    message = error.message;
+    // Runtime exception details can contain implementation or account data.
+    // Keep them in developer tooling rather than rendering them to passengers.
+    console.error(error);
   }
   return (
     <Container sx={{ py: 8 }}>

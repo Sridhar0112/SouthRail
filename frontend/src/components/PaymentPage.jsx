@@ -32,6 +32,7 @@ import WalletIcon from "@mui/icons-material/Wallet"
 import RefreshIcon from "@mui/icons-material/Refresh"
 import ScheduleIcon from "@mui/icons-material/Schedule"
 import api from "../services/api.js"
+import { getApiErrorMessage } from "../utils/apiErrors.js"
 import {
   PAYMENT_TIMEOUT_MS,
   UPI_OPTIONS,
@@ -150,8 +151,9 @@ export default function PaymentPage() {
         if (!pollingRef.current) return
         if (data.status === "CAPTURED") {
           pollingRef.current = false
-          await refreshConfirmedHold()
-          setPaymentState("success")
+          const confirmed = await refreshConfirmedHold()
+          if (confirmed) setPaymentState("success")
+          else pollPaymentStatus(paymentId)
           return
         }
         if (data.status === "FAILED") {
@@ -213,8 +215,9 @@ export default function PaymentPage() {
           )
           setRecoverablePaymentId(activePayment.paymentId)
           if (activePayment.status === "CAPTURED") {
-            await refreshConfirmedHold()
-            setPaymentState("success")
+            const confirmed = await refreshConfirmedHold()
+            if (confirmed) setPaymentState("success")
+            else pollPaymentStatus(activePayment.paymentId)
             return
           }
           if (activePayment.status === "AUTHORIZED"
@@ -230,8 +233,7 @@ export default function PaymentPage() {
           }
         } catch (recoveryError) {
           setErrorMessage(
-            recoveryError.response?.data?.message
-              ?? "The active payment attempt could not be recovered. Please try again shortly."
+            getApiErrorMessage(recoveryError, "The active payment attempt could not be recovered. Please try again shortly.")
           )
           setPaymentState("failed")
           return
@@ -241,8 +243,7 @@ export default function PaymentPage() {
           sessionStorage.removeItem(`payment-key:${booking.holdId}`)
         }
         setErrorMessage(
-          err.response?.data?.message ??
-            (err instanceof Error ? err.message : "Could not initiate payment. Try again.")
+          getApiErrorMessage(err, "Could not initiate payment. Please try again.")
         )
         setPaymentState("failed")
         return
@@ -291,8 +292,9 @@ export default function PaymentPage() {
           })
 
           if (result.status === "CAPTURED") {
-            await refreshConfirmedHold()
-            setPaymentState("success")
+            const confirmed = await refreshConfirmedHold()
+            if (confirmed) setPaymentState("success")
+            else pollPaymentStatus(orderData.paymentId)
           } else if (result.status === "AUTHORIZED" || result.status === "PENDING") {
             pollPaymentStatus(orderData.paymentId)
           } else if (result.status === "FAILED") {
@@ -306,8 +308,7 @@ export default function PaymentPage() {
           }
         } catch (err) {
           setErrorMessage(
-            err.response?.data?.message ??
-              (err instanceof Error ? err.message : "Verification failed. Contact support.")
+            getApiErrorMessage(err, "Verification could not be completed. Check the payment status before retrying.")
           )
           setPaymentState("failed")
         }
@@ -338,8 +339,9 @@ export default function PaymentPage() {
     try {
       const { data } = await api.get(`/payments/${recoverablePaymentId}`)
       if (data.status === "CAPTURED") {
-        await refreshConfirmedHold()
-        setPaymentState("success")
+        const confirmed = await refreshConfirmedHold()
+        if (confirmed) setPaymentState("success")
+        else pollPaymentStatus(recoverablePaymentId)
       } else if (data.status === "FAILED") {
         sessionStorage.removeItem(`payment-key:${booking.holdId}`)
         setErrorMessage("Payment failed. Please retry with a new payment attempt.")
@@ -353,7 +355,7 @@ export default function PaymentPage() {
       }
     } catch (err) {
       setErrorMessage(
-        err.response?.data?.message ?? "Payment status could not be checked. Please try again."
+        getApiErrorMessage(err, "Payment status could not be checked. Please try again.")
       )
       setPaymentState("status_check_available")
     }

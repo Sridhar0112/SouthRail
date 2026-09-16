@@ -76,7 +76,10 @@ export default function LoginPage() {
     setApiError(""); setShowResend(false); setVerificationMessage(""); setUnlockMessage("");
     try {
       await dispatch(login(values)).unwrap();
-      navigate(location.state?.from?.pathname || "/dashboard");
+      const requestedPath = location.state?.from;
+      navigate(typeof requestedPath === 'string' && requestedPath.startsWith('/') && !requestedPath.startsWith('//')
+        ? requestedPath
+        : "/dashboard", { replace: true });
     } catch (payload) {
       const response = normalizeLoginPayload(payload);
       const errorMessage = response.message;

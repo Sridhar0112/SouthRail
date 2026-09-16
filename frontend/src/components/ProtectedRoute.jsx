@@ -7,7 +7,8 @@ export function ProtectedRoute({ children, role }) {
   const location = useLocation();
   const user = useSelector((state) => state.auth.user);
   if (!user) {
-    return <Navigate to="/login" replace state={{ from: location, message: 'Your session has expired. Please login again.' }} />;
+    const returnTo = `${location.pathname}${location.search}${location.hash}`;
+    return <Navigate to="/login" replace state={{ from: returnTo, message: 'Please sign in to continue.' }} />;
   }
   if (role && !user.roles?.includes(role)) {
     return (

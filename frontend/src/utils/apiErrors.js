@@ -1,4 +1,4 @@
-export function getApiErrorMessage(error, fallbackMessage = 'Something went wrong. Please try again.') {
+export function getApiErrorMessage(error, fallbackMessage = 'We could not complete that request. Please try again.') {
   if (!error) return fallbackMessage;
   if (error.code === 'ECONNABORTED') return 'Request timed out. Please try again.';
   if (!error.response) return 'Server is not reachable. Please make sure the backend is running.';
@@ -18,6 +18,7 @@ export function getApiErrorMessage(error, fallbackMessage = 'Something went wron
   if (status === 403) return 'You do not have permission to perform this action.';
   if (status === 404) return toFriendlyMessage(data.message) || 'Requested data was not found.';
   if (status === 409) return toFriendlyMessage(data.message || data.error) || 'This action conflicts with existing data.';
+  if (status === 429) return 'Too many requests were made. Please wait a moment and try again.';
   if (status >= 500) return 'Something went wrong on the server. Please try again later.';
 
   return toFriendlyMessage(data.message || data.error) || fallbackMessage;
@@ -43,12 +44,12 @@ function formatViolations(violations) {
 }
 
 function looksTechnical(value) {
-  return /exception|stack|trace|java\.|org\.springframework|\[object Object\]/i.test(String(value));
+  return /exception|stack|trace|java\.|org\.springframework|\[object Object\]|<!doctype|<html|<body|\bat\s+[\w.$]+\([^)]*:\d+\)/i.test(String(value));
 }
 
 function toFriendlyMessage(value) {
   const message = String(value || '').trim();
-  if (!message || looksTechnical(message)) return '';
+  if (!message || message.length > 500 || looksTechnical(message)) return '';
   if (/must be a date in the present or in the future/i.test(message)) return 'Please select today or a future journey date.';
   if (/must not be blank|must not be empty|required/i.test(message)) return 'Please fill all required fields.';
   return message;

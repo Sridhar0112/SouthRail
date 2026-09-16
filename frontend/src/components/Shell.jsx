@@ -19,7 +19,6 @@ import PersonIcon from '@mui/icons-material/Person';
 import SearchIcon from '@mui/icons-material/Search';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import TrainIcon from '@mui/icons-material/Train';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import CloseIcon from '@mui/icons-material/Close';
 import { ColorModeContext } from '../theme/AppThemeProvider.jsx';
 import { logout } from '../features/auth/authSlice.js';
@@ -44,9 +43,7 @@ export function Shell() {
   const location = useLocation();
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [isPageSettling, setIsPageSettling] = useState(true);
   const avatarButtonRef = useRef(null);
-  const pageSettleTimerRef = useRef(null);
 
   useEffect(() => {
     const clearAuth = () => dispatch(logout());
@@ -64,7 +61,6 @@ export function Shell() {
   const handleMenuOpen = (event) => {
     event.stopPropagation();
     setMobileNavOpen(false);
-    if (isPageSettling) { closeAllMenus(); return; }
     if (anchorEl) { setAnchorEl(null); return; }
     setAnchorEl(event.currentTarget);
   };
@@ -87,13 +83,6 @@ export function Shell() {
 
   useEffect(() => {
     closeAllMenus();
-    setIsPageSettling(true);
-    if (pageSettleTimerRef.current) clearTimeout(pageSettleTimerRef.current);
-    pageSettleTimerRef.current = setTimeout(() => {
-      setIsPageSettling(false);
-      pageSettleTimerRef.current = null;
-    }, 1000);
-    return () => { if (pageSettleTimerRef.current) clearTimeout(pageSettleTimerRef.current); };
   }, [location.pathname, location.search, location.hash]);
 
   const signOut = () => { closeAllMenus(); dispatch(logout()); navigate('/'); };
@@ -175,7 +164,7 @@ export function Shell() {
                       fontSize: '0.8rem',
                       px: 1.4,
                       py: 0.6,
-                      minHeight: 32,
+                      minHeight: 44,
                       borderRadius: 1.5,
                       overflow: 'hidden',
                       transition: 'all 200ms ease',
@@ -207,7 +196,7 @@ export function Shell() {
               <IconButton
                 onClick={() => { closeAllMenus(); toggleColorMode(); }}
                 sx={{
-                  width: 32, height: 32,
+                  width: 44, height: 44,
                   bgcolor: 'action.hover',
                   flexShrink: 0,
                   borderRadius: 1.5,
@@ -228,10 +217,9 @@ export function Shell() {
                   <IconButton
                     ref={avatarButtonRef}
                     onClick={handleMenuOpen}
-                    aria-disabled={isPageSettling ? 'true' : undefined}
                     aria-haspopup="menu"
                     aria-expanded={anchorEl ? 'true' : undefined}
-                    sx={{ p: 0, cursor: isPageSettling ? 'default' : 'pointer' }}
+                    sx={{ p: 0 }}
                   >
                     <Avatar
                       sx={{
@@ -303,7 +291,7 @@ export function Shell() {
                   display: { xs: 'none', sm: 'inline-flex' },
                   borderRadius: 2,
                   px: 2,
-                  minHeight: 32,
+                  minHeight: 44,
                   fontSize: '0.8rem'
                 }}
               >
@@ -317,7 +305,7 @@ export function Shell() {
                 onClick={() => { setAnchorEl(null); setMobileNavOpen(true); }}
                 sx={{
                   display: { xs: 'inline-flex', md: 'none' },
-                  width: 32, height: 32,
+                  width: 44, height: 44,
                   bgcolor: 'action.hover',
                   flexShrink: 0,
                   borderRadius: 1.5,
@@ -357,7 +345,7 @@ export function Shell() {
                 </Typography>
               </Box>
             </Stack>
-            <IconButton onClick={closeAllMenus} aria-label="Close menu" sx={{ borderRadius: 1.5, width: 32, height: 32 }}>
+            <IconButton onClick={closeAllMenus} aria-label="Close menu" sx={{ borderRadius: 1.5, width: 44, height: 44 }}>
               <CloseIcon sx={{ fontSize: 18 }} />
             </IconButton>
           </Stack>

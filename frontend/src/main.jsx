@@ -1,8 +1,8 @@
 import React, { Suspense, lazy } from "react";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { CssBaseline, LinearProgress } from "@mui/material";
+import { createBrowserRouter, Link, RouterProvider } from "react-router-dom";
+import { Button, Container, CssBaseline, LinearProgress, Typography } from "@mui/material";
 import { AppThemeProvider } from "./theme/AppThemeProvider.jsx";
 import { store } from "./app/store.js";
 import { Shell } from "./components/Shell.jsx";
@@ -115,6 +115,16 @@ const router = createBrowserRouter([
           <ProtectedRoute role="ROLE_ADMIN">
             <AdminSupportTicketsPage />
           </ProtectedRoute>
+        ),
+      },
+      {
+        path: "*",
+        element: (
+          <Container maxWidth="sm" sx={{ py: 8, textAlign: "center" }}>
+            <Typography variant="h3" component="h1" gutterBottom>Page not found</Typography>
+            <Typography color="text.secondary" sx={{ mb: 3 }}>The page may have moved or the address may be incorrect.</Typography>
+            <Button component={Link} to="/" variant="contained">Return to train search</Button>
+          </Container>
         ),
       },
     ],
