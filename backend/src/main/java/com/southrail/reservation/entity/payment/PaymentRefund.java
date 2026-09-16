@@ -30,7 +30,7 @@ public class PaymentRefund extends BaseEntity {
   @JoinColumn(name = "payment_id")
   private Payment payment;
 
-  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "booking_id")
   private Booking booking;
 
@@ -64,9 +64,7 @@ public class PaymentRefund extends BaseEntity {
     return refund;
   }
 
-  public void processing() {
-    transition(RefundStatus.PROCESSING);
-  }
+  public void processing() { transition(RefundStatus.PROCESSING); }
 
   public void providerAccepted(String providerId) {
     providerRefundId = providerId;
