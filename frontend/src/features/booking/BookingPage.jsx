@@ -6,7 +6,6 @@ import {
   MenuItem, Paper, Stack, Step, StepLabel, Stepper, TextField, Typography, alpha
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import PrintIcon from '@mui/icons-material/Print';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';

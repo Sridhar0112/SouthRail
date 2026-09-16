@@ -2,6 +2,7 @@
 // No JSX, no data aggregation — only value -> display-string transforms.
 
 import { getApiErrorMessage, isAuthError } from '../../utils/apiErrors.js';
+import { getStatusColor } from '../../utils/bookingStatus.js';
 export { formatStatus, getStatusColor, normalizeBookingStatus as normalizeStatus } from '../../utils/bookingStatus.js';
 
 export function statusBarColor(status) {

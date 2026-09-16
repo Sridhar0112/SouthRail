@@ -207,7 +207,7 @@ export function AppThemeProvider({ children }) {
           defaultProps: { size: 'medium', disableElevation: true },
           styleOverrides: {
             root: {
-              minHeight: 36,
+              minHeight: 44,
               padding: '8px 18px',
               borderRadius: 10,
               fontSize: '0.85rem',
@@ -220,7 +220,7 @@ export function AppThemeProvider({ children }) {
                 borderRadius: 10
               }
             },
-            sizeSmall: { minHeight: 30, padding: '5px 12px', fontSize: '0.8rem' },
+            sizeSmall: { minHeight: 36, padding: '5px 12px', fontSize: '0.8rem' },
             sizeLarge: { minHeight: 44, padding: '10px 24px', fontSize: '0.95rem' },
             containedPrimary: {
               background: isLight
@@ -269,6 +269,8 @@ export function AppThemeProvider({ children }) {
         MuiIconButton: {
           styleOverrides: {
             root: {
+              minWidth: 44,
+              minHeight: 44,
               borderRadius: 10,
               transition: 'all 180ms ease',
               '&:focus-visible': {

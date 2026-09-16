@@ -26,7 +26,7 @@ import {
   Divider,
   alpha,
 } from "@mui/material";
-import { useTheme, lighten } from "@mui/material/styles";
+import { lighten, useTheme } from "@mui/material/styles";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
@@ -100,7 +100,6 @@ const initialFilters = { search: "", status: "ALL" };
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const theme = useTheme();
   const user = useSelector((state) => state.auth.user);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);

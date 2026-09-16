@@ -2,7 +2,6 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { motion } from 'framer-motion';
 import {
   Alert,
   Autocomplete,
@@ -32,7 +31,7 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import TrainIcon from '@mui/icons-material/Train';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
-import { EmptyState, ErrorState, LoadingState } from '../../components/StateFeedback.jsx';
+import { EmptyState, ErrorState } from '../../components/StateFeedback.jsx';
 import api from '../../services/api.js';
 import { getApiErrorMessage } from '../../utils/apiErrors.js';
 import { rememberSearch, searchTrains } from './trainSlice.js';

@@ -4,22 +4,17 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
-  CircularProgress,
-  Divider,
   Fade,
   Grid,
   Paper,
   Radio,
   Skeleton,
   Stack,
-  Tooltip,
   Typography,
   useTheme
 } from "@mui/material"
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline"
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong"
-import TrainIcon from "@mui/icons-material/Train"
 import { useNavigate } from "react-router-dom"
 
 export const PAYMENT_TIMEOUT_MS = 10 * 60 * 1000
