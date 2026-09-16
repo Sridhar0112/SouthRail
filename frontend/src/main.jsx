@@ -13,6 +13,7 @@ import "./styles.css";
 const HomePage = lazy(() => import("./features/trains/HomePage.jsx"));
 const LoginPage = lazy(() => import("./features/auth/LoginPage.jsx"));
 const RegisterPage = lazy(() => import("./features/auth/RegisterPage.jsx"));
+const OAuthCallbackPage = lazy(() => import("./features/auth/OAuthCallbackPage.jsx"));
 const ForgotPasswordPage = lazy(
   () => import("./features/auth/ForgotPasswordPage.jsx"),
 );
@@ -52,6 +53,7 @@ const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: "login", element: <LoginPage /> },
       { path: "register", element: <RegisterPage /> },
+      { path: "oauth/callback", element: <OAuthCallbackPage /> },
       { path: "forgot-password", element: <ForgotPasswordPage /> },
       { path: "reset-password", element: <ResetPasswordPage /> },
       { path: "verify-email", element: <VerifyEmailPage /> },

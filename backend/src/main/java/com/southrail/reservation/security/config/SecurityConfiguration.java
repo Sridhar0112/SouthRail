@@ -40,17 +40,22 @@ public class SecurityConfiguration {
 
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter,
-      ApiAuthenticationEntryPoint authenticationEntryPoint, ApiAccessDeniedHandler accessDeniedHandler) throws Exception {
+      ApiAuthenticationEntryPoint authenticationEntryPoint, ApiAccessDeniedHandler accessDeniedHandler,
+      com.southrail.reservation.security.oauth.OAuthLoginSuccessHandler oauthSuccessHandler,
+      com.southrail.reservation.security.oauth.OAuthLoginFailureHandler oauthFailureHandler) throws Exception {
     return http
         .csrf(csrf -> csrf.disable())
         .cors(cors -> {})
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+        .oauth2Login(oauth -> oauth.successHandler(oauthSuccessHandler).failureHandler(oauthFailureHandler))
         .exceptionHandling(exceptions -> exceptions
             .authenticationEntryPoint(authenticationEntryPoint)
             .accessDeniedHandler(accessDeniedHandler))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(
                 "/auth/**",
+                "/oauth2/**",
+                "/login/oauth2/**",
                 "/payments/webhooks/razorpay",
                 "/swagger-ui/**",
                 "/swagger-ui.html",

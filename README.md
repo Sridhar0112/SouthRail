@@ -211,3 +211,6 @@ No open-source license file is currently present. Until the owner selects and ad
 
 The checkout boundary is server-authoritative: `REVIEW → HOLD → PAY → CAPTURE → FINAL BOOKING`.
 An unpaid selection follows `HOLD → TIMEOUT → EXPIRE → RELEASE`; no PNR is issued until a captured payment is atomically finalized. Configure the hold window with `southrail.reservation-hold.duration` (environment variable `RESERVATION_HOLD_DURATION`, default `PT10M`).
+
+## Google sign-in
+Create a Google Cloud OAuth 2.0 **Web application** client and configure the consent screen for `openid`, `email`, and `profile`. Local frontend: `http://localhost:5173`; backend: `http://localhost:8080/api`; exact authorized redirect URI: `http://localhost:8080/api/login/oauth2/code/google`. A JavaScript origin is not required for this backend redirect flow. Set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `APP_FRONTEND_URL=http://localhost:5173`, and `CORS_ALLOWED_ORIGINS=http://localhost:5173`. For production, register `https://<backend-host>/api/login/oauth2/code/google` and use the exact HTTPS frontend URL. Never expose the secret in a `VITE_` variable.

@@ -14,6 +14,7 @@ import IconButton from '@mui/material/IconButton';
 
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import GoogleSignInButton from './GoogleSignInButton.jsx';
 
 function PasswordStrengthBar({ password }) {
   const score = useMemo(() => {
@@ -177,6 +178,7 @@ export default function RegisterPage() {
             <Button type="submit" variant="contained" startIcon={<PersonAddIcon />} disabled={loading} fullWidth sx={{ borderRadius: 2, py: 1.4 }}>
               {loading ? 'Creating account...' : 'Create account'}
             </Button>
+            <GoogleSignInButton />
             <Button component={Link} to="/login" variant="text" fullWidth sx={{ fontSize: '0.85rem' }}>
               Already have an account? Sign in
             </Button>

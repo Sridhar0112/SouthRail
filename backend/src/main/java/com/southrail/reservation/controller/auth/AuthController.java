@@ -33,6 +33,10 @@ public class AuthController {
   AuthDtos.AuthResponse refresh(@Valid @RequestBody AuthDtos.RefreshRequest request) {
     return authService.refresh(request);
   }
+  @PostMapping("/oauth/exchange")
+  AuthDtos.AuthResponse exchange(@Valid @RequestBody AuthDtos.OAuthExchangeRequest request) {
+    return authService.exchangeOAuthCode(request.getCode());
+  }
   @PostMapping("/resend-verification")
   ResponseEntity<Void> resendVerification(
           @Valid @RequestBody AuthDtos.ResendVerificationRequest request) {

@@ -38,8 +38,14 @@ public class User extends BaseEntity {
   @Column(nullable = false, length = 120)
   private String fullName;
 
-  @Column(nullable = false)
+  @Column
   private String passwordHash;
+
+  @Column(length = 20)
+  private String authProvider;
+
+  @Column(length = 255)
+  private String providerSubject;
 
   @Column(length = 15)
   private String phone;
