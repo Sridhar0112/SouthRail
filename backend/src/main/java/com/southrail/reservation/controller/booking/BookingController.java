@@ -13,14 +13,12 @@ import java.security.Principal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -41,16 +39,6 @@ public class BookingController {
     this.bookingCancellationService = bookingCancellationService;
     this.notificationService = notificationService;
     this.ticketPdfService = ticketPdfService;
-  }
-
-  @PostMapping("/bookings")
-  ResponseEntity<BookingDtos.BookingResponse> create(
-      Principal principal,
-      @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
-      @Valid @RequestBody BookingDtos.BookingRequest request) {
-
-    return ResponseEntity.status(HttpStatus.CREATED)
-        .body(bookingService.create(principal.getName(), idempotencyKey, request));
   }
 
   @PostMapping("/bookings/review")
@@ -90,19 +78,12 @@ public class BookingController {
   }
 
   @GetMapping("/bookings/{pnr}/ticket")
-  ResponseEntity<byte[]> downloadTicket(
-          Principal principal,
-          @PathVariable String pnr) {
-
-    byte[] pdf = ticketPdfService.generateTicket(
-            principal.getName(),
-            pnr);
-
+  ResponseEntity<byte[]> downloadTicket(Principal principal, @PathVariable String pnr) {
+    byte[] pdf = ticketPdfService.generateTicket(principal.getName(), pnr);
     return ResponseEntity.ok()
-            .header(
-                    HttpHeaders.CONTENT_DISPOSITION,
-                    "attachment; filename=\"SouthRail-Ticket-" + pnr + ".pdf\"")
-            .contentType(MediaType.APPLICATION_PDF)
-            .body(pdf);
+        .header(HttpHeaders.CONTENT_DISPOSITION,
+            "attachment; filename=\"SouthRail-Ticket-" + pnr + ".pdf\"")
+        .contentType(MediaType.APPLICATION_PDF)
+        .body(pdf);
   }
 }
