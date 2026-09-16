@@ -36,6 +36,10 @@ public class GoogleOAuthService {
     if (subject == null || subject.isBlank() || email.isBlank()) {
       throw new OAuthLoginException(OAuthLoginException.Reason.AUTHENTICATION_FAILED);
     }
+    // The unique index is the final invariant. This transaction-scoped lock also makes concurrent
+    // first callbacks deterministic because there is no user row available for a row lock yet.
+    users.lockExternalIdentity("GOOGLE:" + subject);
+    users.lockExternalIdentity("EMAIL:" + email);
     User user = users.findByAuthProviderAndProviderSubject("GOOGLE", subject).orElse(null);
     if (user == null) {
       if (users.existsByEmailIgnoreCase(email)) {

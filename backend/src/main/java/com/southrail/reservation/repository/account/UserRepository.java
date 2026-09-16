@@ -16,4 +16,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
   Optional<User> findByEmailIgnoreCaseForUpdate(@Param("email") String email);
   boolean existsByEmailIgnoreCase(String email);
   Optional<User> findByAuthProviderAndProviderSubject(String authProvider, String providerSubject);
+
+  /** Serializes creation for an identity that does not have a row to pessimistically lock yet. */
+  @Query(value = "select pg_advisory_xact_lock(hashtextextended(:identity, 0))", nativeQuery = true)
+  Object lockExternalIdentity(@Param("identity") String identity);
 }
