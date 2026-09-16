@@ -7,9 +7,7 @@ const savedUser = readSavedUser();
 export const login = createAsyncThunk('auth/login', async (payload, { rejectWithValue }) => {
   try {
     const { data } = await api.post('/auth/login', payload);
-    localStorage.setItem('southrail_access_token', data.accessToken || '');
-    localStorage.setItem('southrail_refresh_token', data.refreshToken || '');
-    localStorage.setItem('southrail_user', JSON.stringify(data.user || null));
+    storeAuthSession(data);
     return data.user || null;
   } catch (error) {
     return rejectWithValue(normalizeLoginError(error));
@@ -48,6 +46,10 @@ const authSlice = createSlice({
         ...action.payload
       };
       localStorage.setItem('southrail_user', JSON.stringify(state.user));
+    },
+    authenticated(state, action) {
+      state.user = action.payload;
+      state.error = null;
     }
   },
   extraReducers: (builder) => {
@@ -101,4 +103,11 @@ function readSavedUser() {
 }
 
 export const { logout, clearRegistrationResult, updateUser } = authSlice.actions;
+export const { authenticated } = authSlice.actions;
+
+export function storeAuthSession(data) {
+  localStorage.setItem('southrail_access_token', data.accessToken || '');
+  localStorage.setItem('southrail_refresh_token', data.refreshToken || '');
+  localStorage.setItem('southrail_user', JSON.stringify(data.user || null));
+}
 export default authSlice.reducer;

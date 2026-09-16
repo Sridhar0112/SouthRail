@@ -76,6 +76,7 @@ public class ProfileService {
   @Transactional
   public void deleteAccount(String email, @NotBlank(message = "Password is required") String password) {
     User user = findUser(email);
+    requireLocalPassword(user);
 
     if (!passwordEncoder.matches(password, user.getPasswordHash())) {
       throw new ApiException(
@@ -102,6 +103,7 @@ public class ProfileService {
           ProfileDtos.ChangePasswordRequest request) {
 
     User user = findUser(email);
+    requireLocalPassword(user);
 
     if (!passwordEncoder.matches(
             request.getCurrentPassword(),
@@ -135,5 +137,12 @@ public class ProfileService {
 
     refreshTokens.revokeActiveTokens(user);
     accountTokens.markAllOpenTokensUsed(user, Instant.now());
+  }
+
+  private void requireLocalPassword(User user) {
+    if (user.getPasswordHash() == null) {
+      throw new ApiException(HttpStatus.BAD_REQUEST,
+          "Password authentication is not available for this account");
+    }
   }
 }
