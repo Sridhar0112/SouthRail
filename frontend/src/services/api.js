@@ -21,7 +21,7 @@ api.interceptors.response.use(
   async (error) => {
     const original = error.config;
     const status = error.response?.status;
-    const canRetryAuth = status === 401 && !original?._retry && !isAuthRequest(original?.url);
+    const canRetryAuth = status === 401 && Boolean(original) && !original._retry && !isAuthRequest(original.url);
     if (canRetryAuth) {
       original._retry = true;
       try {
@@ -47,6 +47,9 @@ function refreshAccessToken() {
     refreshPromise = axios.post(`${api.defaults.baseURL}/auth/refresh`, { refreshToken }, {
       timeout: api.defaults.timeout
     }).then(({ data }) => {
+      if (!data?.accessToken || !data?.refreshToken) {
+        throw new Error('The authentication response was incomplete.');
+      }
       localStorage.setItem('southrail_access_token', data.accessToken);
       localStorage.setItem('southrail_refresh_token', data.refreshToken);
       if (data.user) localStorage.setItem('southrail_user', JSON.stringify(data.user));

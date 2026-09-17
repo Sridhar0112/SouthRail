@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Box,
@@ -55,6 +55,7 @@ export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
+  const verificationRequestRef = useRef(null);
 
   useEffect(() => {
     let active = true;
@@ -64,10 +65,12 @@ export default function VerifyEmailPage() {
       setStatus('missing');
       return;
     }
+    window.history.replaceState({}, '', window.location.pathname);
 
+    verificationRequestRef.current ||= api.post('/auth/verify-email', { token });
     (async () => {
       try {
-        await api.post('/auth/verify-email', { token });
+        await verificationRequestRef.current;
         if (!active) return;
         setStatus('verified');
         redirectTimer = setTimeout(() => {
@@ -89,7 +92,7 @@ export default function VerifyEmailPage() {
       active = false;
       if (redirectTimer) clearTimeout(redirectTimer);
     };
-  }, [searchParams]);
+  }, [navigate, searchParams]);
 
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.loading;
   const Icon = cfg.icon;

@@ -59,6 +59,7 @@ import SendIcon from '@mui/icons-material/Send';
 import LockIcon from '@mui/icons-material/Lock';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import api from '../../services/api.js';
+import { getApiErrorMessage } from '../../utils/apiErrors.js';
 
 const STATUS_OPTIONS = ['ALL', 'OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'];
 
@@ -93,7 +94,9 @@ function getStatusMainColor(status, theme) {
 
 function formatDate(value) {
   if (!value) return '—';
-  return new Date(value).toLocaleString('en-IN', {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleString('en-IN', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -104,7 +107,9 @@ function formatDate(value) {
 
 function formatDateShort(value) {
   if (!value) return '—';
-  return new Date(value).toLocaleDateString('en-IN', {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleDateString('en-IN', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -113,7 +118,9 @@ function formatDateShort(value) {
 
 function formatTime(value) {
   if (!value) return '—';
-  return new Date(value).toLocaleTimeString('en-IN', {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleTimeString('en-IN', {
     hour: '2-digit',
     minute: '2-digit',
   });
@@ -713,6 +720,7 @@ function TicketDrawer({
             </Stack>
           ) : (
             <TextField
+              label="Reply to customer"
               fullWidth
               multiline
               minRows={2}
@@ -887,8 +895,8 @@ export default function AdminSupportTicketsPage() {
     try {
       const { data } = await api.get('/support/admin/tickets');
       setTickets(Array.isArray(data) ? data : []);
-    } catch {
-      setError('Unable to load support tickets right now.');
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, 'Unable to load support tickets right now.'));
     } finally {
       setLoading(false);
     }
@@ -899,8 +907,9 @@ export default function AdminSupportTicketsPage() {
       setMessageLoading(true);
       const { data } = await api.get(`/support/admin/tickets/${ticketId}/messages`);
       setMessages(data || []);
-    } catch {
+    } catch (requestError) {
       setMessages([]);
+      setSnackbar({ open: true, message: getApiErrorMessage(requestError, 'Unable to load this conversation.'), severity: 'error' });
     } finally {
       setMessageLoading(false);
     }
@@ -956,8 +965,8 @@ export default function AdminSupportTicketsPage() {
       });
       setReplyMessage('');
       await loadMessages(selectedTicket.id);
-    } catch {
-      setSnackbar({ open: true, message: 'Failed to send reply', severity: 'error' });
+    } catch (requestError) {
+      setSnackbar({ open: true, message: getApiErrorMessage(requestError, 'Failed to send reply. Please try again.'), severity: 'error' });
     } finally {
       setSendingReply(false);
     }
@@ -978,8 +987,8 @@ export default function AdminSupportTicketsPage() {
       if (selectedTicket?.id === ticketId) {
         setSelectedTicket((prev) => ({ ...prev, status }));
       }
-    } catch {
-      setSnackbar({ open: true, message: 'Failed to update ticket status', severity: 'error' });
+    } catch (requestError) {
+      setSnackbar({ open: true, message: getApiErrorMessage(requestError, 'Failed to update ticket status. Please try again.'), severity: 'error' });
     } finally {
       setStatusLoading(false);
     }
@@ -1111,6 +1120,7 @@ export default function AdminSupportTicketsPage() {
             <Box sx={{ p: { xs: 2, md: 2.5 } }}>
               <Stack direction={{ xs: 'column', lg: 'row' }} justifyContent="space-between" spacing={2}>
                 <TextField
+                  label="Search support tickets"
                   placeholder="Search by ticket ID, customer, email, topic or booking ref…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}

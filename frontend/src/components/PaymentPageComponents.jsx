@@ -6,8 +6,6 @@ import {
   CardContent,
   Fade,
   Grid,
-  Paper,
-  Radio,
   Skeleton,
   Stack,
   Typography,
@@ -18,12 +16,6 @@ import ReceiptLongIcon from "@mui/icons-material/ReceiptLong"
 import { useNavigate } from "react-router-dom"
 
 export const PAYMENT_TIMEOUT_MS = 10 * 60 * 1000
-
-export const UPI_OPTIONS = [
-  { id: "gpay", label: "Google Pay", icon: "G" },
-  { id: "phonepe", label: "PhonePe", icon: "P" },
-  { id: "paytm", label: "Paytm", icon: "T" }
-]
 
 export function loadRazorpayScript() {
   return new Promise(resolve => {
@@ -41,8 +33,8 @@ export function loadRazorpayScript() {
 
 export function formatRupees(rupees) {
   const amount = Number(rupees)
-  if (!Number.isFinite(amount)) return '0'
-  return Math.round(amount).toLocaleString("en-IN")
+  if (!Number.isFinite(amount)) return '0.00'
+  return amount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 export function SectionCard({ icon, title, children }) {
@@ -134,84 +126,6 @@ export function FareRow({ label, amount, bold, large }) {
         ₹{formatRupees(amount)}
       </Typography>
     </Box>
-  )
-}
-
-export function PaymentMethodOption({
-  value,
-  selected,
-  icon,
-  label,
-  sublabel,
-  onChange
-}) {
-  const theme = useTheme()
-  return (
-    <Paper
-      variant="outlined"
-      onClick={() => onChange(value)}
-      sx={{
-        px: 1.5,
-        py: 1.25,
-        cursor: "pointer",
-        border: selected
-          ? `2px solid ${theme.palette.primary.main}`
-          : `1px solid ${theme.palette.custom?.cardBorder ??
-              theme.palette.divider}`,
-        borderRadius: 1.5,
-        bgcolor: selected
-          ? alpha(theme.palette.primary.main, 0.05)
-          : theme.palette.background.paper,
-        transition: "all 0.15s ease",
-        "&:hover": {
-          borderColor: theme.palette.primary.main,
-          bgcolor: alpha(theme.palette.primary.main, 0.04)
-        }
-      }}
-    >
-      <Stack direction="row" alignItems="center" spacing={1.5}>
-        <Radio
-          checked={selected}
-          onChange={() => onChange(value)}
-          size="small"
-          sx={{
-            p: 0,
-            color: "text.secondary",
-            "&.Mui-checked": { color: "primary.main" }
-          }}
-        />
-        <Box
-          sx={{
-            width: 32,
-            height: 32,
-            borderRadius: 1,
-            bgcolor: alpha(theme.palette.primary.main, 0.1),
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: theme.palette.primary.main,
-            fontSize: 18,
-            flexShrink: 0
-          }}
-        >
-          {icon}
-        </Box>
-        <Box minWidth={0}>
-          <Typography variant="body2" fontWeight={700} noWrap>
-            {label}
-          </Typography>
-          {sublabel && (
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              display="block"
-            >
-              {sublabel}
-            </Typography>
-          )}
-        </Box>
-      </Stack>
-    </Paper>
   )
 }
 

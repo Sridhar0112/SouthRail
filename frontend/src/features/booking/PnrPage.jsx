@@ -45,6 +45,7 @@ export default function PnrPage() {
   const [loading, setLoading] = useState(false);
   const [cancellationOpen, setCancellationOpen] = useState(false);
   const searchedQueryRef = useRef("");
+  const requestIdRef = useRef(0);
   const inputRef = useRef(null);
   const user = useSelector((state) => state.auth.user);
 
@@ -54,18 +55,21 @@ export default function PnrPage() {
   const search = useCallback(async (value, options = {}) => {
     const trimmedPnr = String(value || "").trim();
     const issue = validatePnr(trimmedPnr);
+    const requestId = ++requestIdRef.current;
     setTouched(true);
     if (issue) { setError(""); setResult(null); return; }
     setError(""); setResult(null); setLoading(true);
     try {
       const { data } = await api.get(`/pnr/${trimmedPnr}`);
+      if (requestId !== requestIdRef.current) return;
       setResult(data);
       searchedQueryRef.current = trimmedPnr;
       if (options.updateUrl !== false) setSearchParams({ pnr: trimmedPnr });
     } catch (apiError) {
+      if (requestId !== requestIdRef.current) return;
       setResult(null);
       setError(apiError.response?.status === 404 ? "No booking found for this PNR." : getApiErrorMessage(apiError, "No booking found for this PNR."));
-    } finally { setLoading(false); }
+    } finally { if (requestId === requestIdRef.current) setLoading(false); }
   }, [setSearchParams]);
 
   useEffect(() => {
@@ -73,7 +77,7 @@ export default function PnrPage() {
     if (queryPnr && queryPnr !== searchedQueryRef.current) { setPnr(queryPnr); search(queryPnr, { updateUrl: false }); }
   }, [searchParams, search]);
 
-  const clearSearch = () => { setPnr(""); setTouched(false); setResult(null); setError(""); setCancellationOpen(false); searchedQueryRef.current = ""; setSearchParams({}); setTimeout(() => inputRef.current?.focus(), 100); };
+  const clearSearch = () => { requestIdRef.current += 1; setPnr(""); setTouched(false); setResult(null); setError(""); setLoading(false); setCancellationOpen(false); searchedQueryRef.current = ""; setSearchParams({}); setTimeout(() => inputRef.current?.focus(), 100); };
   const refreshCurrentPnr = () => { const currentPnr = result?.pnr || searchedQueryRef.current || pnr; if (currentPnr) search(currentPnr, { updateUrl: false }); };
 
   return (

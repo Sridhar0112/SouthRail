@@ -163,6 +163,7 @@ export default function LoginPage() {
           <Stack spacing={2}>
             <TextField
               label="Email"
+              type="email"
               placeholder="you@example.com"
               autoComplete="email"
               error={!!errors.email}
@@ -170,7 +171,7 @@ export default function LoginPage() {
               slotProps={{
                 input: { startAdornment: <InputAdornment position="start"><EmailIcon fontSize="small" color="disabled" /></InputAdornment> }
               }}
-              {...register("email", { required: "Email is required" })}
+              {...register("email", { required: "Email is required", pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Enter a valid email address" } })}
             />
             <TextField
               label="Password"

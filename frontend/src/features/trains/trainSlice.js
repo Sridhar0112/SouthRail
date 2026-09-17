@@ -18,7 +18,8 @@ const trainSlice = createSlice({
     selectedSearch: null,
     hasSearched: false,
     loading: false,
-    error: null
+    error: null,
+    currentRequestId: null
   },
   reducers: {
     rememberSearch(state, action) {
@@ -27,18 +28,23 @@ const trainSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(searchTrains.pending, (state) => {
+      .addCase(searchTrains.pending, (state, action) => {
         state.loading = true;
+        state.currentRequestId = action.meta.requestId;
         state.error = null;
         state.results = [];
       })
       .addCase(searchTrains.fulfilled, (state, action) => {
+        if (state.currentRequestId !== action.meta.requestId) return;
         state.loading = false;
+        state.currentRequestId = null;
         state.results = action.payload;
         state.hasSearched = true;
       })
       .addCase(searchTrains.rejected, (state, action) => {
+        if (state.currentRequestId !== action.meta.requestId) return;
         state.loading = false;
+        state.currentRequestId = null;
         state.hasSearched = true;
         state.results = [];
         state.error = action.payload || 'Unable to search trains right now. Please try again.';
