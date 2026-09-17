@@ -106,8 +106,14 @@ export const { logout, clearRegistrationResult, updateUser } = authSlice.actions
 export const { authenticated } = authSlice.actions;
 
 export function storeAuthSession(data) {
-  localStorage.setItem('southrail_access_token', data.accessToken || '');
-  localStorage.setItem('southrail_refresh_token', data.refreshToken || '');
+  if (!data?.accessToken || !data?.refreshToken || !data?.user) {
+    clearAuthStorage();
+    const error = new Error('The authentication response was incomplete. Please sign in again.');
+    error.code = 'AUTH_RESPONSE_INVALID';
+    throw error;
+  }
+  localStorage.setItem('southrail_access_token', data.accessToken);
+  localStorage.setItem('southrail_refresh_token', data.refreshToken);
   localStorage.setItem('southrail_user', JSON.stringify(data.user || null));
 }
 export default authSlice.reducer;

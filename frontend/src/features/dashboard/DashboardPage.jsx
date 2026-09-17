@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import TablePagination from "@mui/material/TablePagination";
@@ -115,13 +115,10 @@ export default function DashboardPage() {
   const [cancellationOpen, setCancellationOpen] = useState(false);
 
   useEffect(() => {
-    loadDashboard();
-  }, [user]);
-  useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const loadDashboard = () => {
+  const loadDashboard = useCallback(() => {
     setLoading({ history: true, notifications: true });
     setErrors({ history: "", notifications: "" });
     setHistory(null);
@@ -156,7 +153,11 @@ export default function DashboardPage() {
         }));
       })
       .finally(() => setLoading((c) => ({ ...c, notifications: false })));
-  };
+  }, []);
+
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard, user]);
 
   const openCancellation = (pnr) => {
     setCancellationPnr(pnr || "");

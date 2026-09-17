@@ -81,7 +81,7 @@ function SuccessPanel({ onNavigate }) {
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1.5 }}>
         <CircularProgress size={14} thickness={5} color="primary" />
         <Typography variant="body2" color="text.secondary">
-          Redirecting to login in 3 seconds\u2026
+          Redirecting to login in 5 seconds\u2026
         </Typography>
       </Box>
       <Button variant="contained" fullWidth onClick={onNavigate} sx={{ borderRadius: 2, py: 1.4 }}>
@@ -104,6 +104,10 @@ export default function ResetPasswordPage() {
   const navigate = useNavigate();
   const missingToken = !token;
   const redirectTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (token) window.history.replaceState({}, '', window.location.pathname);
+  }, [token]);
 
   const submit = async (values) => {
     setError(''); setLoading(true);

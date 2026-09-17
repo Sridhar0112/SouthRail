@@ -234,7 +234,7 @@ function formatMoney(value) {
   if (!Number.isFinite(amount)) {
     return 'Not available';
   }
-  return `₹ ${Math.round(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `₹ ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatPercentage(value) {

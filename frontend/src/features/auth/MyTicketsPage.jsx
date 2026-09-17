@@ -34,6 +34,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import api from '../../services/api.js';
+import { getApiErrorMessage } from '../../utils/apiErrors.js';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 // All values, keys, and filtering semantics below are UNCHANGED from the
@@ -89,7 +90,9 @@ const QUICK_FILTERS = [
 
 function formatDate(iso) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleString('en-IN', {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleString('en-IN', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -722,7 +725,7 @@ export default function MyTicketsPage() {
       const { data } = await api.get('/support/my-tickets');
       setTickets(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err?.response?.data?.message || 'Failed to load tickets. Please try again.');
+      setError(getApiErrorMessage(err, 'Failed to load tickets. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -809,6 +812,7 @@ export default function MyTicketsPage() {
               >
                 <Stack spacing={1.75}>
                   <TextField
+                    label="Search support tickets"
                     placeholder="Search by ticket ID, topic, or description…"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}

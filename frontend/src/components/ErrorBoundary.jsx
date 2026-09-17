@@ -2,6 +2,7 @@ import { Box, Button, Container, Stack, Typography } from '@mui/material';
 import { isRouteErrorResponse, Link, useRouteError } from 'react-router-dom';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import HomeIcon from '@mui/icons-material/Home';
+import { getApiErrorMessage } from '../utils/apiErrors.js';
 
 export function ErrorBoundary() {
   const error = useRouteError();
@@ -9,7 +10,7 @@ export function ErrorBoundary() {
   let message = 'The page could not be loaded. Please try again.';
   if (isRouteErrorResponse(error)) {
     title = `${error.status} ${error.statusText}`;
-    message = error.data?.message || message;
+    message = getApiErrorMessage({ response: { status: error.status, data: error.data } }, message);
   } else if (error instanceof Error) {
     // Runtime exception details can contain implementation or account data.
     // Keep them in developer tooling rather than rendering them to passengers.

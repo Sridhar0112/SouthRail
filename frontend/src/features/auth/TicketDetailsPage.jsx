@@ -31,6 +31,7 @@ import ConfirmationNumberOutlinedIcon from '@mui/icons-material/ConfirmationNumb
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import api from '../../services/api.js';
+import { getApiErrorMessage } from '../../utils/apiErrors.js';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -49,7 +50,9 @@ const MAX_MESSAGE_LENGTH = 2000;
 
 function formatDate(iso) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleString('en-IN', {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleString('en-IN', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -181,7 +184,7 @@ export default function TicketDetailsPage() {
       const { data } = await api.get(`/support/my-tickets/${ticketId}`);
       setTicket(data || null);
     } catch (err) {
-      setTicketError(err?.response?.data?.message || 'Failed to load ticket details.');
+      setTicketError(getApiErrorMessage(err, 'Failed to load ticket details.'));
     } finally {
       setTicketLoading(false);
     }
@@ -195,7 +198,7 @@ export default function TicketDetailsPage() {
       const { data } = await api.get(`/support/my-tickets/${ticketId}/messages`);
       setMessages(Array.isArray(data) ? data : []);
     } catch (err) {
-      setMessagesError(err?.response?.data?.message || 'Failed to load conversation.');
+      setMessagesError(getApiErrorMessage(err, 'Failed to load conversation.'));
     } finally {
       if (!silent) setMessagesLoading(false);
     }
@@ -234,7 +237,7 @@ export default function TicketDetailsPage() {
       // Auto-refresh conversation after a successful reply.
       await fetchMessages({ silent: true });
     } catch (err) {
-      setSendError(err?.response?.data?.message || 'Failed to send your message. Please try again.');
+      setSendError(getApiErrorMessage(err, 'Failed to send your message. Please try again.'));
     } finally {
       setSending(false);
     }
@@ -525,10 +528,8 @@ export default function TicketDetailsPage() {
                           {sendError}
                         </Alert>
                       )}
-                      <Typography variant="subtitle2" fontWeight={700}>
-  Reply to Support Team
-</Typography>
                       <TextField
+                        label="Reply to support team"
                         inputRef={replyInputRef}
                         placeholder="Reply to Support Team"
                         value={draft}

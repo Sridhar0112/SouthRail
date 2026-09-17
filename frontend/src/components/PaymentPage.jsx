@@ -12,7 +12,6 @@ import {
   Container,
   Divider,
   Grid,
-  RadioGroup,
   Stack,
   Tooltip,
   Typography,
@@ -24,22 +23,16 @@ import LockIcon from "@mui/icons-material/Lock"
 import TrainIcon from "@mui/icons-material/Train"
 import PersonIcon from "@mui/icons-material/Person"
 import PaymentIcon from "@mui/icons-material/Payment"
-import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid"
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong"
-import CreditCardIcon from "@mui/icons-material/CreditCard"
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance"
-import WalletIcon from "@mui/icons-material/Wallet"
 import RefreshIcon from "@mui/icons-material/Refresh"
 import ScheduleIcon from "@mui/icons-material/Schedule"
 import api from "../services/api.js"
 import { getApiErrorMessage } from "../utils/apiErrors.js"
 import {
   PAYMENT_TIMEOUT_MS,
-  UPI_OPTIONS,
   loadRazorpayScript,
   SectionCard,
   FareRow,
-  PaymentMethodOption,
   SuccessAnimation,
   PaymentSkeleton,
   formatRupees
@@ -59,7 +52,6 @@ export default function PaymentPage() {
   const [loadingBooking, setLoadingBooking] = useState(true)
   const [bookingError, setBookingError] = useState(null)
 
-  const [paymentMethod, setPaymentMethod] = useState("upi")
   const [paymentState, setPaymentState] = useState("idle")
   const [errorMessage, setErrorMessage] = useState(null)
   const [ticketId, setTicketId] = useState()
@@ -70,6 +62,8 @@ export default function PaymentPage() {
   const timeoutRef = useRef(null)
   const pollTimerRef = useRef(null)
   const pollingRef = useRef(false)
+  const paymentActionRef = useRef(false)
+  const expiryRefreshRef = useRef(false)
 
   // ── Fetch booking ──────────────────────────────────────────────────────────
 
@@ -83,9 +77,12 @@ export default function PaymentPage() {
     api.get(`/reservation-holds/${holdId}`)
       .then(({ data }) => {
         setBooking(data)
-        if (data.status === "CONFIRMED") {
+        if (data.status === "CONFIRMED" && data.pnr) {
           setTicketId(data.pnr)
           setPaymentState("success")
+        } else if (data.status === "CONFIRMED") {
+          setPaymentState("status_check_available")
+          setErrorMessage("Payment was received, but the ticket is still being finalized. Check the status again shortly.")
         } else if (data.status === "EXPIRED") {
           setPaymentState("expired")
           setErrorMessage("Your reservation hold has expired. The seats have been released. Please search again to continue booking.")
@@ -106,6 +103,7 @@ export default function PaymentPage() {
     }
     if (data.status === "EXPIRED") {
       razorpayRef.current?.close()
+      paymentActionRef.current = false
       setPaymentState("expired")
       setErrorMessage("Your reservation hold has expired. The seats have been released. Please search again to continue booking.")
     }
@@ -117,7 +115,10 @@ export default function PaymentPage() {
     const update = () => {
       const remaining = Math.max(0, Math.ceil((new Date(booking.expiresAt).getTime() - Date.now()) / 1000))
       setSecondsRemaining(remaining)
-      if (remaining === 0) refreshConfirmedHold()
+      if (remaining === 0 && !expiryRefreshRef.current) {
+        expiryRefreshRef.current = true
+        refreshConfirmedHold().finally(() => { expiryRefreshRef.current = false })
+      }
     }
     update()
     const timer = setInterval(update, 1000)
@@ -150,14 +151,17 @@ export default function PaymentPage() {
         const { data } = await api.get(`/payments/${paymentId}`)
         if (!pollingRef.current) return
         if (data.status === "CAPTURED") {
-          pollingRef.current = false
           const confirmed = await refreshConfirmedHold()
-          if (confirmed) setPaymentState("success")
-          else pollPaymentStatus(paymentId)
-          return
+          if (confirmed) {
+            pollingRef.current = false
+            paymentActionRef.current = false
+            setPaymentState("success")
+            return
+          }
         }
         if (data.status === "FAILED") {
           pollingRef.current = false
+          paymentActionRef.current = false
           sessionStorage.removeItem(`payment-key:${booking.holdId}`)
           setErrorMessage("Payment failed. Please retry with a new payment attempt.")
           setPaymentState("failed")
@@ -170,6 +174,7 @@ export default function PaymentPage() {
       if (!pollingRef.current) return
       if (Date.now() >= deadline) {
         pollingRef.current = false
+        paymentActionRef.current = false
         setErrorMessage("Payment is still processing. Please check again shortly.")
         setPaymentState("status_check_available")
         return
@@ -181,7 +186,8 @@ export default function PaymentPage() {
   }, [booking, refreshConfirmedHold])
 
   const handlePay = useCallback(async () => {
-    if (!booking) return
+    if (!booking || paymentActionRef.current) return
+    paymentActionRef.current = true
     setErrorMessage(null)
     setPaymentState("creating_order")
 
@@ -192,6 +198,7 @@ export default function PaymentPage() {
         "Payment gateway failed to load. Please refresh and try again."
       )
       setPaymentState("failed")
+      paymentActionRef.current = false
       return
     }
 
@@ -216,7 +223,7 @@ export default function PaymentPage() {
           setRecoverablePaymentId(activePayment.paymentId)
           if (activePayment.status === "CAPTURED") {
             const confirmed = await refreshConfirmedHold()
-            if (confirmed) setPaymentState("success")
+            if (confirmed) { paymentActionRef.current = false; setPaymentState("success") }
             else pollPaymentStatus(activePayment.paymentId)
             return
           }
@@ -236,6 +243,7 @@ export default function PaymentPage() {
             getApiErrorMessage(recoveryError, "The active payment attempt could not be recovered. Please try again shortly.")
           )
           setPaymentState("failed")
+          paymentActionRef.current = false
           return
         }
       } else {
@@ -246,6 +254,7 @@ export default function PaymentPage() {
           getApiErrorMessage(err, "Could not initiate payment. Please try again.")
         )
         setPaymentState("failed")
+        paymentActionRef.current = false
         return
       }
     }
@@ -253,6 +262,7 @@ export default function PaymentPage() {
     // 3. Start payment timeout watchdog
     timeoutRef.current = setTimeout(() => {
       razorpayRef.current?.close()
+      paymentActionRef.current = false
       setPaymentState("timeout")
       setErrorMessage("Payment session expired. Please try again.")
     }, PAYMENT_TIMEOUT_MS)
@@ -268,13 +278,14 @@ export default function PaymentPage() {
       description: `${booking.trainName} · ${booking.sourceCode} → ${booking.destinationCode}`,
       order_id: orderData.razorpayOrderId,
       prefill: {
-        name: booking.passengers[0]?.name
+        name: booking.passengers?.[0]?.name
       },
       theme: { color: "#064E3B" },
       modal: {
         ondismiss: () => {
           if (timeoutRef.current) clearTimeout(timeoutRef.current)
           setPaymentState("idle")
+          paymentActionRef.current = false
         },
         escape: false
       },
@@ -293,7 +304,7 @@ export default function PaymentPage() {
 
           if (result.status === "CAPTURED") {
             const confirmed = await refreshConfirmedHold()
-            if (confirmed) setPaymentState("success")
+            if (confirmed) { paymentActionRef.current = false; setPaymentState("success") }
             else pollPaymentStatus(orderData.paymentId)
           } else if (result.status === "AUTHORIZED" || result.status === "PENDING") {
             pollPaymentStatus(orderData.paymentId)
@@ -301,6 +312,7 @@ export default function PaymentPage() {
             sessionStorage.removeItem(`payment-key:${booking.holdId}`)
             setErrorMessage("Payment failed. Please retry with a new payment attempt.")
             setPaymentState("failed")
+            paymentActionRef.current = false
           } else {
             throw new Error(
               "Payment verification failed. Contact support with your payment ID."
@@ -311,6 +323,7 @@ export default function PaymentPage() {
             getApiErrorMessage(err, "Verification could not be completed. Check the payment status before retrying.")
           )
           setPaymentState("failed")
+          paymentActionRef.current = false
         }
       }
     }
@@ -324,11 +337,13 @@ export default function PaymentPage() {
         "Payment was declined. Please try a different payment method."
       )
       setPaymentState("failed")
+      paymentActionRef.current = false
     })
     rzp.open()
   }, [booking, pollPaymentStatus, refreshConfirmedHold])
 
   const handleRetry = useCallback(() => {
+    paymentActionRef.current = false
     setPaymentState("idle")
     setErrorMessage(null)
   }, [])
@@ -340,7 +355,7 @@ export default function PaymentPage() {
       const { data } = await api.get(`/payments/${recoverablePaymentId}`)
       if (data.status === "CAPTURED") {
         const confirmed = await refreshConfirmedHold()
-        if (confirmed) setPaymentState("success")
+        if (confirmed) { paymentActionRef.current = false; setPaymentState("success") }
         else pollPaymentStatus(recoverablePaymentId)
       } else if (data.status === "FAILED") {
         sessionStorage.removeItem(`payment-key:${booking.holdId}`)
@@ -586,7 +601,7 @@ export default function PaymentPage() {
                 icon={<PersonIcon fontSize="small" />}
                 title="Passenger details"
               >
-                {booking.passengers.map((p, idx) => (
+                {(booking.passengers || []).map((p, idx) => (
                   <Box
                     key={idx}
                     sx={{
@@ -660,102 +675,12 @@ export default function PaymentPage() {
                 }}
               >
                 <CardContent sx={{ p: { xs: 1.5, sm: 2.5 } }}>
-                  <Typography variant="h6" fontWeight={800} mb={2}>
-                    Choose payment method
+                  <Typography variant="h6" fontWeight={800} mb={1}>
+                    Secure checkout
                   </Typography>
-
-                  {/* UPI */}
-                  <Typography
-                    variant="caption"
-                    fontWeight={700}
-                    color="text.secondary"
-                    display="block"
-                    mb={0.75}
-                    sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}
-                  >
-                    UPI
-                  </Typography>
-                  <RadioGroup
-                    value={paymentMethod}
-                    onChange={(_, v) => setPaymentMethod(v)}
-                  >
-                    <Stack spacing={0.75} mb={1.5}>
-                      <PaymentMethodOption
-                        value="upi"
-                        selected={paymentMethod === "upi"}
-                        icon={<PhoneAndroidIcon sx={{ fontSize: 18 }} />}
-                        label="UPI"
-                        sublabel="Google Pay, PhonePe, Paytm & more"
-                        onChange={setPaymentMethod}
-                      />
-                      {paymentMethod === "upi" && (
-                        <Stack direction="row" spacing={0.75} px={0.5}>
-                          {UPI_OPTIONS.map(opt => (
-                            <Chip
-                              key={opt.id}
-                              icon={<span style={{ fontSize: 14, fontWeight: 700 }}>{opt.icon}</span>}
-                              label={opt.label}
-                              size="small"
-                              variant="outlined"
-                              sx={{ fontWeight: 600 }}
-                            />
-                          ))}
-                        </Stack>
-                      )}
-                    </Stack>
-
-                    {/* Cards */}
-                    <Typography
-                      variant="caption"
-                      fontWeight={700}
-                      color="text.secondary"
-                      display="block"
-                      mb={0.75}
-                      sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}
-                    >
-                      Cards
-                    </Typography>
-                    <Stack spacing={0.75} mb={1.5}>
-                      <PaymentMethodOption
-                        value="card"
-                        selected={paymentMethod === "card"}
-                        icon={<CreditCardIcon sx={{ fontSize: 18 }} />}
-                        label="Debit / Credit card"
-                        sublabel="Visa, Mastercard, RuPay"
-                        onChange={setPaymentMethod}
-                      />
-                    </Stack>
-
-                    {/* Net banking */}
-                    <Typography
-                      variant="caption"
-                      fontWeight={700}
-                      color="text.secondary"
-                      display="block"
-                      mb={0.75}
-                      sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}
-                    >
-                      Net banking & wallet
-                    </Typography>
-                    <Stack spacing={0.75} mb={2}>
-                      <PaymentMethodOption
-                        value="netbanking"
-                        selected={paymentMethod === "netbanking"}
-                        icon={<AccountBalanceIcon sx={{ fontSize: 18 }} />}
-                        label="Net banking"
-                        sublabel="All major banks supported"
-                        onChange={setPaymentMethod}
-                      />
-                      <PaymentMethodOption
-                        value="wallet"
-                        selected={paymentMethod === "wallet"}
-                        icon={<WalletIcon sx={{ fontSize: 18 }} />}
-                        label="Wallet"
-                        sublabel="Mobikwik, Freecharge & more"
-                        onChange={setPaymentMethod}
-                      />
-                    </Stack>
-                  </RadioGroup>
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    Continue to Razorpay to choose from the payment methods currently available for this order. SouthRail never stores your card, bank, or UPI credentials.
+                  </Alert>
 
                   <Divider sx={{ mb: 2 }} />
 
@@ -795,16 +720,19 @@ export default function PaymentPage() {
                     <Button fullWidth variant="contained" size="large" onClick={() => navigate("/")}>
                       Search trains again
                     </Button>
-                  ) : paymentState === "status_check_available" ? (
+                  ) : paymentState === "status_check_available" && recoverablePaymentId ? (
                     <Button
                       fullWidth
                       variant="contained"
                       size="large"
                       onClick={handleCheckStatus}
-                      disabled={!recoverablePaymentId}
                       sx={{ py: 1.5, fontWeight: 800, borderRadius: 2, minHeight: 52 }}
                     >
                       Check payment status
+                    </Button>
+                  ) : paymentState === "status_check_available" ? (
+                    <Button fullWidth variant="contained" size="large" onClick={() => navigate("/dashboard")}>
+                      View my bookings
                     </Button>
                   ) : paymentState !== "failed" && paymentState !== "timeout" ? (
                     <Button

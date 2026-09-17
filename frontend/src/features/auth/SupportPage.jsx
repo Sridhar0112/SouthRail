@@ -17,6 +17,7 @@ import {
   Typography,
 } from '@mui/material';
 import api from '../../services/api.js';
+import { getApiErrorMessage } from '../../utils/apiErrors.js';
 import TrainIcon from '@mui/icons-material/Train';
 import SearchIcon from '@mui/icons-material/Search';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -28,9 +29,6 @@ import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined
 import TrainOutlinedIcon from '@mui/icons-material/TrainOutlined';
 import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
-import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
@@ -65,12 +63,12 @@ const FAQ_ITEMS = [
   {
     id: 4, category: 'account', icon: AccountCircleOutlinedIcon,
     question: 'How do I update my email address or phone number?',
-    answer: 'Go to Account Settings → Personal details. You can update your email or phone number there. Changing your email will require re-verification — we\'ll send a link to your new address. Your old email remains active until the new one is confirmed.',
+    answer: 'Go to Account Settings → Personal details to update your name or phone number. Email-address changes are not currently supported. Contact SouthRail support if you no longer have access to your registered email.',
   },
   {
     id: 5, category: 'bookings', icon: ConfirmationNumberOutlinedIcon,
     question: 'How do I cancel or modify a booking?',
-    answer: 'Open My Bookings, find the trip, and select "Modify" or "Cancel." You can cancel eligible Confirmed, RAC, and Waitlisted bookings through SouthRail. Before cancellation, the system calculates the applicable cancellation charge, refund percentage, and refund amount based on the configured cancellation policy.',
+    answer: 'Open My Bookings, find the trip, and select "Cancel" for an eligible Confirmed, RAC, or Waitlisted booking. SouthRail shows the server-calculated cancellation charge and refund before you confirm. Booking modifications are not currently supported.',
   },
   {
     id: 6, category: 'bookings', icon: ConfirmationNumberOutlinedIcon,
@@ -110,12 +108,12 @@ const FAQ_ITEMS = [
   {
     id: 13, category: 'notifications', icon: NotificationsNoneOutlinedIcon,
     question: 'How do I manage travel alerts and notifications?',
-    answer: 'Go to Account Settings → Notifications. You can choose to receive departure reminders, delay alerts, and booking confirmations via email, SMS, or push notification. We recommend enabling at least email alerts so you never miss a schedule change.',
+    answer: 'SouthRail currently sends essential booking and account emails automatically. Notification preferences are not yet configurable because the server does not provide preference controls.',
   },
   {
     id: 14, category: 'notifications', icon: NotificationsNoneOutlinedIcon,
     question: 'I\'m not receiving emails from SouthRail. What should I do?',
-    answer: 'First, check your spam or junk folder and mark SouthRail emails as "Not spam." Add support@southrail.com to your contacts. If the problem persists, verify that your registered email address is correct in Account Settings. Still nothing? Contact support and we\'ll investigate.',
+    answer: 'First, check your spam or junk folder and mark SouthRail emails as "Not spam." Add support@southrail.in to your contacts. If the problem persists, verify that your registered email address is correct in Account Settings. Still nothing? Contact support and we\'ll investigate.',
   },
 ];
 
@@ -123,38 +121,10 @@ const CONTACT_CHANNELS = [
   {
     icon: EmailOutlinedIcon,
     title: 'Email support',
-    description: 'Send us a message and we\'ll get back to you within 24 hours on business days.',
-    action: 'Send an email',
-    href: 'mailto:support@southrail.com',
-    badge: 'Avg. reply: 4 hrs',
-    badgeColor: 'success',
+    description: 'Use email for account or booking questions that cannot be resolved in the app.',
+    action: 'support@southrail.in',
+    href: 'mailto:support@southrail.in',
   },
-  {
-    icon: ChatBubbleOutlineIcon,
-    title: 'Live chat',
-    description: 'Chat with a support agent in real time. Available Monday–Saturday, 6 am–10 pm.',
-    action: 'Start a chat',
-    href: '#chat',
-    badge: 'Online now',
-    badgeColor: 'success',
-  },
-  {
-    icon: PhoneOutlinedIcon,
-    title: 'Phone support',
-    description: 'Speak to someone directly. Best for urgent issues like same-day cancellations.',
-    action: '1800-SOUTHRAIL',
-    href: 'tel:1800768847245',
-    badge: 'Mon–Sat 6 am–10 pm',
-    badgeColor: 'default',
-  },
-];
-
-const STATUS_ITEMS = [
-  { label: 'Booking system', ok: true },
-  { label: 'Payment processing', ok: true },
-  { label: 'Email delivery', ok: true },
-  { label: 'Live train data', ok: true },
-  { label: 'Mobile app', ok: false, note: 'Intermittent delays (investigating)' },
 ];
 
 // ─── OPTIMIZATION 1: Hoist static policy array out of JSX to module scope ────
@@ -162,27 +132,9 @@ const STATUS_ITEMS = [
 // every render, forcing React to diff all four Grid children unnecessarily.
 // Impact: Medium.
 const POLICIES = [
-  {
-    title: 'Cancellation & Refund Policy',
-    description:
-      'Eligible bookings can be cancelled through the SouthRail cancellation process. Refund amount, cancellation charges, and refund percentage are automatically calculated according to the configured cancellation policy before cancellation is confirmed.',
-    to: '/policies/refunds',
-  },
-  {
-    title: 'Baggage policy',
-    description: 'Permitted luggage sizes and weights, oversized items, and how to pre-book extra bags.',
-    to: '/policies/baggage',
-  },
-  {
-    title: 'Accessibility & assistance',
-    description: 'Services available for passengers with reduced mobility, visual or hearing impairments, and special dietary needs.',
-    to: '/policies/accessibility',
-  },
-  {
-    title: 'Privacy policy',
-    description: 'How we collect, use, and protect your personal data in line with applicable regulations.',
-    to: '/policies/privacy',
-  },
+  { title: 'My support tickets', description: 'Review existing requests and continue conversations with support.', to: '/my-tickets' },
+  { title: 'PNR enquiry', description: 'View the current server-reported status of a booking.', to: '/pnr' },
+  { title: 'Account settings', description: 'Manage supported profile and security settings.', to: '/profile' },
 ];
 
 // ─── OPTIMIZATION 2: Stable sx objects at module scope ───────────────────────
@@ -387,12 +339,8 @@ export default function SupportPage() {
     return 'Please enter issue description.';
   }
 
-  if (description.length < 10) {
-    return 'Description must contain at least 10 characters.';
-  }
-
-  if (description.length > 1000) {
-    return 'Description cannot exceed 1000 characters.';
+  if (description.length > 5000) {
+    return 'Description cannot exceed 5000 characters.';
   }
 
   return '';
@@ -421,11 +369,12 @@ const submitTicket = useCallback(async () => {
       description: ticket.description.trim(),
     });
 
-    const val=response?.data?.id.slice(0, 8).toUpperCase();
+    const ticketId = String(response?.data?.id || 'created');
+    const val = ticketId === 'created' ? '' : ` Ticket ID: ${ticketId.slice(0, 8).toUpperCase()}`;
     setSnackbar({
       open: true,
       severity: 'success',
-      message: `Support ticket created successfully. Ticket ID: ${val}`,
+      message: `Support ticket created successfully.${val}`,
     });
 
     setTicket({
@@ -435,11 +384,11 @@ const submitTicket = useCallback(async () => {
     });
 
     setSubmitted(false);
-  } catch {
+  } catch (error) {
     setSnackbar({
       open: true,
       severity: 'error',
-      message: 'Failed to create support ticket. Please try again.',
+      message: getApiErrorMessage(error, 'Failed to create support ticket. Please try again.'),
     });
   } finally {
     setLoading(false);
@@ -518,6 +467,7 @@ useEffect(() => {
           <Box sx={{ width: '100%', maxWidth: 520, mx: 'auto' }}>
             <TextField
               fullWidth
+              label="Search help articles"
               placeholder="Search — e.g. cancel booking, locked account, refund…"
               value={search}
               onChange={handleSearchChange}
@@ -615,83 +565,26 @@ useEffect(() => {
 
           {/* ── System status ── */}
           <Box>
-            <Stack spacing={0.5} sx={{ mb: 1.5 }}>
-              <Typography variant="overline" color="text.disabled" fontWeight={600} letterSpacing={1}>
-                System status
-              </Typography>
-              <Typography variant="h5" fontWeight={700}>
-                Service health
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Live status of SouthRail systems. Updated every 5 minutes.
-              </Typography>
-            </Stack>
-
-            <Paper
-              elevation={0}
-              sx={{
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 3,
-                overflow: 'hidden',
-              }}
-            >
-              {STATUS_ITEMS.map((s, i) => (
-                <Box key={s.label}>
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    sx={{ px: 3, py: 2 }}
-                  >
-                    <Stack direction="row" alignItems="center" spacing={1.5}>
-                      <Box
-                        role="status"
-                        aria-label={`${s.label}: ${s.ok ? 'Operational' : 'Degraded'}`}
-                        sx={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: '50%',
-                          bgcolor: s.ok ? 'success.main' : 'warning.main',
-                          flexShrink: 0,
-                        }}
-                      />
-                      <Typography variant="body2" fontWeight={500}>
-                        {s.label}
-                      </Typography>
-                      {s.note && (
-                        <Typography variant="caption" color="warning.main" fontWeight={500}>
-                          — {s.note}
-                        </Typography>
-                      )}
-                    </Stack>
-                    <Chip
-                      label={s.ok ? 'Operational' : 'Degraded'}
-                      size="small"
-                      color={s.ok ? 'success' : 'warning'}
-                      variant="outlined"
-                      sx={{ fontSize: 11, height: 22 }}
-                    />
-                  </Stack>
-                  {i < STATUS_ITEMS.length - 1 && <Divider />}
-                </Box>
-              ))}
-            </Paper>
+            <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>
+              Service health
+            </Typography>
+            <Alert severity="info">
+              Live service-health information is not currently published by the SouthRail API. If an action fails, retry from that page or create a support ticket below.
+            </Alert>
           </Box>
 
-          <Divider />
 
           {/* ── Policies quick links ── */}
           <Box>
             <Stack spacing={0.5} sx={{ mb: 1.5 }}>
               <Typography variant="overline" color="text.disabled" fontWeight={600} letterSpacing={1}>
-                Policies
+                Useful links
               </Typography>
               <Typography variant="h5" fontWeight={700}>
-                Know your rights
+                Continue in SouthRail
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Key policies every SouthRail traveller should be aware of.
+                Open the relevant account, booking, or support page.
               </Typography>
             </Stack>
 
@@ -755,7 +648,7 @@ useEffect(() => {
                   Submit a support ticket
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Describe your issue and we'll assign it to the right team. We aim to respond within 4 business hours.
+                  Describe your issue and we'll assign it to the appropriate support queue.
                 </Typography>
               </Stack>
 
@@ -767,6 +660,7 @@ useEffect(() => {
     size="small"
     value={ticket.bookingReference}
     onChange={handleBookingRefChange}
+    inputProps={{ maxLength: 20 }}
   />
 </Grid>
 
@@ -803,19 +697,17 @@ useEffect(() => {
     submitted &&
     (
       !ticket.description.trim() ||
-      ticket.description.trim().length < 10 ||
-      ticket.description.trim().length > 1000
+      ticket.description.trim().length > 5000
     )
   }
   helperText={
     submitted && !ticket.description.trim()
       ? 'Description is required'
-      : submitted && ticket.description.trim().length < 10
-      ? 'Description must contain at least 10 characters'
-      : submitted && ticket.description.trim().length > 1000
-      ? 'Description cannot exceed 1000 characters'
-      : descriptionTouched ? `${ticket.description.length}/1000` : ''
+      : submitted && ticket.description.trim().length > 5000
+      ? 'Description cannot exceed 5000 characters'
+      : descriptionTouched ? `${ticket.description.length}/5000` : ''
   }
+  inputProps={{ maxLength: 5000 }}
 />
                 </Grid>
               </Grid>
@@ -830,12 +722,7 @@ useEffect(() => {
 >
   {loading ? 'Submitting...' : 'Submit ticket'}
 </Button>
-                <Stack direction="row" spacing={0.75} alignItems="center">
-                  <CheckCircleOutlineIcon sx={{ fontSize: 15, color: 'success.main' }} />
-                  <Typography variant="caption" color="text.secondary">
-                    Avg. first response in under 4 hours
-                  </Typography>
-                </Stack>
+
               </Stack>
             </Stack>
           </Paper>

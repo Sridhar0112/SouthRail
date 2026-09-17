@@ -47,9 +47,14 @@ export function Shell() {
 
   useEffect(() => {
     const clearAuth = () => dispatch(logout());
+    const syncAuthAcrossTabs = (event) => {
+      if (event.key === 'southrail_user' && !event.newValue) dispatch(logout());
+    };
     window.addEventListener('southrail-auth-cleared', clearAuth);
+    window.addEventListener('storage', syncAuthAcrossTabs);
     return () => {
       window.removeEventListener('southrail-auth-cleared', clearAuth);
+      window.removeEventListener('storage', syncAuthAcrossTabs);
     };
   }, [dispatch]);
 
@@ -75,14 +80,15 @@ export function Shell() {
       if (!anchorEl) return;
       const clickedAvatar = avatarButtonRef.current?.contains(event.target);
       const clickedMenu = document.querySelector('[role="menu"]')?.contains(event.target);
-      if (!clickedAvatar && !clickedMenu) { closeAllMenus(); }
+      if (!clickedAvatar && !clickedMenu) { setAnchorEl(null); setMobileNavOpen(false); }
     };
     document.addEventListener('mousedown', handleDocumentClick, true);
     return () => document.removeEventListener('mousedown', handleDocumentClick, true);
   }, [anchorEl]);
 
   useEffect(() => {
-    closeAllMenus();
+    setAnchorEl(null);
+    setMobileNavOpen(false);
   }, [location.pathname, location.search, location.hash]);
 
   const signOut = () => { closeAllMenus(); dispatch(logout()); navigate('/'); };

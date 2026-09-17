@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, Container, Paper, Stack, Tab, Tabs } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import AltRouteIcon from '@mui/icons-material/AltRoute';
@@ -45,11 +45,7 @@ export default function AdminPage() {
   const [filters, setFilters] = useState(initialFilters);
   const [lastUpdated, setLastUpdated] = useState(null);
 
-  useEffect(() => {
-    loadAdminData();
-  }, []);
-
-  const loadAdminData = async () => {
+  const loadAdminData = useCallback(async () => {
     setLoading(true);
     setData(emptyAdminData());
     setErrors({});
@@ -80,7 +76,11 @@ export default function AdminPage() {
     setErrors(nextErrors);
     setLastUpdated(new Date());
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    loadAdminData();
+  }, [loadAdminData]);
 
   const metrics = useMemo(() => buildAdminMetricsWithKpis(data), [data]);
   const tables = useMemo(() => buildFilteredTables(data, filters, metrics), [data, filters, metrics]);

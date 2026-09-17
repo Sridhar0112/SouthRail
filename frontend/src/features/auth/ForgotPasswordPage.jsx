@@ -94,12 +94,13 @@ export default function ForgotPasswordPage() {
           <Stack spacing={2}>
             <TextField
               label="Email"
+              type="email"
               placeholder="you@example.com"
               autoComplete="email"
               error={!!form.formState.errors.email}
               helperText={form.formState.errors.email?.message}
               slotProps={{ input: { startAdornment: <InputAdornment position="start"><EmailIcon fontSize="small" color="disabled" /></InputAdornment> } }}
-              {...form.register('email', { required: 'Email is required' })}
+              {...form.register('email', { required: 'Email is required', pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Enter a valid email address' } })}
             />
             <Button type="submit" variant="contained" startIcon={<RestartAltIcon />} disabled={loading} fullWidth sx={{ borderRadius: 2, py: 1.4 }}>
               {loading ? 'Sending reset link\u2026' : 'Send reset link'}

@@ -74,10 +74,12 @@ export function formatDateTime(value) {
   if (!value) {
     return '-';
   }
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
   return new Intl.DateTimeFormat('en-IN', {
     dateStyle: 'medium',
     timeStyle: 'short'
-  }).format(value);
+  }).format(date);
 }
 
 // Resolves a "palette.shade" string (e.g. "success.main") to a real CSS color

@@ -3,7 +3,7 @@ import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Alert, Box, Button, Card, CardContent, Chip, Container, Divider, Grid, LinearProgress,
-  MenuItem, Paper, Stack, Step, StepLabel, Stepper, TextField, Typography, alpha
+  IconButton, MenuItem, Paper, Stack, Step, StepLabel, Stepper, TextField, Tooltip, Typography, alpha
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
@@ -14,6 +14,7 @@ import RateReviewIcon from '@mui/icons-material/RateReview';
 import SearchIcon from '@mui/icons-material/Search';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import PersonIcon from '@mui/icons-material/Person';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import TrainIcon from '@mui/icons-material/Train';
 import api from '../../services/api.js';
 import { EmptyState, ErrorState, LoadingState, SuccessState } from '../../components/StateFeedback.jsx';
@@ -54,12 +55,22 @@ export default function BookingPage() {
       passengers: [{ fullName: '', age: 30, gender: 'Male', berthPreference: 'LOWER' }]
     }
   });
-  const { fields, append } = useFieldArray({ control: form.control, name: 'passengers' });
+  const { fields, append, remove } = useFieldArray({ control: form.control, name: 'passengers' });
   const currentValues = form.watch();
   const currentSignature = useMemo(() => JSON.stringify(currentValues), [currentValues]);
   const reviewIsCurrent = review && reviewedSignature === currentSignature;
   const activeStep = response ? 2 : reviewIsCurrent || submitError ? 1 : 0;
   const passengerCount = currentValues.passengers?.length || 0;
+
+  useEffect(() => {
+    const warnBeforeUnload = (event) => {
+      if (!form.formState.isDirty || submitting || response) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warnBeforeUnload);
+    return () => window.removeEventListener('beforeunload', warnBeforeUnload);
+  }, [form.formState.isDirty, response, submitting]);
 
   useEffect(() => {
     setLoadingTrain(true);
@@ -184,13 +195,14 @@ export default function BookingPage() {
                       <Grid item xs={12} sm={6} md={4}>
                         <TextField fullWidth label="From station code" disabled={submitting} error={!!form.formState.errors.sourceStationCode}
                           helperText={form.formState.errors.sourceStationCode?.message}
-                          {...form.register('sourceStationCode', { required: 'Source station is required' })} />
+                          {...form.register('sourceStationCode', { required: 'Source station is required', pattern: { value: /^[A-Za-z0-9]{2,10}$/, message: 'Enter a valid station code.' } })} />
                       </Grid>
                       <Grid item xs={12} sm={6} md={4}>
                         <TextField fullWidth label="To station code" disabled={submitting} error={!!form.formState.errors.destinationStationCode}
                           helperText={form.formState.errors.destinationStationCode?.message}
                           {...form.register('destinationStationCode', {
                             required: 'Destination station is required',
+                            pattern: { value: /^[A-Za-z0-9]{2,10}$/, message: 'Enter a valid station code.' },
                             validate: (value) => value.trim().toUpperCase() !== String(form.getValues('sourceStationCode') || '').trim().toUpperCase() || 'Source and destination cannot be the same.'
                           })} />
                       </Grid>
@@ -231,14 +243,23 @@ export default function BookingPage() {
                                   <PersonIcon color="primary" sx={{ fontSize: 20 }} />
                                   <Typography variant="subtitle1" fontWeight={900}>Passenger {index + 1}</Typography>
                                 </Stack>
-                                <Chip size="small" color={index === 0 ? 'primary' : 'default'} variant={index === 0 ? 'filled' : 'outlined'} label={index === 0 ? 'Primary traveller' : 'Co-passenger'} />
+                                <Stack direction="row" spacing={0.5} alignItems="center">
+                                  <Chip size="small" color={index === 0 ? 'primary' : 'default'} variant={index === 0 ? 'filled' : 'outlined'} label={index === 0 ? 'Primary traveller' : 'Co-passenger'} />
+                                  {fields.length > 1 && (
+                                    <Tooltip title={`Remove passenger ${index + 1}`}>
+                                      <IconButton size="small" color="error" aria-label={`Remove passenger ${index + 1}`} onClick={() => remove(index)} disabled={submitting}>
+                                        <DeleteOutlineIcon fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                  )}
+                                </Stack>
                               </Stack>
                               <Grid container spacing={2}>
                                 <Grid item xs={12} md={4}>
                                   <TextField fullWidth label="Passenger name" disabled={submitting}
                                     error={!!form.formState.errors.passengers?.[index]?.fullName}
                                     helperText={form.formState.errors.passengers?.[index]?.fullName?.message}
-                                    {...form.register(`passengers.${index}.fullName`, { required: 'Passenger name is required' })} />
+                                    {...form.register(`passengers.${index}.fullName`, { required: 'Passenger name is required', maxLength: { value: 100, message: 'Passenger name must be 100 characters or fewer.' } })} />
                                 </Grid>
                                 <Grid item xs={12} sm={6} md={2}>
                                   <TextField fullWidth label="Age" type="number" disabled={submitting}
@@ -263,9 +284,9 @@ export default function BookingPage() {
                   <ReviewPanel review={review} isCurrent={reviewIsCurrent} passengerCount={passengerCount} />
 
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }}>
-                    <Button type="button" startIcon={<AddIcon />} disabled={submitting} variant="outlined" sx={{ borderRadius: 2 }}
+                    <Button type="button" startIcon={<AddIcon />} disabled={submitting || fields.length >= 12} variant="outlined" sx={{ borderRadius: 2 }}
                       onClick={() => append({ fullName: '', age: 30, gender: 'Male', berthPreference: 'NO_PREFERENCE' })}>
-                      Add passenger
+                      {fields.length >= 12 ? 'Passenger limit reached' : 'Add passenger'}
                     </Button>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ '& .MuiButton-root': { width: { xs: '100%', sm: 'auto' } } }}>
                       <Button type="button" variant="outlined" startIcon={<RateReviewIcon />} onClick={form.handleSubmit(prepareReview)} disabled={loadingReview || submitting} sx={{ borderRadius: 2 }}>

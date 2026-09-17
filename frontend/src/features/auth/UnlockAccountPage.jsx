@@ -54,11 +54,9 @@ export default function UnlockAccountPage() {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
-  const hasCalled = useRef(false);
+  const unlockRequestRef = useRef(null);
 
   useEffect(() => {
-    if (hasCalled.current) return;
-    hasCalled.current = true;
     let active = true;
     let redirectTimer;
 
@@ -68,10 +66,12 @@ export default function UnlockAccountPage() {
       setStatus('missing');
       return;
     }
+    window.history.replaceState({}, '', window.location.pathname);
 
+    unlockRequestRef.current ||= api.post('/auth/unlock-account', { token });
     (async () => {
       try {
-        await api.post('/auth/unlock-account', { token });
+        await unlockRequestRef.current;
         if (!active) return;
         setStatus('success');
         redirectTimer = setTimeout(() => {
@@ -93,7 +93,7 @@ export default function UnlockAccountPage() {
       active = false;
       if (redirectTimer) clearTimeout(redirectTimer);
     };
-  }, [searchParams]);
+  }, [navigate, searchParams]);
 
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.loading;
   const Icon = cfg.icon;

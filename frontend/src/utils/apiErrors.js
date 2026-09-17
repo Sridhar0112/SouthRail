@@ -1,7 +1,8 @@
 export function getApiErrorMessage(error, fallbackMessage = 'We could not complete that request. Please try again.') {
   if (!error) return fallbackMessage;
+  if (error.code === 'AUTH_RESPONSE_INVALID') return 'Sign-in could not be completed securely. Please try again.';
   if (error.code === 'ECONNABORTED') return 'Request timed out. Please try again.';
-  if (!error.response) return 'Server is not reachable. Please make sure the backend is running.';
+  if (!error.response) return 'SouthRail could not be reached. Check your connection and try again.';
 
   const status = error.response.status;
   const data = normalizeErrorData(error.response.data);
@@ -44,7 +45,7 @@ function formatViolations(violations) {
 }
 
 function looksTechnical(value) {
-  return /exception|stack|trace|java\.|org\.springframework|\[object Object\]|<!doctype|<html|<body|\bat\s+[\w.$]+\([^)]*:\d+\)/i.test(String(value));
+  return /exception|stack|trace|java\.|org\.springframework|\[object Object\]|<!doctype|<html|<body|\bat\s+[\w.$]+\([^)]*:\d+\)|sql(state)?|constraint\s+['"`]|jdbc|hibernate/i.test(String(value));
 }
 
 function toFriendlyMessage(value) {

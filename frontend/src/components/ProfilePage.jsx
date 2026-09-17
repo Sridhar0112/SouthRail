@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector,useDispatch } from 'react-redux';
 import Dialog from '@mui/material/Dialog';
@@ -250,6 +250,7 @@ onProfileUpdated?.(data);
             <Stack spacing={1.5}>
               <FieldRow icon={<BadgeIcon fontSize="small" />} label="Full name">
                 <TextField
+                  label="Full name"
                   fullWidth size="small"
                   value={form.fullName}
                   onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
@@ -262,6 +263,7 @@ onProfileUpdated?.(data);
               <FieldRow icon={<EmailIcon fontSize="small" />} label="Email">
                 <Stack direction="row" spacing={1} alignItems="center">
                   <TextField
+                    label="Email"
                     fullWidth size="small"
                     value={profile.email || ''}
                     disabled
@@ -277,6 +279,7 @@ onProfileUpdated?.(data);
 
               <FieldRow icon={<PhoneIcon fontSize="small" />} label="Phone">
                 <TextField
+                  label="Phone"
                   fullWidth size="small"
                   value={form.phone}
                   onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
@@ -328,8 +331,12 @@ function SecurityTab({ onDeleteClick }) {
   const [show, setShow] = useState({ current: false, next: false, confirm: false });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
-const dispatch = useDispatch();
-const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const redirectTimerRef = useRef(null);
+  useEffect(() => () => {
+    if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+  }, []);
   const toggleShow = (field) => () => setShow((s) => ({ ...s, [field]: !s[field] }));
 
   const handleSubmit = async (e) => {
@@ -348,10 +355,10 @@ const navigate = useNavigate();
       await api.put('/users/me/password', { currentPassword: form.current, newPassword: form.next });
       setMessage({ type: 'success', text: 'Password updated successfully.' });
       setForm({ current: '', next: '', confirm: '' });
-      setTimeout(() => {
-  dispatch(logout());
-  navigate('/login');
-}, 1500);
+      redirectTimerRef.current = setTimeout(() => {
+        dispatch(logout());
+        navigate('/login', { replace: true });
+      }, 1500);
     } catch (err) {
       setMessage({ type: 'error', text: getErrorMessage(err, 'Could not update password.') });
     } finally {
@@ -369,7 +376,7 @@ const navigate = useNavigate();
       InputProps={{
         endAdornment: (
           <InputAdornment position="end">
-            <IconButton size="small" onClick={toggleShow(field)} edge="end">
+            <IconButton size="small" onClick={toggleShow(field)} edge="end" aria-label={show[field] ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}>
               {show[field] ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
             </IconButton>
           </InputAdornment>
@@ -520,127 +527,33 @@ function AccountRoles() {
 // ── Tab: Notifications ─────────────────────────────────────────────────────
 
 function NotificationsTab() {
-  const [prefs, setPrefs] = useState({
-    emailBookingConfirmation: true,
-    emailCancellation: true,
-    emailPnrUpdates: false,
-    smsBookingConfirmation: false,
-    smsCancellation: false,
-  });
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState(null);
-
-  const toggle = (key) => setPrefs((p) => ({ ...p, [key]: !p[key] }));
-
-  const handleSave = async () => {
-    setSaving(true);
-    setMessage(null);
-    try {
-      await api.put('/users/me/notification-preferences', prefs);
-      setMessage({ type: 'success', text: 'Notification preferences saved.' });
-    } catch (err) {
-      setMessage({ type: 'error', text: getErrorMessage(err, 'Could not save preferences.') });
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const groups = [
-    {
-      label: 'Email notifications',
-      items: [
-        { key: 'emailBookingConfirmation', label: 'Booking confirmed', desc: 'When a ticket is successfully booked' },
-        { key: 'emailCancellation', label: 'Booking cancelled', desc: 'When a booking is cancelled' },
-        { key: 'emailPnrUpdates', label: 'PNR status updates', desc: 'Waitlist and chart preparation alerts' },
-      ]
-    },
-    {
-      label: 'SMS notifications',
-      items: [
-        { key: 'smsBookingConfirmation', label: 'Booking confirmed', desc: 'SMS when ticket is booked' },
-        { key: 'smsCancellation', label: 'Booking cancelled', desc: 'SMS when booking is cancelled' },
-      ]
-    }
+    { label: 'Email notifications', items: ['Booking confirmations', 'Booking cancellations', 'PNR status updates'] },
+    { label: 'SMS notifications', items: ['Booking confirmations', 'Booking cancellations'] }
   ];
 
   return (
     <SectionCard
       title="Notification preferences"
-      subtitle="Choose how SouthRail keeps you in the loop"
+      subtitle="Notification controls are not yet available for this account"
       icon={<NotificationsIcon fontSize="small" />}
     >
       <Stack spacing={2}>
+        <Alert severity="info">
+          SouthRail currently sends essential booking and account messages automatically. Preference changes cannot be saved because the server does not yet provide a notification-preferences API.
+        </Alert>
         {groups.map((group) => (
           <Box key={group.label}>
-            <Typography variant="overline" color="text.disabled" fontWeight={700} letterSpacing={1}>
+            <Typography variant="overline" color="text.secondary" fontWeight={700} letterSpacing={1}>
               {group.label}
             </Typography>
-            <Stack spacing={1} mt={1}>
+            <Stack component="ul" spacing={0.75} sx={{ pl: 2.5, mb: 0, mt: 1 }}>
               {group.items.map((item) => (
-                <Stack
-                  key={item.key}
-                  direction="row"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  sx={{
-                    p: 1.5, borderRadius: 2,
-                    border: 1, borderColor: 'divider',
-                    cursor: 'pointer',
-                    '&:hover': { bgcolor: 'action.hover' },
-                    transition: 'background-color 0.15s'
-                  }}
-                  onClick={() => toggle(item.key)}
-                >
-                  <Box>
-                    <Typography variant="body2" fontWeight={600}>{item.label}</Typography>
-                    <Typography variant="caption" color="text.secondary">{item.desc}</Typography>
-                  </Box>
-                  <Box
-                    role="switch"
-                    aria-checked={prefs[item.key]}
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        toggle(item.key);
-                      }
-                    }}
-                    sx={{
-                      width: 42, height: 24, borderRadius: 12,
-                      bgcolor: prefs[item.key] ? 'primary.main' : 'action.disabledBackground',
-                      position: 'relative', flexShrink: 0, ml: 2,
-                      transition: 'background-color 0.2s'
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: 18, height: 18, borderRadius: '50%',
-                        bgcolor: 'white',
-                        position: 'absolute',
-                        top: 3,
-                        left: prefs[item.key] ? 21 : 3,
-                        transition: 'left 0.2s',
-                        boxShadow: 1
-                      }}
-                    />
-                  </Box>
-                </Stack>
+                <Typography component="li" variant="body2" color="text.secondary" key={item}>{item}</Typography>
               ))}
             </Stack>
           </Box>
         ))}
-
-        {message && <Alert severity={message.type} sx={{ borderRadius: 2 }}>{message.text}</Alert>}
-
-        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="flex-end">
-          <Button
-            variant="contained" startIcon={<SaveIcon />}
-            onClick={handleSave} disabled={saving}
-            sx={{ borderRadius: 2 }}
-          >
-            {saving ? 'Saving…' : 'Save preferences'}
-          </Button>
-        </Stack>
       </Stack>
     </SectionCard>
   );
@@ -686,7 +599,7 @@ setDeleteError(
     setDeleteLoading(false);
   }
 };
-  const fetchProfile = () => {
+  const fetchProfile = useCallback(() => {
     setLoading(true);
     setError('');
     api.get('/users/me')
@@ -695,9 +608,9 @@ setDeleteError(
         setError(getErrorMessage(err, 'Unable to load profile right now.'));
       })
       .finally(() => setLoading(false));
-  };
+  }, []);
 
-  useEffect(() => { fetchProfile(); }, [auth.user]);
+  useEffect(() => { fetchProfile(); }, [auth.user, fetchProfile]);
 
   return (
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2.25, md: 3.5 } }}>

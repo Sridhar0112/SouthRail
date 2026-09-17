@@ -67,38 +67,43 @@ export default function HomePage() {
   const hasSearchAttempt = trains.hasSearched || trains.loading || Boolean(searchIssue);
   const compactSearch = hasSearchAttempt;
 
-  const loadStationOptions = useCallback(async (query, setOptions, setLoading, setFieldError) => {
+  const loadStationOptions = useCallback(async (query, setOptions, setLoading, setFieldError, signal) => {
     const searchQuery = normalizeStationQuery(query);
     if (searchQuery.length < 2) { setOptions([]); setFieldError(''); return; }
     setLoading(true);
     setFieldError('');
     try {
-      const { data } = await api.get(`/trains/stations?q=${encodeURIComponent(searchQuery)}&page=0&size=8`);
+      const { data } = await api.get(`/trains/stations?q=${encodeURIComponent(searchQuery)}&page=0&size=8`, { signal });
       setOptions(Array.isArray(data) ? data : data?.content || []);
     } catch (apiError) {
+      if (apiError.code === 'ERR_CANCELED') return;
       setOptions([]);
       setFieldError(getApiErrorMessage(apiError, 'Unable to load station suggestions.'));
-    } finally { setLoading(false); }
+    } finally { if (!signal?.aborted) setLoading(false); }
   }, []);
 
   useEffect(() => {
     const query = normalizeStationQuery(sourceInput);
-    if (!query || query === lastSourceQuery.current) return undefined;
+    if (!query) { setSourceOptions([]); setSourceLoading(false); setSourceError(''); return undefined; }
+    if (query === lastSourceQuery.current) return undefined;
+    const controller = new AbortController();
     const timer = window.setTimeout(() => {
       lastSourceQuery.current = query;
-      loadStationOptions(query, setSourceOptions, setSourceLoading, setSourceError);
+      loadStationOptions(query, setSourceOptions, setSourceLoading, setSourceError, controller.signal);
     }, 300);
-    return () => window.clearTimeout(timer);
+    return () => { window.clearTimeout(timer); controller.abort(); };
   }, [sourceInput, loadStationOptions]);
 
   useEffect(() => {
     const query = normalizeStationQuery(destinationInput);
-    if (!query || query === lastDestinationQuery.current) return undefined;
+    if (!query) { setDestinationOptions([]); setDestinationLoading(false); setDestinationError(''); return undefined; }
+    if (query === lastDestinationQuery.current) return undefined;
+    const controller = new AbortController();
     const timer = window.setTimeout(() => {
       lastDestinationQuery.current = query;
-      loadStationOptions(query, setDestinationOptions, setDestinationLoading, setDestinationError);
+      loadStationOptions(query, setDestinationOptions, setDestinationLoading, setDestinationError, controller.signal);
     }, 300);
-    return () => window.clearTimeout(timer);
+    return () => { window.clearTimeout(timer); controller.abort(); };
   }, [destinationInput, loadStationOptions]);
 
   const onSubmit = (values) => {
