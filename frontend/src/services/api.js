@@ -53,6 +53,7 @@ function refreshAccessToken() {
       localStorage.setItem('southrail_access_token', data.accessToken);
       localStorage.setItem('southrail_refresh_token', data.refreshToken);
       if (data.user) localStorage.setItem('southrail_user', JSON.stringify(data.user));
+      if (data.user) window.dispatchEvent(new window.CustomEvent('southrail-auth-updated', { detail: data.user }));
       return data;
     }).catch((error) => {
       clearAuthStorage();
@@ -68,7 +69,14 @@ function isAuthRequest(url = '') {
   return url.includes('/auth/login')
     || url.includes('/auth/register')
     || url.includes('/auth/refresh')
+    || url.includes('/auth/logout')
     || url.includes('/auth/oauth/exchange');
+}
+
+export async function revokeCurrentSession() {
+  const refreshToken = localStorage.getItem('southrail_refresh_token');
+  if (!refreshToken) return;
+  await api.post('/auth/logout', { refreshToken });
 }
 
 export function clearAuthStorage() {

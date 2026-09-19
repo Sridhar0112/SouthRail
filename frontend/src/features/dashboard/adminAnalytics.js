@@ -21,7 +21,8 @@ export const initialFilters = {
   stations: '',
   stationState: 'ALL',
   bookings: '',
-  bookingStatus: 'ALL'
+  bookingStatus: 'ALL',
+  auditLogs: ''
 };
 
 export function emptyAdminData() {
@@ -31,7 +32,8 @@ export function emptyAdminData() {
     trains: [],
     routes: [],
     stations: [],
-    bookings: []
+    bookings: [],
+    auditLogs: []
   };
 }
 
@@ -579,5 +581,9 @@ export function buildFilteredTables(data, filters, metrics) {
     .filter((row) => filters.bookingStatus === 'ALL' || normalizeStatus(row.status) === filters.bookingStatus)
     .sort((a, b) => compareDateDesc(a.journeyDate, b.journeyDate));
 
-  return { users, trains, routes, stations, bookings, routeCountByTrain: metrics.routeCountByTrain };
+  const auditLogs = data.auditLogs
+    .filter((row) => matchesSearch(row, ['username', 'action', 'module', 'description'], filters.auditLogs))
+    .sort((a, b) => compareDateDesc(a.createdAt, b.createdAt));
+
+  return { users, trains, routes, stations, bookings, auditLogs, routeCountByTrain: metrics.routeCountByTrain };
 }

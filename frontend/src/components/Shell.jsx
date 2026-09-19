@@ -21,8 +21,9 @@ import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import TrainIcon from '@mui/icons-material/Train';
 import CloseIcon from '@mui/icons-material/Close';
 import { ColorModeContext } from '../theme/AppThemeProvider.jsx';
-import { logout } from '../features/auth/authSlice.js';
+import { authenticated, logout } from '../features/auth/authSlice.js';
 import { AiAssistant } from './AiAssistant.jsx';
+import { revokeCurrentSession } from '../services/api.js';
 
 function getInitials(name = '') {
   return name.trim().split(/\s+/).map((w) => w[0]).join('').toUpperCase().slice(0, 2);
@@ -47,14 +48,23 @@ export function Shell() {
   const avatarButtonRef = useRef(null);
 
   useEffect(() => {
-    const clearAuth = () => dispatch(logout());
+    // clearAuthStorage already removed browser credentials. Only mirror that
+    // result into Redux here; dispatching logout would call clearAuthStorage
+    // again and recursively emit this same event.
+    const clearAuth = () => dispatch(authenticated(null));
+    const updateAuth = (event) => dispatch(authenticated(event.detail));
     const syncAuthAcrossTabs = (event) => {
       if (event.key === 'southrail_user' && !event.newValue) dispatch(logout());
+      if (event.key === 'southrail_user' && event.newValue) {
+        try { dispatch(authenticated(JSON.parse(event.newValue))); } catch { dispatch(logout()); }
+      }
     };
     window.addEventListener('southrail-auth-cleared', clearAuth);
+    window.addEventListener('southrail-auth-updated', updateAuth);
     window.addEventListener('storage', syncAuthAcrossTabs);
     return () => {
       window.removeEventListener('southrail-auth-cleared', clearAuth);
+      window.removeEventListener('southrail-auth-updated', updateAuth);
       window.removeEventListener('storage', syncAuthAcrossTabs);
     };
   }, [dispatch]);
@@ -92,7 +102,13 @@ export function Shell() {
     setMobileNavOpen(false);
   }, [location.pathname, location.search, location.hash]);
 
-  const signOut = () => { closeAllMenus(); dispatch(logout()); navigate('/'); };
+  const signOut = async () => {
+    closeAllMenus();
+    const revocation = revokeCurrentSession();
+    dispatch(logout());
+    navigate('/');
+    try { await revocation; } catch { /* Local sign-out must still complete offline. */ }
+  };
 
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/';

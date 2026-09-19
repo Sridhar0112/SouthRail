@@ -33,6 +33,12 @@ public class AuthController {
   AuthDtos.AuthResponse refresh(@Valid @RequestBody AuthDtos.RefreshRequest request) {
     return authService.refresh(request);
   }
+
+  @PostMapping("/logout")
+  ResponseEntity<Void> logout(@Valid @RequestBody AuthDtos.LogoutRequest request) {
+    authService.logout(request);
+    return ResponseEntity.noContent().build();
+  }
   @PostMapping("/oauth/exchange")
   AuthDtos.AuthResponse exchange(@Valid @RequestBody AuthDtos.OAuthExchangeRequest request) {
     return authService.exchangeOAuthCode(request.getCode());

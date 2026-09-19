@@ -7,6 +7,7 @@ import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import PlaceIcon from '@mui/icons-material/Place';
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
 import TrainIcon from '@mui/icons-material/Train';
+import PolicyOutlinedIcon from '@mui/icons-material/PolicyOutlined';
 import api from '../../services/api.js';
 import { ErrorState, LoadingState } from '../../components/StateFeedback.jsx';
 import {
@@ -22,6 +23,7 @@ import {
   AdminHeader,
   OverviewTab,
   getBookingColumns,
+  getAuditLogColumns,
   getRouteColumns,
   getStationColumns,
   getTrainColumns,
@@ -34,7 +36,8 @@ const TAB_ITEMS = [
   { value: 'trains', label: 'Trains', icon: <TrainIcon fontSize="small" /> },
   { value: 'routes', label: 'Routes', icon: <AltRouteIcon fontSize="small" /> },
   { value: 'stations', label: 'Stations', icon: <PlaceIcon fontSize="small" /> },
-  { value: 'bookings', label: 'Bookings', icon: <ConfirmationNumberIcon fontSize="small" /> }
+  { value: 'bookings', label: 'Bookings', icon: <ConfirmationNumberIcon fontSize="small" /> },
+  { value: 'auditLogs', label: 'Audit Log', icon: <PolicyOutlinedIcon fontSize="small" /> }
 ];
 
 export default function AdminPage() {
@@ -56,7 +59,8 @@ export default function AdminPage() {
       ['trains', () => fetchPagedRows('/admin/trains')],
       ['routes', () => fetchPagedRows('/admin/routes')],
       ['stations', () => fetchPagedRows('/admin/stations')],
-      ['bookings', () => fetchPagedRows('/admin/bookings')]
+      ['bookings', () => fetchPagedRows('/admin/bookings')],
+      ['auditLogs', () => fetchPagedRows('/admin/audit-logs')]
     ];
 
     const results = await Promise.allSettled(requests.map(([, request]) => request()));
@@ -84,7 +88,7 @@ export default function AdminPage() {
 
   const metrics = useMemo(() => buildAdminMetricsWithKpis(data), [data]);
   const tables = useMemo(() => buildFilteredTables(data, filters, metrics), [data, filters, metrics]);
-  const hasAnyData = Boolean(data.summary) || ['users', 'trains', 'routes', 'stations', 'bookings'].some((key) => data[key].length > 0);
+  const hasAnyData = Boolean(data.summary) || ['users', 'trains', 'routes', 'stations', 'bookings', 'auditLogs'].some((key) => data[key].length > 0);
   const accessError = Object.values(errors).find((message) => /permission|admin account|login/i.test(message));
   const firstError = Object.values(errors)[0];
 
@@ -278,6 +282,22 @@ export default function AdminPage() {
               emptyTitle="No bookings yet"
               emptyMessage="No bookings match the current search or filter."
               error={errors.bookings}
+              onRetry={loadAdminData}
+            />
+          )}
+
+          {activeTab === 'auditLogs' && (
+            <AdminDataTable
+              title="Audit Log"
+              subtitle="Security-sensitive account, booking, and payment activity"
+              icon={<PolicyOutlinedIcon />}
+              rows={tables.auditLogs}
+              columns={getAuditLogColumns()}
+              searchValue={filters.auditLogs}
+              onSearch={(value) => updateFilter('auditLogs', value)}
+              emptyTitle="No audit activity"
+              emptyMessage="No audit records match the current search."
+              error={errors.auditLogs}
               onRetry={loadAdminData}
             />
           )}

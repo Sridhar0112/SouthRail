@@ -1149,6 +1149,16 @@ export function getBookingColumns() {
   ];
 }
 
+export function getAuditLogColumns() {
+  return [
+    { key: 'createdAt', header: 'Time', minWidth: 180, render: (row) => formatDateTime(row.createdAt) },
+    { key: 'username', header: 'Account', minWidth: 220, render: (row) => row.username || '-' },
+    { key: 'module', header: 'Module', render: (row) => formatStatus(row.module) },
+    { key: 'action', header: 'Action', minWidth: 180, render: (row) => formatStatus(row.action) },
+    { key: 'description', header: 'Details', minWidth: 300, render: (row) => row.description || '-' }
+  ];
+}
+
 export function AdminDataTable({
   title,
   subtitle,
