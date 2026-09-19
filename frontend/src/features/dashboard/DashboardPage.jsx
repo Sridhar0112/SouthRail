@@ -41,6 +41,7 @@ import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import NotificationsActiveOutlinedIcon from "@mui/icons-material/NotificationsActiveOutlined";
 import { downloadTicketPdf } from "../../services/downloadTicket.js";
 import api from "../../services/api.js";
 import BookingCancellationDialog, {
@@ -104,7 +105,7 @@ export default function DashboardPage() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [history, setHistory] = useState(null);
-  const [, setNotifications] = useState(null);
+  const [notifications, setNotifications] = useState(null);
   const [loading, setLoading] = useState({
     history: true,
     notifications: true,
@@ -292,7 +293,12 @@ export default function DashboardPage() {
             />
           </Paper>
 
-          {/* Notifications */}
+          <NotificationsSection
+            notifications={notifications}
+            loading={loading.notifications}
+            error={errors.notifications}
+            onRetry={loadDashboard}
+          />
         </Stack>
       </Container>
 
@@ -303,6 +309,63 @@ export default function DashboardPage() {
         onCancelled={handleCancelled}
       />
     </Box>
+  );
+}
+
+function NotificationsSection({ notifications, loading, error, onRetry }) {
+  return (
+    <SectionCard
+      id="notifications"
+      title="Travel updates"
+      subtitle="Reservation and account notifications from SouthRail"
+      icon={<NotificationsActiveOutlinedIcon color="primary" fontSize="small" />}
+      action={(
+        <Button size="small" startIcon={<RefreshIcon />} onClick={onRetry} disabled={loading}>
+          Refresh
+        </Button>
+      )}
+    >
+      {loading ? (
+        <LoadingState message="Loading travel updates…" />
+      ) : error ? (
+        <ErrorState title="Updates unavailable" message={error} actionLabel="Retry" onAction={onRetry} />
+      ) : !notifications?.length ? (
+        <Stack alignItems="center" spacing={0.75} sx={{ py: 2.5, textAlign: "center" }}>
+          <NotificationsActiveOutlinedIcon color="disabled" sx={{ fontSize: 34 }} />
+          <Typography fontWeight={800}>No new travel updates</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Booking, waitlist, and account updates will appear here.
+          </Typography>
+        </Stack>
+      ) : (
+        <Stack divider={<Divider flexItem />}>
+          {notifications.map((notification, index) => (
+            <Stack
+              key={notification.id || `${notification.createdAt}-${index}`}
+              direction={{ xs: "column", sm: "row" }}
+              spacing={{ xs: 0.5, sm: 1.5 }}
+              sx={{ py: 1.25 }}
+            >
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
+                  <Typography variant="subtitle2" fontWeight={notification.read ? 700 : 900}>
+                    {notification.title || "SouthRail update"}
+                  </Typography>
+                  {!notification.read && <Chip label="New" size="small" color="primary" />}
+                  {notification.channel && <Chip label={notification.channel} size="small" variant="outlined" />}
+                </Stack>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35, overflowWrap: "anywhere" }}>
+                  {notification.message || "An update is available for your account."}
+                </Typography>
+              </Box>
+              <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
+                {formatDateTime(notification.createdAt)}
+              </Typography>
+            </Stack>
+          ))}
+        </Stack>
+      )}
+    </SectionCard>
   );
 }
 

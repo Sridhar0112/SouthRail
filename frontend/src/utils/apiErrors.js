@@ -6,7 +6,10 @@ export function getApiErrorMessage(error, fallbackMessage = 'We could not comple
 
   const status = error.response.status;
   const data = normalizeErrorData(error.response.data);
-  const violationMessage = formatViolations(data.violations);
+  // Spring's ApiErrorResponse exposes bean-validation failures as
+  // `validationErrors`. Keep the legacy key as a fallback for older
+  // deployments, but prefer the backend's current contract.
+  const violationMessage = formatViolations(data.validationErrors || data.violations);
 
   if (data.message === 'Please verify your email before logging in.') {
     return "We've sent a verification email. Please verify your email to continue.";
