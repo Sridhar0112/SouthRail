@@ -274,7 +274,7 @@ export default function TicketDetailsPage() {
               onClick={() => navigate('/my-tickets')}
               sx={{ mb: 2, fontWeight: 700, borderRadius: 2 }}
             >
-              Back to My Tickets
+              Back to support requests
             </Button>
 
             {/* ── Ticket header ── */}

@@ -153,7 +153,7 @@ export default function PnrPage() {
 }
 
 function PnrResult({ result, onClear, onCancelBooking, canRequestCancellation }) {
-  const passengers = parsePassengerStatuses(result.passengerStatuses);
+  const passengers = normalizePassengers(result.passengers, result.passengerStatuses);
   const lifecycle = buildLifecycle(result);
   const showCancel = canRequestCancellation && result.pnr && canShowCancelButton(result.status);
 
@@ -258,12 +258,13 @@ function PassengerSection({ passengers }) {
         {passengers.length === 0 ? (
           <EmptyState title="Passenger details not available" message="Passenger status was not returned for this booking." />
         ) : (
-          <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2, overflowX: "auto", "& table": { minWidth: 280 } }}>
+          <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2, overflowX: "auto", "& table": { minWidth: 440 } }}>
             <Table size="small" aria-label="Passenger status table" stickyHeader>
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ fontWeight: 900 }}>Passenger</TableCell>
                   <TableCell sx={{ fontWeight: 900 }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 900 }}>Seat / queue</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -271,6 +272,7 @@ function PassengerSection({ passengers }) {
                   <TableRow key={`${passenger.name}-${passenger.status}`} sx={{ '&:hover': { bgcolor: 'action.hover' }, transition: 'background-color 150ms ease' }}>
                     <TableCell sx={{ overflowWrap: "anywhere" }}>{passenger.name}</TableCell>
                     <TableCell><RailwayStatusChip status={passenger.status} /></TableCell>
+                    <TableCell>{passenger.seatNumber || (passenger.waitlistPosition ? `WL ${passenger.waitlistPosition}` : "—")}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -343,6 +345,18 @@ function validatePnr(value) {
   if (!/^\d+$/.test(trimmed)) return "PNR must contain digits only.";
   if (trimmed.length !== 10) return "PNR must be a 10-digit number.";
   return "";
+}
+
+function normalizePassengers(structuredPassengers, legacyStatuses) {
+  if (Array.isArray(structuredPassengers) && structuredPassengers.length) {
+    return structuredPassengers.map((passenger, index) => ({
+      name: passenger?.name || `Passenger ${index + 1}`,
+      status: passenger?.status || "UNKNOWN",
+      waitlistPosition: passenger?.waitlistPosition ?? null,
+      seatNumber: passenger?.seatNumber || "",
+    }));
+  }
+  return parsePassengerStatuses(legacyStatuses);
 }
 
 function parsePassengerStatuses(items) {

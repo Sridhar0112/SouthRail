@@ -289,7 +289,7 @@ export function Shell() {
                   </MenuItem>
                   <MenuItem onClick={() => goTo('/my-tickets')} sx={{ py: 1, mx: 0.5, borderRadius: 1.5 }}>
                     <ListItemIcon><ConfirmationNumberIcon fontSize="small" /></ListItemIcon>
-                    My Tickets
+                    Support requests
                   </MenuItem>
                   {auth.user?.roles?.includes('ROLE_ADMIN') && (
                     <MenuItem onClick={() => goTo('/admin/support-tickets')} sx={{ py: 1, mx: 0.5, borderRadius: 1.5 }}>
