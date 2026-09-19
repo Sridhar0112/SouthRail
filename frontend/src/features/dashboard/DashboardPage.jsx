@@ -344,7 +344,14 @@ function NotificationsSection({ notifications, loading, error, onRetry }) {
               key={notification.id || `${notification.createdAt}-${index}`}
               direction={{ xs: "column", sm: "row" }}
               spacing={{ xs: 0.5, sm: 1.5 }}
-              sx={{ py: 1.25 }}
+              sx={(theme) => ({
+                py: 1.25,
+                px: 1,
+                borderLeft: 3,
+                borderLeftColor: notification.read ? 'transparent' : 'primary.main',
+                bgcolor: notification.read ? 'transparent' : alpha(theme.palette.primary.main, 0.045),
+                borderRadius: 1.5
+              })}
             >
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>

@@ -126,6 +126,18 @@ export function Shell() {
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Box
+        component="a"
+        href="#main-content"
+        sx={{
+          position: 'fixed', left: 12, top: 8, zIndex: 2000, px: 2, py: 1,
+          borderRadius: 1.5, bgcolor: 'primary.main', color: 'primary.contrastText',
+          fontWeight: 800, transform: 'translateY(-150%)', transition: 'transform 150ms ease',
+          '&:focus': { transform: 'translateY(0)' }
+        }}
+      >
+        Skip to main content
+      </Box>
       <AppBar position="sticky" elevation={0} color="inherit">
         <Container maxWidth="xl">
           <Toolbar disableGutters sx={{ gap: { xs: 0.5, md: 1.5 }, minHeight: { xs: 48, sm: 52 }, py: 0.25 }}>
@@ -444,6 +456,14 @@ export function Shell() {
                     </Typography>
                   </Box>
                 </Stack>
+                <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
+                  <Button fullWidth variant="outlined" size="small" startIcon={<PersonIcon />} onClick={() => goTo('/profile')}>
+                    Profile
+                  </Button>
+                  <Button fullWidth variant="outlined" size="small" startIcon={<ConfirmationNumberIcon />} onClick={() => goTo('/my-tickets')}>
+                    Requests
+                  </Button>
+                </Stack>
                 <Button
                   fullWidth
                   variant="outlined"
@@ -460,8 +480,26 @@ export function Shell() {
         </Stack>
       </Drawer>
 
-      <Box component="main" sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <Box id="main-content" component="main" tabIndex={-1} sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Outlet />
+      </Box>
+      <Box component="footer" sx={{ borderTop: 1, borderColor: 'divider', bgcolor: 'background.paper', mt: 'auto' }}>
+        <Container maxWidth="xl" sx={{ py: { xs: 2, sm: 2.5 } }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between">
+            <Stack direction="row" spacing={1} alignItems="center">
+              <TrainIcon color="primary" fontSize="small" />
+              <Box>
+                <Typography variant="subtitle2" fontWeight={800}>SouthRail</Typography>
+                <Typography variant="caption" color="text.secondary">Plan, book, and manage supported rail journeys.</Typography>
+              </Box>
+            </Stack>
+            <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+              <Button component={Link} to="/" size="small">Search trains</Button>
+              {auth.user && <Button component={Link} to="/dashboard" size="small">My journeys</Button>}
+              {auth.user && <Button component={Link} to="/support" size="small">Help & support</Button>}
+            </Stack>
+          </Stack>
+        </Container>
       </Box>
       <AiAssistant authenticated={Boolean(auth.user)} />
     </Box>

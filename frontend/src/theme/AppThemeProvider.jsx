@@ -118,9 +118,9 @@ export function AppThemeProvider({ children }) {
         h6: { fontWeight: 700, fontSize: '0.95rem', lineHeight: 1.3 },
         subtitle1: { fontWeight: 600, fontSize: '0.9rem', lineHeight: 1.4 },
         subtitle2: { fontWeight: 600, fontSize: '0.82rem', lineHeight: 1.4 },
-        body1: { fontSize: '0.88rem', lineHeight: 1.6 },
-        body2: { fontSize: '0.8rem', lineHeight: 1.55 },
-        caption: { fontSize: '0.72rem', lineHeight: 1.45 },
+        body1: { fontSize: '0.94rem', lineHeight: 1.65 },
+        body2: { fontSize: '0.86rem', lineHeight: 1.6 },
+        caption: { fontSize: '0.76rem', lineHeight: 1.5 },
         button: { textTransform: 'none', fontWeight: 600, letterSpacing: 0.01 }
       },
       components: {
@@ -436,6 +436,14 @@ export function AppThemeProvider({ children }) {
               boxShadow: isLight
                 ? '0 24px 80px rgba(13,107,75,0.15), 0 8px 24px rgba(13,107,75,0.08)'
                 : '0 24px 80px rgba(0,0,0,0.50)'
+            },
+            paperFullScreen: {
+              width: '100vw',
+              height: '100dvh',
+              maxWidth: '100vw',
+              maxHeight: '100dvh',
+              margin: 0,
+              borderRadius: 0
             }
           }
         },
@@ -446,7 +454,18 @@ export function AppThemeProvider({ children }) {
           styleOverrides: { root: { minWidth: 0, overflowWrap: 'anywhere', padding: '8px 24px 12px' } }
         },
         MuiDialogActions: {
-          styleOverrides: { root: { padding: '12px 24px 20px', gap: 8 } }
+          styleOverrides: {
+            root: {
+              padding: '12px 24px 20px',
+              gap: 8,
+              '@media (max-width:599.95px)': {
+                padding: '12px 16px 16px',
+                flexDirection: 'column-reverse',
+                alignItems: 'stretch',
+                '& .MuiButton-root': { width: '100%', margin: '0 !important' }
+              }
+            }
+          }
         },
         MuiTableContainer: {
           styleOverrides: { root: { maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', borderRadius: 12 } }
