@@ -17,12 +17,16 @@ function GoogleIcon() {
   );
 }
 
-export default function GoogleSignInButton() {
+export default function GoogleSignInButton({ returnTo = '/dashboard' }) {
   const [starting, setStarting] = useState(false);
 
   const start = () => {
     if (starting) return;
     setStarting(true);
+    const safeReturnTo = typeof returnTo === 'string' && returnTo.startsWith('/') && !returnTo.startsWith('//')
+      ? returnTo
+      : '/dashboard';
+    sessionStorage.setItem('southrail_oauth_return_to', safeReturnTo);
     window.location.assign(googleAuthorizationUrl());
   };
 
