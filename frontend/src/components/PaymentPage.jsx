@@ -70,12 +70,27 @@ export default function PaymentPage() {
   useEffect(() => {
     if (!holdId) {
       navigate("/")
-      return
+      return undefined
     }
 
+    let active = true
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    if (pollTimerRef.current) clearTimeout(pollTimerRef.current)
+    pollingRef.current = false
+    paymentActionRef.current = false
+    expiryRefreshRef.current = false
+    razorpayRef.current?.close()
+    setBooking(null)
+    setBookingError(null)
+    setPaymentState("idle")
+    setErrorMessage(null)
+    setTicketId(undefined)
+    setRecoverablePaymentId(null)
+    setSecondsRemaining(null)
     setLoadingBooking(true)
     api.get(`/reservation-holds/${holdId}`)
       .then(({ data }) => {
+        if (!active) return
         setBooking(data)
         if (data.status === "CONFIRMED" && data.pnr) {
           setTicketId(data.pnr)
@@ -91,11 +106,14 @@ export default function PaymentPage() {
           setErrorMessage("This reservation hold was cancelled and can no longer be paid. Please search again to continue booking.")
         }
       })
-      .catch((error) => setBookingError(getApiErrorMessage(
-        error,
-        "Unable to load booking details. Please go back and try again."
-      )))
-      .finally(() => setLoadingBooking(false))
+      .catch((error) => {
+        if (active) setBookingError(getApiErrorMessage(
+          error,
+          "Unable to load booking details. Please go back and try again."
+        ))
+      })
+      .finally(() => { if (active) setLoadingBooking(false) })
+    return () => { active = false }
   }, [holdId, navigate])
 
   const refreshConfirmedHold = useCallback(async () => {

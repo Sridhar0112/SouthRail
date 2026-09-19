@@ -367,6 +367,7 @@ function SecurityTab({ onDeleteClick }) {
       value={form[field]}
       onChange={(e) => setForm((f) => ({ ...f, [field]: e.target.value }))}
       fullWidth size="small" required
+      inputProps={{ maxLength: 128 }}
       InputProps={{
         endAdornment: (
           <InputAdornment position="end">
