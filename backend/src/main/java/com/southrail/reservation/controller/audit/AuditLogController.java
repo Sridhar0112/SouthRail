@@ -30,6 +30,7 @@ import org.springframework.data.domain.Sort;
                             Sort.by("createdAt").descending()
                     )
             ).map(log -> new AuditDtos.AuditLogResponse(
+                    log.getId(),
                     log.getUsername(),
                     log.getAction(),
                     log.getModule(),
@@ -38,4 +39,3 @@ import org.springframework.data.domain.Sort;
             ));
         }
     }
-

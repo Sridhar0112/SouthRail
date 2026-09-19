@@ -1,6 +1,7 @@
 package com.southrail.reservation.dto.audit;
 
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 public class AuditDtos {
 
@@ -9,6 +10,7 @@ public class AuditDtos {
 
     public static class AuditLogResponse {
 
+        private UUID id;
         private String username;
         private String action;
         private String module;
@@ -18,17 +20,22 @@ public class AuditDtos {
         public AuditLogResponse() {
         }
 
-        public AuditLogResponse(String username,
+        public AuditLogResponse(UUID id,
+                                String username,
                                 String action,
                                 String module,
                                 String description,
                                 OffsetDateTime createdAt) {
+            this.id = id;
             this.username = username;
             this.action = action;
             this.module = module;
             this.description = description;
             this.createdAt = createdAt;
         }
+
+        public UUID getId() { return id; }
+        public void setId(UUID id) { this.id = id; }
 
         public String getUsername() {
             return username;

@@ -169,7 +169,7 @@ export function SuccessAnimation({ ticketId }) {
             variant="contained"
             startIcon={<ReceiptLongIcon />}
             onClick={() =>
-              navigate(ticketId ? `/ticket/${ticketId}` : "/dashboard")
+              navigate(ticketId ? `/pnr?pnr=${encodeURIComponent(ticketId)}` : "/dashboard")
             }
           >
             View ticket

@@ -273,6 +273,18 @@ public class AuthService {
     return issueTokens(user);
   }
 
+  /** Revokes the presented refresh token without disclosing whether it existed. */
+  @Transactional
+  public void logout(AuthDtos.LogoutRequest request) {
+    refreshTokens.findActiveByTokenHashForUpdate(hash(request.getRefreshToken())).ifPresent(token -> {
+      token.setRevoked(true);
+      refreshTokens.save(token);
+      User user = token.getUser();
+      auditLogService.log(user.getId(), user.getEmail(), "USER_LOGOUT", "AUTH",
+          "User signed out and revoked the current refresh token");
+    });
+  }
+
   @Transactional
   public void forgotPassword(AuthDtos.ForgotPasswordRequest request) {
     users.findByEmailIgnoreCaseForUpdate(request.getEmail()).ifPresent(user -> {
