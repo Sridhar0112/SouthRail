@@ -22,6 +22,7 @@ import TrainIcon from '@mui/icons-material/Train';
 import CloseIcon from '@mui/icons-material/Close';
 import { ColorModeContext } from '../theme/AppThemeProvider.jsx';
 import { logout } from '../features/auth/authSlice.js';
+import { AiAssistant } from './AiAssistant.jsx';
 
 function getInitials(name = '') {
   return name.trim().split(/\s+/).map((w) => w[0]).join('').toUpperCase().slice(0, 2);
@@ -446,6 +447,7 @@ export function Shell() {
       <Box component="main" sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Outlet />
       </Box>
+      <AiAssistant authenticated={Boolean(auth.user)} />
     </Box>
   );
 }

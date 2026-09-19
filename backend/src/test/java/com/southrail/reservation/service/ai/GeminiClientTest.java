@@ -12,6 +12,7 @@ import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -46,6 +47,20 @@ class GeminiClientTest {
     assertThat(response.getResponse()).isEqualTo("hello");
     assertThat(apiKeyHeader.get()).isEqualTo("test-api-key");
     assertThat(query.get()).isNull();
+  }
+
+  @Test
+  void exposesModelIdentifiersThatCanBeSentBackToChat() throws Exception {
+    server = server(exchange -> respond(exchange, 200,
+        "{\"models\":[{\"name\":\"models/gemini-test\",\"displayName\":\"Gemini Test\","
+            + "\"supportedGenerationMethods\":[\"generateContent\"]}]}"));
+
+    List<AiDtos.ModelResponse> models = service(1000).getModels();
+
+    assertThat(models).singleElement().satisfies(model -> {
+      assertThat(model.getName()).isEqualTo("gemini-test");
+      assertThat(model.getDisplayName()).isEqualTo("Gemini Test");
+    });
   }
 
   @Test
@@ -124,6 +139,7 @@ class GeminiClientTest {
   private HttpServer server(ExchangeHandler handler) throws IOException {
     HttpServer httpServer = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
     httpServer.createContext("/v1beta/models/gemini-test:generateContent", exchange -> handler.handle(exchange));
+    httpServer.createContext("/v1beta/models", exchange -> handler.handle(exchange));
     httpServer.start();
     return httpServer;
   }

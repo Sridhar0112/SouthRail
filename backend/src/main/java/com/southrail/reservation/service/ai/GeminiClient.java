@@ -169,7 +169,10 @@ public class GeminiClient {
                 }
                 models.add(
                         AiDtos.ModelResponse.builder()
-                                .name(model.path("name").asText())
+                                // Gemini returns resource names such as "models/gemini-2.5-flash".
+                                // The public chat contract accepts a model identifier, and the chat
+                                // endpoint itself adds /models/, so expose only the identifier here.
+                                .name(normalizeModelName(model.path("name").asText()))
                                 .displayName(model.path("displayName").asText())
                                 .description(model.path("description").asText())
                                 .supportedGenerationMethods(methods)
@@ -187,5 +190,11 @@ public class GeminiClient {
                     ex
             );
         }
+    }
+
+    private String normalizeModelName(String providerName) {
+        return providerName != null && providerName.startsWith("models/")
+                ? providerName.substring("models/".length())
+                : providerName;
     }
 }
