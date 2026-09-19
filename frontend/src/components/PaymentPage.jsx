@@ -420,16 +420,12 @@ export default function PaymentPage() {
         background: theme.palette.custom.pageBg
       }}
     >
-      {/* ── Header ── */}
+      {/* ── Page introduction ── */}
       <Box
-        component="header"
+        component="section"
         sx={{
           borderBottom: `1px solid ${theme.palette.divider}`,
-          backdropFilter: "blur(16px)",
-          bgcolor: theme.palette.custom.appBar,
-          position: "sticky",
-          top: 0,
-          zIndex: 100
+          bgcolor: alpha(theme.palette.background.paper, 0.72)
         }}
       >
         <Container maxWidth="lg">
@@ -439,20 +435,10 @@ export default function PaymentPage() {
             justifyContent="space-between"
             py={1.25}
           >
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <TrainIcon sx={{ color: primaryColor, fontSize: 22 }} />
-              <Typography variant="h6" fontWeight={800} color="primary.main">
-                SouthRail
-              </Typography>
-            </Stack>
-
-            <Typography
-              variant="h6"
-              fontWeight={800}
-              sx={{ display: { xs: "none", sm: "block" } }}
-            >
-              Complete your booking
-            </Typography>
+            <Box>
+              <Typography variant="h4" component="h1" fontWeight={900}>Complete your booking</Typography>
+              <Typography variant="body2" color="text.secondary">Review your journey and finish secure payment before the hold expires.</Typography>
+            </Box>
 
             <Tooltip title="Secured by Razorpay & 256-bit SSL">
               <Chip
@@ -471,15 +457,6 @@ export default function PaymentPage() {
           </Stack>
         </Container>
       </Box>
-
-      {/* ── Mobile page title ── */}
-      <Container maxWidth="lg">
-        <Box display={{ xs: "block", sm: "none" }} pt={2} pb={0.5}>
-          <Typography variant="h6" fontWeight={800}>
-            Complete your booking
-          </Typography>
-        </Box>
-      </Container>
 
       {/* ── Main content ── */}
       <Container maxWidth="lg" sx={{ py: { xs: 2, md: 3 } }}>

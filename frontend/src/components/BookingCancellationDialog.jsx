@@ -13,6 +13,8 @@ import {
   Stack,
   Typography
 } from '@mui/material';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import CancelIcon from '@mui/icons-material/Cancel';
 import CloseIcon from '@mui/icons-material/Close';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
@@ -21,6 +23,8 @@ import { RailwayStatusChip } from './RailwayStatusChip.jsx';
 import { getApiErrorMessage } from '../utils/apiErrors.js';
 
 export default function BookingCancellationDialog({ pnr, open, onClose, onCancelled }) {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [reviewLoading, setReviewLoading] = useState(false);
   const [review, setReview] = useState(null);
   const [cancelling, setCancelling] = useState(false);
@@ -82,7 +86,7 @@ export default function BookingCancellationDialog({ pnr, open, onClose, onCancel
   const titlePnr = success?.pnr || review?.pnr || pnr || '';
 
   return (
-    <Dialog open={open} onClose={cancelling ? undefined : onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={cancelling ? undefined : onClose} maxWidth="sm" fullWidth fullScreen={fullScreen}>
       <DialogTitle>Cancel booking{titlePnr ? ` — PNR ${titlePnr}` : ''}</DialogTitle>
       <DialogContent dividers>
         {reviewLoading && (

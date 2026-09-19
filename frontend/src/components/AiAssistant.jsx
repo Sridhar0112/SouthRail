@@ -4,6 +4,8 @@ import {
   DialogTitle, Divider, Fab, FormControl, IconButton, InputLabel, MenuItem,
   Select, Stack, TextField, Tooltip, Typography, alpha
 } from '@mui/material';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
@@ -13,6 +15,8 @@ import { getApiErrorMessage } from '../utils/apiErrors.js';
 const STARTERS = ['How do I book a train?', 'Explain RAC and waitlist', 'How can I cancel a booking?'];
 
 export function AiAssistant({ authenticated }) {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [open, setOpen] = useState(false);
   const [models, setModels] = useState([]);
   const [model, setModel] = useState('');
@@ -85,7 +89,7 @@ export function AiAssistant({ authenticated }) {
         </Fab>
       </Tooltip>
 
-      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm" aria-labelledby="assistant-title">
+      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm" fullScreen={fullScreen} aria-labelledby="assistant-title">
         <DialogTitle id="assistant-title" sx={{ pr: 7 }}>
           <Stack direction="row" spacing={1} alignItems="center">
             <AutoAwesomeIcon color="primary" />
