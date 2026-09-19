@@ -144,7 +144,8 @@ export default function RegisterPage() {
               error={!!form.formState.errors.fullName}
               helperText={form.formState.errors.fullName?.message}
               slotProps={{ input: { startAdornment: <InputAdornment position="start"><BadgeIcon fontSize="small" color="disabled" /></InputAdornment> } }}
-              {...form.register('fullName', { required: 'Full name is required', minLength: { value: 2, message: 'Use at least 2 characters' } })}
+              inputProps={{ maxLength: 120 }}
+              {...form.register('fullName', { required: 'Full name is required', minLength: { value: 2, message: 'Use at least 2 characters' }, maxLength: { value: 120, message: 'Use 120 characters or fewer' } })}
             />
             <TextField
               label="Email"
@@ -158,12 +159,12 @@ export default function RegisterPage() {
             />
             <TextField
               label="Phone number"
-              placeholder="10-digit mobile number"
-              inputProps={{ maxLength: 10 }}
+              placeholder="Optional, up to 15 characters"
+              inputProps={{ maxLength: 15 }}
               error={!!form.formState.errors.phone}
               helperText={form.formState.errors.phone?.message}
               slotProps={{ input: { startAdornment: <InputAdornment position="start"><PhoneIcon fontSize="small" color="disabled" /></InputAdornment> } }}
-              {...form.register('phone', { required: 'Phone number is required', pattern: { value: /^[6-9]\d{9}$/, message: 'Enter a valid 10-digit mobile number' } })}
+              {...form.register('phone', { maxLength: { value: 15, message: 'Use 15 characters or fewer' } })}
             />
             <TextField
               label="Password"
@@ -172,7 +173,8 @@ export default function RegisterPage() {
               error={!!form.formState.errors.password}
               helperText={form.formState.errors.password?.message}
               placeholder="At least 8 characters"
-              {...form.register('password', { required: 'Password is required', minLength: { value: 8, message: 'Use at least 8 characters' } })}
+              inputProps={{ maxLength: 72 }}
+              {...form.register('password', { required: 'Password is required', minLength: { value: 8, message: 'Use at least 8 characters' }, maxLength: { value: 72, message: 'Use 72 characters or fewer' } })}
               slotProps={{ input: { endAdornment: <InputAdornment position="end"><IconButton onClick={() => setShowPassword(!showPassword)} edge="end" aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <VisibilityOff /> : <Visibility />}</IconButton></InputAdornment> } }}
             />
             <PasswordStrengthBar password={password} />

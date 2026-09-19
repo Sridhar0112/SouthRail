@@ -1,4 +1,4 @@
-import { Box, Button, Container, Stack, Typography } from '@mui/material';
+import { Box, Button, Container, Stack, Typography, alpha } from '@mui/material';
 import { isRouteErrorResponse, Link, useRouteError } from 'react-router-dom';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import HomeIcon from '@mui/icons-material/Home';
@@ -25,11 +25,10 @@ export function ErrorBoundary() {
               width: 64,
               height: 64,
               borderRadius: '50%',
-              bgcolor: 'error.main',
+              bgcolor: (theme) => alpha(theme.palette.error.main, 0.12),
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              opacity: 0.15
             }}
           >
             <ErrorOutlineIcon sx={{ fontSize: 32, color: 'error.main' }} />

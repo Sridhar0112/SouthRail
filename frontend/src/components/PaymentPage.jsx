@@ -70,12 +70,27 @@ export default function PaymentPage() {
   useEffect(() => {
     if (!holdId) {
       navigate("/")
-      return
+      return undefined
     }
 
+    let active = true
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    if (pollTimerRef.current) clearTimeout(pollTimerRef.current)
+    pollingRef.current = false
+    paymentActionRef.current = false
+    expiryRefreshRef.current = false
+    razorpayRef.current?.close()
+    setBooking(null)
+    setBookingError(null)
+    setPaymentState("idle")
+    setErrorMessage(null)
+    setTicketId(undefined)
+    setRecoverablePaymentId(null)
+    setSecondsRemaining(null)
     setLoadingBooking(true)
     api.get(`/reservation-holds/${holdId}`)
       .then(({ data }) => {
+        if (!active) return
         setBooking(data)
         if (data.status === "CONFIRMED" && data.pnr) {
           setTicketId(data.pnr)
@@ -86,12 +101,19 @@ export default function PaymentPage() {
         } else if (data.status === "EXPIRED") {
           setPaymentState("expired")
           setErrorMessage("Your reservation hold has expired. The seats have been released. Please search again to continue booking.")
+        } else if (data.status === "CANCELLED") {
+          setPaymentState("unavailable")
+          setErrorMessage("This reservation hold was cancelled and can no longer be paid. Please search again to continue booking.")
         }
       })
-      .catch(() => setBookingError(
-        "Unable to load booking details. Please go back and try again."
-      ))
-      .finally(() => setLoadingBooking(false))
+      .catch((error) => {
+        if (active) setBookingError(getApiErrorMessage(
+          error,
+          "Unable to load booking details. Please go back and try again."
+        ))
+      })
+      .finally(() => { if (active) setLoadingBooking(false) })
+    return () => { active = false }
   }, [holdId, navigate])
 
   const refreshConfirmedHold = useCallback(async () => {
@@ -106,6 +128,11 @@ export default function PaymentPage() {
       paymentActionRef.current = false
       setPaymentState("expired")
       setErrorMessage("Your reservation hold has expired. The seats have been released. Please search again to continue booking.")
+    } else if (data.status === "CANCELLED") {
+      razorpayRef.current?.close()
+      paymentActionRef.current = false
+      setPaymentState("unavailable")
+      setErrorMessage("This reservation hold was cancelled and can no longer be paid. Please search again to continue booking.")
     }
     return false
   }, [holdId])
@@ -393,16 +420,12 @@ export default function PaymentPage() {
         background: theme.palette.custom.pageBg
       }}
     >
-      {/* ── Header ── */}
+      {/* ── Page introduction ── */}
       <Box
-        component="header"
+        component="section"
         sx={{
           borderBottom: `1px solid ${theme.palette.divider}`,
-          backdropFilter: "blur(16px)",
-          bgcolor: theme.palette.custom.appBar,
-          position: "sticky",
-          top: 0,
-          zIndex: 100
+          bgcolor: alpha(theme.palette.background.paper, 0.72)
         }}
       >
         <Container maxWidth="lg">
@@ -412,20 +435,10 @@ export default function PaymentPage() {
             justifyContent="space-between"
             py={1.25}
           >
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <TrainIcon sx={{ color: primaryColor, fontSize: 22 }} />
-              <Typography variant="h6" fontWeight={800} color="primary.main">
-                SouthRail
-              </Typography>
-            </Stack>
-
-            <Typography
-              variant="h6"
-              fontWeight={800}
-              sx={{ display: { xs: "none", sm: "block" } }}
-            >
-              Complete your booking
-            </Typography>
+            <Box>
+              <Typography variant="h4" component="h1" fontWeight={900}>Complete your booking</Typography>
+              <Typography variant="body2" color="text.secondary">Review your journey and finish secure payment before the hold expires.</Typography>
+            </Box>
 
             <Tooltip title="Secured by Razorpay & 256-bit SSL">
               <Chip
@@ -444,15 +457,6 @@ export default function PaymentPage() {
           </Stack>
         </Container>
       </Box>
-
-      {/* ── Mobile page title ── */}
-      <Container maxWidth="lg">
-        <Box display={{ xs: "block", sm: "none" }} pt={2} pb={0.5}>
-          <Typography variant="h6" fontWeight={800}>
-            Complete your booking
-          </Typography>
-        </Box>
-      </Container>
 
       {/* ── Main content ── */}
       <Container maxWidth="lg" sx={{ py: { xs: 2, md: 3 } }}>
@@ -480,8 +484,8 @@ export default function PaymentPage() {
                 icon={<TrainIcon fontSize="small" />}
                 title="Journey summary"
               >
-                <Alert severity={paymentState === "expired" ? "error" : "info"} sx={{ mb: 1.5 }}>
-                  {paymentState === "expired" ? errorMessage : `Seats reserved for ${formatCountdown(secondsRemaining)}`}
+                <Alert severity={["expired", "unavailable"].includes(paymentState) ? "error" : "info"} sx={{ mb: 1.5 }}>
+                  {["expired", "unavailable"].includes(paymentState) ? errorMessage : `Seats reserved for ${formatCountdown(secondsRemaining)}`}
                 </Alert>
                 {/* Route strip */}
                 <Box
@@ -507,9 +511,7 @@ export default function PaymentPage() {
                     <Typography variant="h6" fontWeight={800}>
                       {booking.sourceCode}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {booking.departureTime}
-                    </Typography>
+                    <Typography variant="caption" color="text.secondary">Origin</Typography>
                   </Box>
 
                   <Box flex={1} textAlign="center" px={1}>
@@ -534,9 +536,7 @@ export default function PaymentPage() {
                     <Typography variant="h6" fontWeight={800}>
                       {booking.destinationCode}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {booking.arrivalTime}
-                    </Typography>
+                    <Typography variant="caption" color="text.secondary">Destination</Typography>
                   </Box>
                 </Box>
 
@@ -716,7 +716,7 @@ export default function PaymentPage() {
                   </Collapse>
 
                   {/* Pay button */}
-                  {paymentState === "expired" ? (
+                  {["expired", "unavailable"].includes(paymentState) ? (
                     <Button fullWidth variant="contained" size="large" onClick={() => navigate("/")}>
                       Search trains again
                     </Button>
@@ -793,7 +793,7 @@ export default function PaymentPage() {
 
                   {/* Timeout extra action */}
                   <Collapse
-                    in={paymentState === "timeout" || paymentState === "failed" || paymentState === "expired"}
+                    in={paymentState === "timeout" || paymentState === "failed" || paymentState === "expired" || paymentState === "unavailable"}
                   >
                     <Stack
                       direction="row"

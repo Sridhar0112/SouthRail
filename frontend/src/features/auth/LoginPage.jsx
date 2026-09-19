@@ -204,7 +204,7 @@ export default function LoginPage() {
             <Button type="submit" variant="contained" startIcon={loading ? null : <LoginIcon />} disabled={loading} fullWidth sx={{ py: 1.4, borderRadius: 2 }}>
               {loading ? "Logging in\u2026" : "Sign in"}
             </Button>
-            <GoogleSignInButton />
+            <GoogleSignInButton returnTo={location.state?.from} />
             <Stack direction="row" spacing={1} justifyContent="center">
               <Button component={Link} to="/forgot-password" variant="text" size="small" sx={{ fontSize: '0.8rem' }}>
                 Forgot password

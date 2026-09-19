@@ -64,7 +64,14 @@ export default function OAuthCallbackPage() {
     api.post('/auth/oauth/exchange', { code }).then(({ data }) => {
       storeAuthSession(data);
       dispatch(authenticated(data.user || null));
-      navigate('/dashboard', { replace: true });
+      const savedReturnTo = sessionStorage.getItem('southrail_oauth_return_to');
+      sessionStorage.removeItem('southrail_oauth_return_to');
+      const returnTo = typeof savedReturnTo === 'string'
+        && savedReturnTo.startsWith('/')
+        && !savedReturnTo.startsWith('//')
+        ? savedReturnTo
+        : '/dashboard';
+      navigate(returnTo, { replace: true });
     }).catch((error) => {
       const errorCode = error.response?.data?.errorCode;
       if (errorCode === 'OAUTH_EXCHANGE_EXPIRED') setState('exchange_expired');

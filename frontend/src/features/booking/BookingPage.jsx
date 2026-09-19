@@ -101,6 +101,9 @@ export default function BookingPage() {
       const idempotencyKey = sessionStorage.getItem(`hold-key:${currentSignature}`) || window.crypto.randomUUID();
       sessionStorage.setItem(`hold-key:${currentSignature}`, idempotencyKey);
       const { data } = await api.post('/reservation-holds', values, { headers: { 'Idempotency-Key': idempotencyKey } });
+      // A completed request no longer needs client-side replay protection. Keeping
+      // this key would make a later, identical search reuse an expired hold.
+      sessionStorage.removeItem(`hold-key:${currentSignature}`);
       setResponse(data);
       navigate(`/payment/${data.holdId}`);
       setShowReview(false);

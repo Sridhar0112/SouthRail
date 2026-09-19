@@ -68,12 +68,12 @@ const FAQ_ITEMS = [
   {
     id: 5, category: 'bookings', icon: ConfirmationNumberOutlinedIcon,
     question: 'How do I cancel or modify a booking?',
-    answer: 'Open My Bookings, find the trip, and select "Cancel" for an eligible Confirmed, RAC, or Waitlisted booking. SouthRail shows the server-calculated cancellation charge and refund before you confirm. Booking modifications are not currently supported.',
+    answer: 'Open your Dashboard, find the trip, and select "Cancel" for an eligible Confirmed, RAC, or Waitlisted booking. SouthRail shows the server-calculated cancellation charge and refund before you confirm. Booking modifications are not currently supported.',
   },
   {
     id: 6, category: 'bookings', icon: ConfirmationNumberOutlinedIcon,
     question: 'Where do I find my booking confirmation?',
-    answer: 'Confirmations are emailed immediately after booking. You can also find all your bookings under My Bookings in the app or website. Each booking has a unique reference number — keep it handy for check-in and customer service queries.',
+    answer: 'Confirmations are emailed after booking. You can also find all your bookings on your Dashboard. Each booking has a unique PNR — keep it handy for ticket downloads and support queries.',
   },
   {
     id: 7, category: 'bookings', icon: TrainOutlinedIcon,

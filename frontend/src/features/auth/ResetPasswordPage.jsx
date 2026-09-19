@@ -178,6 +178,7 @@ export default function ResetPasswordPage() {
                       label="New password"
                       type={showPass ? 'text' : 'password'}
                       autoComplete="new-password"
+                      inputProps={{ maxLength: 72 }}
                       fullWidth
                       disabled={loading || missingToken}
                       error={!!form.formState.errors.password}
@@ -191,7 +192,7 @@ export default function ResetPasswordPage() {
                           </InputAdornment>
                         ),
                       }}
-                      {...form.register('password', { required: 'Password is required', minLength: { value: 8, message: 'Use at least 8 characters' } })}
+                      {...form.register('password', { required: 'Password is required', minLength: { value: 8, message: 'Use at least 8 characters' }, maxLength: { value: 72, message: 'Use 72 characters or fewer' } })}
                     />
                     <Box sx={{ mt: 1 }}>
                       <PasswordStrength password={password} theme={theme} />
