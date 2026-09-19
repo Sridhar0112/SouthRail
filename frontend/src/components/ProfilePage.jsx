@@ -206,10 +206,10 @@ function PersonalInfoTab({ profile, loading, error, onSaved,onProfileUpdated, on
     setMessage(null);
     try {
       const { data } = await api.put('/users/me', {
-  fullName: form.fullName,
-  phone: form.phone.replace(/\D/g, '').slice(0, 10)
-});
-onProfileUpdated?.(data);
+        fullName: form.fullName.trim(),
+        phone: form.phone.trim()
+      });
+      onProfileUpdated?.(data);
       setMessage({ type: 'success', text: 'Profile updated successfully.' });
       setEditing(false);
       onSaved?.();
@@ -257,6 +257,7 @@ onProfileUpdated?.(data);
                   disabled={!editing}
                   required
                   placeholder="Your full name"
+                  inputProps={{ minLength: 2, maxLength: 120 }}
                 />
               </FieldRow>
 
@@ -282,17 +283,10 @@ onProfileUpdated?.(data);
                   label="Phone"
                   fullWidth size="small"
                   value={form.phone}
-                  onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
+                  onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value.slice(0, 15) }))}
                   disabled={!editing}
-                  placeholder="10-digit mobile number"
-                  inputProps={{ maxLength: 10 }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Typography variant="body2" color="text.secondary">+91</Typography>
-                      </InputAdornment>
-                    )
-                  }}
+                  placeholder="Optional phone number"
+                  inputProps={{ maxLength: 15 }}
                 />
               </FieldRow>
 
