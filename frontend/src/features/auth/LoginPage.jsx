@@ -294,7 +294,7 @@ export default function LoginPage() {
             </Typography>
           </Box>
         </DialogContent>
-        <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: 3, pt: 1.5, gap: 1.5, flexDirection: { xs: "column-reverse", sm: "row" }, "& .MuiButton-root": { width: { xs: "100%", sm: "auto" }, ml: { xs: "0 !important" } } }}>
+        <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: 3, pt: 1.5, gap: 1.5, flexDirection: { xs: "column", sm: "row" }, "& .MuiButton-root": { width: { xs: "100%", sm: "auto" }, ml: { xs: "0 !important" } } }}>
           <Button onClick={() => { setShowUnlock(false); setLockedUntil(null); setCountdownSecs(0); }} variant="outlined" color="inherit" size="small" sx={{ flex: 1, borderRadius: 2, fontWeight: 600, py: 1, fontSize: "0.82rem" }}>
             Close
           </Button>

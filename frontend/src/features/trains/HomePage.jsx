@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { motion as Motion } from 'framer-motion';
 import {
   Alert,
   Autocomplete,
@@ -190,7 +191,7 @@ export default function HomePage() {
           <Grid container spacing={compactSearch ? 2 : 3} alignItems="center">
             {!compactSearch && (
               <Grid item xs={12} md={6}>
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+                <Motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
                   <Typography
                     variant="h1"
                     sx={{
@@ -227,11 +228,11 @@ export default function HomePage() {
                       </Stack>
                     ))}
                   </Stack>
-                </motion.div>
+                </Motion.div>
               </Grid>
             )}
             <Grid item xs={12} md={compactSearch ? 12 : 6}>
-              <motion.div
+              <Motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: compactSearch ? 0 : 0.15 }}
@@ -372,7 +373,7 @@ export default function HomePage() {
                     </Grid>
                   </Box>
                 </Paper>
-              </motion.div>
+              </Motion.div>
             </Grid>
           </Grid>
         </Container>
@@ -440,22 +441,22 @@ export default function HomePage() {
           {!trains.loading && !searchIssue && !trains.error && hasResults && (
             <Box role="region" aria-live="polite" aria-label="Train search results">
               <Box>
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                <Motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                   <Typography variant="h4" fontWeight={800} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <TrainIcon color="primary" /> Available trains
                   </Typography>
                   <Typography color="text.secondary" sx={{ mt: 0.5 }}>
                     Choose a train based on fare, duration, and availability.
                   </Typography>
-                </motion.div>
+                </Motion.div>
               </Box>
               <RouteComparison results={sortedResults} />
               <Grid container spacing={2}>
                 {sortedResults.map((train, idx) => (
                   <Grid item xs={12} key={train.trainId}>
-                    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.04 }}>
+                    <Motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.04 }}>
                       <TrainResultCard train={train} search={trains.selectedSearch} />
-                    </motion.div>
+                    </Motion.div>
                   </Grid>
                 ))}
               </Grid>
