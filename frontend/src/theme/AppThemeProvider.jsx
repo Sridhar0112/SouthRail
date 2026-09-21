@@ -460,7 +460,7 @@ export function AppThemeProvider({ children }) {
               gap: 8,
               '@media (max-width:599.95px)': {
                 padding: '12px 16px 16px',
-                flexDirection: 'column-reverse',
+                flexDirection: 'column',
                 alignItems: 'stretch',
                 '& .MuiButton-root': { width: '100%', margin: '0 !important' }
               }

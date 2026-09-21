@@ -64,6 +64,8 @@ export default function PaymentPage() {
   const pollingRef = useRef(false)
   const paymentActionRef = useRef(false)
   const expiryRefreshRef = useRef(false)
+  const currentHoldRef = useRef(holdId)
+  currentHoldRef.current = holdId
 
   // ── Fetch booking ──────────────────────────────────────────────────────────
 
@@ -117,7 +119,9 @@ export default function PaymentPage() {
   }, [holdId, navigate])
 
   const refreshConfirmedHold = useCallback(async () => {
-    const { data } = await api.get(`/reservation-holds/${holdId}`)
+    const expectedHoldId = holdId
+    const { data } = await api.get(`/reservation-holds/${expectedHoldId}`)
+    if (currentHoldRef.current !== expectedHoldId) return false
     setBooking(data)
     if (data.status === "CONFIRMED" && data.pnr) {
       setTicketId(data.pnr)
@@ -167,6 +171,8 @@ export default function PaymentPage() {
 
   const pollPaymentStatus = useCallback((paymentId) => {
     if (pollingRef.current) return
+    const expectedHoldId = holdId
+    if (currentHoldRef.current !== expectedHoldId) return
     pollingRef.current = true
     setRecoverablePaymentId(paymentId)
     setPaymentState("verification_pending")
@@ -176,7 +182,7 @@ export default function PaymentPage() {
     const poll = async () => {
       try {
         const { data } = await api.get(`/payments/${paymentId}`)
-        if (!pollingRef.current) return
+        if (!pollingRef.current || currentHoldRef.current !== expectedHoldId) return
         if (data.status === "CAPTURED") {
           const confirmed = await refreshConfirmedHold()
           if (confirmed) {
@@ -198,7 +204,7 @@ export default function PaymentPage() {
         // A transient status read failure is retried until the bounded deadline.
       }
 
-      if (!pollingRef.current) return
+      if (!pollingRef.current || currentHoldRef.current !== expectedHoldId) return
       if (Date.now() >= deadline) {
         pollingRef.current = false
         paymentActionRef.current = false
@@ -210,16 +216,18 @@ export default function PaymentPage() {
     }
 
     poll()
-  }, [booking, refreshConfirmedHold])
+  }, [booking, holdId, refreshConfirmedHold])
 
   const handlePay = useCallback(async () => {
     if (!booking || paymentActionRef.current) return
+    const expectedHoldId = holdId
     paymentActionRef.current = true
     setErrorMessage(null)
     setPaymentState("creating_order")
 
     // 1. Load Razorpay SDK
     const loaded = await loadRazorpayScript()
+    if (currentHoldRef.current !== expectedHoldId) return
     if (!loaded) {
       setErrorMessage(
         "Payment gateway failed to load. Please refresh and try again."
@@ -240,13 +248,16 @@ export default function PaymentPage() {
         `/payments/reservation-holds/${booking.holdId}/orders`, {},
         { headers: { "Idempotency-Key": idempotencyKey } }
       )
+      if (currentHoldRef.current !== expectedHoldId) return
       orderData = createdOrder
     } catch (err) {
+      if (currentHoldRef.current !== expectedHoldId) return
       if (err.response?.data?.errorCode === "PAYMENT_ATTEMPT_ACTIVE") {
         try {
           const { data: activePayment } = await api.get(
             `/payments/reservation-holds/${booking.holdId}/active`
           )
+          if (currentHoldRef.current !== expectedHoldId) return
           setRecoverablePaymentId(activePayment.paymentId)
           if (activePayment.status === "CAPTURED") {
             const confirmed = await refreshConfirmedHold()
@@ -266,6 +277,7 @@ export default function PaymentPage() {
             return
           }
         } catch (recoveryError) {
+          if (currentHoldRef.current !== expectedHoldId) return
           setErrorMessage(
             getApiErrorMessage(recoveryError, "The active payment attempt could not be recovered. Please try again shortly.")
           )
@@ -286,8 +298,11 @@ export default function PaymentPage() {
       }
     }
 
+    if (currentHoldRef.current !== expectedHoldId) return
+
     // 3. Start payment timeout watchdog
     timeoutRef.current = setTimeout(() => {
+      if (currentHoldRef.current !== expectedHoldId) return
       razorpayRef.current?.close()
       paymentActionRef.current = false
       setPaymentState("timeout")
@@ -310,6 +325,7 @@ export default function PaymentPage() {
       theme: { color: "#064E3B" },
       modal: {
         ondismiss: () => {
+          if (currentHoldRef.current !== expectedHoldId) return
           if (timeoutRef.current) clearTimeout(timeoutRef.current)
           setPaymentState("idle")
           paymentActionRef.current = false
@@ -318,6 +334,7 @@ export default function PaymentPage() {
       },
       retry: { enabled: false, max_count: 0 },
       handler: async response => {
+        if (currentHoldRef.current !== expectedHoldId) return
         if (timeoutRef.current) clearTimeout(timeoutRef.current)
         setPaymentState("verifying")
 
@@ -328,6 +345,7 @@ export default function PaymentPage() {
             razorpayOrderId: response.razorpay_order_id,
             razorpaySignature: response.razorpay_signature
           })
+          if (currentHoldRef.current !== expectedHoldId) return
 
           if (result.status === "CAPTURED") {
             const confirmed = await refreshConfirmedHold()
@@ -346,6 +364,7 @@ export default function PaymentPage() {
             )
           }
         } catch (err) {
+          if (currentHoldRef.current !== expectedHoldId) return
           setErrorMessage(
             getApiErrorMessage(err, "Verification could not be completed. Check the payment status before retrying.")
           )
@@ -358,6 +377,7 @@ export default function PaymentPage() {
     const rzp = new window.Razorpay(options)
     razorpayRef.current = rzp
     rzp.on("payment.failed", () => {
+      if (currentHoldRef.current !== expectedHoldId) return
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
       sessionStorage.removeItem(`payment-key:${booking.holdId}`)
       setErrorMessage(
@@ -367,7 +387,7 @@ export default function PaymentPage() {
       paymentActionRef.current = false
     })
     rzp.open()
-  }, [booking, pollPaymentStatus, refreshConfirmedHold])
+  }, [booking, holdId, pollPaymentStatus, refreshConfirmedHold])
 
   const handleRetry = useCallback(() => {
     paymentActionRef.current = false
@@ -377,9 +397,11 @@ export default function PaymentPage() {
 
   const handleCheckStatus = useCallback(async () => {
     if (!recoverablePaymentId || pollingRef.current) return
+    const expectedHoldId = holdId
     setErrorMessage(null)
     try {
       const { data } = await api.get(`/payments/${recoverablePaymentId}`)
+      if (currentHoldRef.current !== expectedHoldId) return
       if (data.status === "CAPTURED") {
         const confirmed = await refreshConfirmedHold()
         if (confirmed) { paymentActionRef.current = false; setPaymentState("success") }
@@ -396,12 +418,13 @@ export default function PaymentPage() {
         pollPaymentStatus(recoverablePaymentId)
       }
     } catch (err) {
+      if (currentHoldRef.current !== expectedHoldId) return
       setErrorMessage(
         getApiErrorMessage(err, "Payment status could not be checked. Please try again.")
       )
       setPaymentState("status_check_available")
     }
-  }, [booking, handlePay, pollPaymentStatus, recoverablePaymentId, refreshConfirmedHold])
+  }, [booking, handlePay, holdId, pollPaymentStatus, recoverablePaymentId, refreshConfirmedHold])
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
