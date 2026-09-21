@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useLocation, useNavigate, useParams } from "react-router-dom"
 import {
   Alert,
   Box,
@@ -46,6 +46,7 @@ const PAYMENT_STATUS_POLL_TIMEOUT_MS = 30000
 export default function PaymentPage() {
   const theme = useTheme()
   const navigate = useNavigate()
+  const location = useLocation()
   const { holdId } = useParams()
 
   const [booking, setBooking] = useState(null)
@@ -435,6 +436,8 @@ export default function PaymentPage() {
     "verification_pending"
   ].includes(paymentState)
   const primaryColor = theme.palette.primary.main
+  const departureTime = booking?.departureTime || location.state?.departureTime
+  const arrivalTime = booking?.arrivalTime || location.state?.arrivalTime
 
   return (
     <Box
@@ -534,7 +537,8 @@ export default function PaymentPage() {
                     <Typography variant="h6" fontWeight={800}>
                       {booking.sourceCode}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">Origin</Typography>
+                    <Typography fontWeight={800}>{formatJourneyTime(departureTime)}</Typography>
+                    <Typography variant="caption" color="text.secondary">Departure</Typography>
                   </Box>
 
                   <Box flex={1} textAlign="center" px={1}>
@@ -559,7 +563,8 @@ export default function PaymentPage() {
                     <Typography variant="h6" fontWeight={800}>
                       {booking.destinationCode}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">Destination</Typography>
+                    <Typography fontWeight={800}>{formatJourneyTime(arrivalTime)}</Typography>
+                    <Typography variant="caption" color="text.secondary">Arrival</Typography>
                   </Box>
                 </Box>
 
@@ -886,4 +891,13 @@ function formatCountdown(seconds) {
   const minutes = Math.floor(seconds / 60).toString().padStart(2, "0")
   const remainder = (seconds % 60).toString().padStart(2, "0")
   return `${minutes}:${remainder}`
+}
+
+function formatJourneyTime(value) {
+  if (!value) return "—"
+  const [hours, minutes] = String(value).split(":")
+  if (hours == null || minutes == null) return String(value)
+  const date = new Date(2000, 0, 1, Number(hours), Number(minutes))
+  if (Number.isNaN(date.getTime())) return String(value)
+  return new Intl.DateTimeFormat("en-IN", { hour: "numeric", minute: "2-digit" }).format(date)
 }
