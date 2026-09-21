@@ -517,6 +517,8 @@ const TrainResultCard = memo(function TrainResultCard({ train, search }) {
     travelClass: search?.travelClass || '3A',
     quota: search?.quota || 'GENERAL'
   });
+  if (train.departureTime) bookingParams.set('departureTime', train.departureTime);
+  if (train.arrivalTime) bookingParams.set('arrivalTime', train.arrivalTime);
 
   return (
     <Card

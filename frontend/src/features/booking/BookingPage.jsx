@@ -105,7 +105,14 @@ export default function BookingPage() {
       // this key would make a later, identical search reuse an expired hold.
       sessionStorage.removeItem(`hold-key:${currentSignature}`);
       setResponse(data);
-      navigate(`/payment/${data.holdId}`);
+      const sourceStop = train?.route?.find((stop) => stop.stationCode === values.sourceStationCode);
+      const destinationStop = train?.route?.find((stop) => stop.stationCode === values.destinationStationCode);
+      navigate(`/payment/${data.holdId}`, {
+        state: {
+          departureTime: searchParams.get('departureTime') || sourceStop?.departureTime || sourceStop?.arrivalTime || null,
+          arrivalTime: searchParams.get('arrivalTime') || destinationStop?.arrivalTime || destinationStop?.departureTime || null
+        }
+      });
       setShowReview(false);
     } catch (apiError) {
       setSubmitError(isAuthError(apiError)
