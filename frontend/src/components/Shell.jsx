@@ -176,7 +176,7 @@ export function Shell() {
                   SouthRail
                 </Typography>
                 <Typography variant="caption" color="text.secondary" noWrap sx={{ fontSize: '0.62rem', lineHeight: 1, display: { xs: 'none', sm: 'block' } }}>
-                  Indian Railways Booking
+                  Rail Journey Booking
                 </Typography>
               </Box>
             </Stack>
@@ -252,9 +252,10 @@ export function Shell() {
                   <IconButton
                     ref={avatarButtonRef}
                     onClick={handleMenuOpen}
+                    aria-label="Open account menu"
                     aria-haspopup="menu"
                     aria-expanded={anchorEl ? 'true' : undefined}
-                    sx={{ p: 0 }}
+                    sx={{ p: 0, width: 44, height: 44, flexShrink: 0 }}
                   >
                     <Avatar
                       sx={{
@@ -376,7 +377,7 @@ export function Shell() {
               <Box>
                 <Typography variant="h6" fontWeight={800} sx={{ lineHeight: 1.2 }}>SouthRail</Typography>
                 <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.62rem', lineHeight: 1 }}>
-                  Indian Railways Booking
+                  Rail Journey Booking
                 </Typography>
               </Box>
             </Stack>
