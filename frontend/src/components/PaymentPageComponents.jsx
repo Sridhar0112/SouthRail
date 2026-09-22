@@ -43,21 +43,21 @@ export function SectionCard({ icon, title, children }) {
     <Card
       variant="outlined"
       sx={{
-        borderRadius: 2,
-        border: `1px solid ${theme.palette.custom?.cardBorder ??
-          theme.palette.divider}`,
-        boxShadow: theme.palette.custom?.cardShadow,
-        mb: 2
+        borderRadius: 2.5,
+        border: `1px solid ${theme.palette.custom?.cardBorder ?? theme.palette.divider}`,
+        boxShadow: "none",
+        mb: 2,
+        overflow: "hidden"
       }}
     >
-      <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
-        <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
+      <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
+        <Stack direction="row" alignItems="center" spacing={1.25} mb={1.75}>
           <Box
             sx={{
-              width: 32,
-              height: 32,
-              borderRadius: 1.5,
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
+              width: 36,
+              height: 36,
+              borderRadius: 2,
+              bgcolor: alpha(theme.palette.primary.main, 0.09),
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -67,7 +67,7 @@ export function SectionCard({ icon, title, children }) {
           >
             {icon}
           </Box>
-          <Typography variant="h6" fontWeight={800}>
+          <Typography variant="h6" fontWeight={800} sx={{ lineHeight: 1.25 }}>
             {title}
           </Typography>
         </Stack>
@@ -83,14 +83,15 @@ export function DetailRow({ label, value }) {
       sx={{
         display: "flex",
         justifyContent: "space-between",
-        alignItems: "center",
-        py: 0.5
+        alignItems: "flex-start",
+        gap: 2,
+        py: 0.65
       }}
     >
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" color="text.secondary" sx={{ flexShrink: 0 }}>
         {label}
       </Typography>
-      <Typography variant="body2" fontWeight={600} textAlign="right">
+      <Typography variant="body2" fontWeight={700} textAlign="right" sx={{ minWidth: 0 }}>
         {value}
       </Typography>
     </Box>
@@ -105,10 +106,12 @@ export function FareRow({ label, amount, bold, large }) {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        py: bold ? 1 : 0.5,
-        px: bold ? 1.5 : 0,
-        bgcolor: bold ? alpha(theme.palette.primary.main, 0.06) : "transparent",
-        borderRadius: bold ? 1.5 : 0
+        gap: 2,
+        py: bold ? 1.25 : 0.5,
+        px: bold ? { xs: 1.25, sm: 1.5 } : 0,
+        bgcolor: bold ? alpha(theme.palette.primary.main, 0.055) : "transparent",
+        borderRadius: bold ? 2 : 0,
+        border: bold ? `1px solid ${alpha(theme.palette.primary.main, 0.10)}` : 0
       }}
     >
       <Typography
@@ -120,8 +123,9 @@ export function FareRow({ label, amount, bold, large }) {
       </Typography>
       <Typography
         variant={large ? "h5" : "body2"}
-        fontWeight={bold ? 800 : 600}
+        fontWeight={bold ? 900 : 600}
         color={bold ? "primary.main" : "text.primary"}
+        sx={{ whiteSpace: "nowrap" }}
       >
         ₹{formatRupees(amount)}
       </Typography>
@@ -132,45 +136,41 @@ export function FareRow({ label, amount, bold, large }) {
 export function SuccessAnimation({ ticketId }) {
   const navigate = useNavigate()
   return (
-    <Fade in timeout={600}>
-      <Box textAlign="center" py={4}>
+    <Fade in timeout={450}>
+      <Box textAlign="center" py={{ xs: 2.5, sm: 3.5 }}>
         <Box
           sx={{
-            width: 80,
-            height: 80,
+            width: 72,
+            height: 72,
             borderRadius: "50%",
-            bgcolor: "success.main",
+            bgcolor: (theme) => alpha(theme.palette.success.main, 0.12),
+            color: "success.main",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             mx: "auto",
             mb: 2,
-            animation: "pulse 1.5s ease-in-out infinite",
-            "@keyframes pulse": {
-              "0%, 100%": { transform: "scale(1)", opacity: 1 },
-              "50%": { transform: "scale(1.06)", opacity: 0.92 }
-            }
+            border: (theme) => `1px solid ${alpha(theme.palette.success.main, 0.22)}`
           }}
         >
-          <CheckCircleOutlineIcon sx={{ fontSize: 44, color: "white" }} />
+          <CheckCircleOutlineIcon sx={{ fontSize: 40 }} />
         </Box>
-        <Typography variant="h5" fontWeight={800} color="success.main" mb={0.5}>
-          Payment successful
+        <Typography variant="h5" fontWeight={900} mb={0.75}>
+          Booking confirmed
         </Typography>
-        <Typography variant="body2" color="text.secondary" mb={3}>
-          Your ticket has been booked. Check your email for the confirmation.
+        <Typography variant="body2" color="text.secondary" mb={3} sx={{ maxWidth: 420, mx: "auto" }}>
+          Your payment was successful and your ticket is ready. You can open the ticket now or manage the journey from your dashboard.
         </Typography>
         <Stack
           direction={{ xs: "column", sm: "row" }}
-          spacing={1.5}
+          spacing={1.25}
           justifyContent="center"
+          sx={{ "& .MuiButton-root": { minWidth: { sm: 150 } } }}
         >
           <Button
             variant="contained"
             startIcon={<ReceiptLongIcon />}
-            onClick={() =>
-              navigate(ticketId ? `/pnr?pnr=${encodeURIComponent(ticketId)}` : "/dashboard")
-            }
+            onClick={() => navigate(ticketId ? `/pnr?pnr=${encodeURIComponent(ticketId)}` : "/dashboard")}
           >
             View ticket
           </Button>
@@ -185,16 +185,16 @@ export function SuccessAnimation({ ticketId }) {
 
 export function PaymentSkeleton() {
   return (
-    <Grid container spacing={3}>
+    <Grid container spacing={{ xs: 2, md: 3 }}>
       <Grid item xs={12} md={7}>
         {[1, 2, 3].map(i => (
           <Box key={i} mb={2}>
-            <Skeleton variant="rounded" height={160} />
+            <Skeleton variant="rounded" height={i === 1 ? 180 : 140} sx={{ borderRadius: 2.5 }} />
           </Box>
         ))}
       </Grid>
       <Grid item xs={12} md={5}>
-        <Skeleton variant="rounded" height={480} />
+        <Skeleton variant="rounded" height={420} sx={{ borderRadius: 2.5 }} />
       </Grid>
     </Grid>
   )
