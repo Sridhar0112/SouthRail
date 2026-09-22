@@ -36,22 +36,15 @@ import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOu
 import api from '../../services/api.js';
 import { getApiErrorMessage } from '../../utils/apiErrors.js';
 
-// ─── Constants ───────────────────────────────────────────────────────────────
-// All values, keys, and filtering semantics below are UNCHANGED from the
-// original implementation. Only presentation (the JSX/sx below) has been
-// redesigned.
-
 const STATUS_FILTERS = ['All', 'OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'];
 
 const STATUS_META = {
-  OPEN:        { label: 'Open',        color: 'primary' },
+  OPEN: { label: 'Open', color: 'primary' },
   IN_PROGRESS: { label: 'In Progress', color: 'warning' },
-  RESOLVED:    { label: 'Resolved',    color: 'success' },
-  CLOSED:      { label: 'Closed',      color: 'default' },
+  RESOLVED: { label: 'Resolved', color: 'success' },
+  CLOSED: { label: 'Closed', color: 'default' },
 };
 
-// Accent per status — computed from theme.palette via useTheme in TicketCard
-// so dark mode stays correct without hardcoded hex values.
 function useStatusAccent(status) {
   const theme = useTheme();
   const { palette } = theme;
@@ -68,25 +61,24 @@ function useStatusAccent(status) {
 }
 
 const TOPIC_LABELS = {
-  account:   'Account',
-  booking:   'Booking',
-  payment:   'Payment',
-  refund:    'Refund',
-  general:   'General',
+  account: 'Account & login',
+  booking: 'Booking',
+  bookings: 'Bookings & travel',
+  payment: 'Payment',
+  payments: 'Payments & refunds',
+  refund: 'Refund',
+  notifications: 'Notifications',
+  general: 'General',
   complaint: 'Complaint',
+  other: 'Something else',
 };
 
-// Quick filter definitions — additive, client-side-only shortcuts layered on
-// top of the existing search/status filtering. They do not replace or alter
-// the original filteredTickets logic; they narrow the already-filtered list.
 const QUICK_FILTERS = [
-  { key: 'recent',     label: 'Recent',       days: null, openOnly: false },
-  { key: '7d',         label: 'Last 7 Days',  days: 7,    openOnly: false },
-  { key: '30d',        label: 'Last 30 Days', days: 30,   openOnly: false },
-  { key: 'openIssues', label: 'Open Issues',  days: null, openOnly: true },
+  { key: 'recent', label: 'Recent', days: null, openOnly: false },
+  { key: '7d', label: 'Last 7 Days', days: 7, openOnly: false },
+  { key: '30d', label: 'Last 30 Days', days: 30, openOnly: false },
+  { key: 'openIssues', label: 'Open Issues', days: null, openOnly: true },
 ];
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatDate(iso) {
   if (!iso) return '—';
@@ -113,9 +105,6 @@ function withinDays(iso, days) {
   return created >= cutoff;
 }
 
-
-// ─── Sub-components ──────────────────────────────────────────────────────────
-
 function StatusChip({ status, size = 'small' }) {
   const meta = STATUS_META[status] ?? { label: status, color: 'default' };
   return (
@@ -123,17 +112,10 @@ function StatusChip({ status, size = 'small' }) {
       label={meta.label}
       color={meta.color}
       size={size}
-      sx={{
-        fontWeight: 700,
-        letterSpacing: 0.3,
-        borderRadius: 1.5,
-        px: 0.5,
-      }}
+      sx={{ fontWeight: 700, letterSpacing: 0.3, borderRadius: 1.5, px: 0.5 }}
     />
   );
 }
-
-// ── Premium hero header ──
 
 function PageHero({ ticketCount, loading }) {
   return (
@@ -150,7 +132,6 @@ function PageHero({ ticketCount, loading }) {
         boxShadow: theme.palette.custom.cardShadow,
       })}
     >
-      {/* Decorative ambient glow — purely visual, no layout impact */}
       <Box
         sx={{
           position: 'absolute',
@@ -196,10 +177,7 @@ function PageHero({ ticketCount, loading }) {
             <SupportAgentIcon />
           </Avatar>
           <Box sx={{ minWidth: 0 }}>
-            <Typography
-              variant="overline"
-              sx={{ opacity: 0.78, fontWeight: 700, letterSpacing: 1.1 }}
-            >
+            <Typography variant="overline" sx={{ opacity: 0.78, fontWeight: 700, letterSpacing: 1.1 }}>
               Support Center
             </Typography>
             <Typography
@@ -210,8 +188,7 @@ function PageHero({ ticketCount, loading }) {
               My Support Tickets
             </Typography>
             <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5, maxWidth: 440, overflowWrap: 'anywhere' }}>
-              Track every conversation with our support team, follow up on open cases, and
-              review resolutions — all in one place.
+              Track every conversation with our support team, follow up on open cases, and review resolutions — all in one place.
             </Typography>
           </Box>
         </Stack>
@@ -234,25 +211,10 @@ function PageHero({ ticketCount, loading }) {
   );
 }
 
-// ── Statistics dashboard ──
-
 function StatCard({ icon, label, value, color, delay }) {
   return (
     <Fade in timeout={500} style={{ transitionDelay: `${delay}ms` }}>
-      <Card
-        variant="outlined"
-        sx={(theme) => ({
-          borderRadius: 3,
-          borderColor: theme.palette.custom.cardBorder,
-          height: '100%',
-          transition: 'box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease',
-          '&:hover': {
-            boxShadow: theme.palette.custom.cardShadow,
-            borderColor: color.solid,
-            transform: 'translateY(-3px)',
-          },
-        })}
-      >
+      <Card variant="outlined" sx={(theme) => ({ borderRadius: 3, borderColor: theme.palette.custom.cardBorder, height: '100%' })}>
         <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
           <Stack direction="row" alignItems="center" spacing={1.5}>
             <Avatar
@@ -269,20 +231,10 @@ function StatCard({ icon, label, value, color, delay }) {
               {icon}
             </Avatar>
             <Box sx={{ minWidth: 0 }}>
-              <Typography
-                variant="h5"
-                fontWeight={800}
-                sx={{ lineHeight: 1.1, fontSize: { xs: '1.35rem', sm: '1.6rem' } }}
-              >
+              <Typography variant="h5" fontWeight={800} sx={{ lineHeight: 1.1, fontSize: { xs: '1.35rem', sm: '1.6rem' } }}>
                 {value}
               </Typography>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                fontWeight={600}
-                noWrap
-                sx={{ display: 'block' }}
-              >
+              <Typography variant="caption" color="text.secondary" fontWeight={600} noWrap sx={{ display: 'block' }}>
                 {label}
               </Typography>
             </Box>
@@ -303,34 +255,10 @@ function StatsDashboard({ tickets, loading }) {
   }, [tickets]);
 
   const cards = [
-    {
-      key: 'total',
-      label: 'Total Tickets',
-      value: counts.total,
-      icon: <AssignmentOutlinedIcon fontSize="small" />,
-      color: { soft: 'rgba(25,118,210,0.1)', solid: '#1565c0' },
-    },
-    {
-      key: 'open',
-      label: 'Open Tickets',
-      value: counts.OPEN,
-      icon: <ConfirmationNumberOutlinedIcon fontSize="small" />,
-      color: { soft: 'rgba(2,136,209,0.1)', solid: '#0277bd' },
-    },
-    {
-      key: 'inprogress',
-      label: 'In Progress',
-      value: counts.IN_PROGRESS,
-      icon: <HourglassEmptyOutlinedIcon fontSize="small" />,
-      color: { soft: 'rgba(237,108,2,0.1)', solid: '#ed6c02' },
-    },
-    {
-      key: 'resolved',
-      label: 'Resolved Tickets',
-      value: counts.RESOLVED,
-      icon: <TaskAltOutlinedIcon fontSize="small" />,
-      color: { soft: 'rgba(46,125,50,0.1)', solid: '#2e7d32' },
-    },
+    { key: 'total', label: 'Total Tickets', value: counts.total, icon: <AssignmentOutlinedIcon fontSize="small" />, color: { soft: 'rgba(25,118,210,0.1)', solid: '#1565c0' } },
+    { key: 'open', label: 'Open Tickets', value: counts.OPEN, icon: <ConfirmationNumberOutlinedIcon fontSize="small" />, color: { soft: 'rgba(2,136,209,0.1)', solid: '#0277bd' } },
+    { key: 'inprogress', label: 'In Progress', value: counts.IN_PROGRESS, icon: <HourglassEmptyOutlinedIcon fontSize="small" />, color: { soft: 'rgba(237,108,2,0.1)', solid: '#ed6c02' } },
+    { key: 'resolved', label: 'Resolved Tickets', value: counts.RESOLVED, icon: <TaskAltOutlinedIcon fontSize="small" />, color: { soft: 'rgba(46,125,50,0.1)', solid: '#2e7d32' } },
   ];
 
   return (
@@ -350,13 +278,7 @@ function StatsDashboard({ tickets, loading }) {
               </CardContent>
             </Card>
           ) : (
-            <StatCard
-              icon={c.icon}
-              label={c.label}
-              value={c.value}
-              color={c.color}
-              delay={i * 80}
-            />
+            <StatCard icon={c.icon} label={c.label} value={c.value} color={c.color} delay={i * 80} />
           )}
         </Grid>
       ))}
@@ -364,14 +286,11 @@ function StatsDashboard({ tickets, loading }) {
   );
 }
 
-// ── Ticket card (timeline style) ──
-
 function TicketCard({ ticket, onViewDetails, isLast }) {
   const accent = useStatusAccent(ticket.status);
   const shortId = ticket.id?.slice(0, 8).toUpperCase();
   return (
     <Box sx={{ position: 'relative', display: 'flex', minWidth: 0, width: '100%' }}>
-      {/* Timeline rail */}
       <Box
         sx={{
           display: { xs: 'none', sm: 'flex' },
@@ -395,18 +314,7 @@ function TicketCard({ ticket, onViewDetails, isLast }) {
             flexShrink: 0,
           }}
         />
-        {!isLast && (
-          <Box
-            sx={{
-              flex: 1,
-              width: '2px',
-              bgcolor: 'divider',
-              mt: 0.5,
-              mb: -2,
-              minHeight: 24,
-            }}
-          />
-        )}
+        {!isLast && <Box sx={{ flex: 1, width: '2px', bgcolor: 'divider', mt: 0.5, mb: -2, minHeight: 24 }} />}
       </Box>
 
       <Card
@@ -419,10 +327,9 @@ function TicketCard({ ticket, onViewDetails, isLast }) {
           flex: 1,
           minWidth: 0,
           mb: 2,
-          transition: 'box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease',
+          transition: 'box-shadow 0.25s ease, border-color 0.25s ease',
           '&:hover': {
             boxShadow: theme.palette.custom.cardShadow,
-            transform: 'translateY(-3px)',
             borderColor: accent.solid,
           },
           '&::before': {
@@ -437,7 +344,6 @@ function TicketCard({ ticket, onViewDetails, isLast }) {
         })}
       >
         <CardContent sx={{ p: { xs: 1.4, sm: 1.75 }, pl: { xs: 2.75, sm: 3.5 } }}>
-          {/* Header: ticket number, created date, status chip */}
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             justifyContent="space-between"
@@ -484,7 +390,6 @@ function TicketCard({ ticket, onViewDetails, isLast }) {
 
           <Divider sx={{ mb: 1.5 }} />
 
-          {/* Topic — small label sitting above description for hierarchy */}
           <Stack direction="row" alignItems="center" spacing={0.75} mb={0.75}>
             <SellOutlinedIcon sx={{ fontSize: 14, color: 'text.disabled' }} />
             <Typography
@@ -497,7 +402,6 @@ function TicketCard({ ticket, onViewDetails, isLast }) {
             </Typography>
           </Stack>
 
-          {/* Description — clamped to 2 lines */}
           <Typography
             variant="subtitle1"
             fontWeight={700}
@@ -532,14 +436,9 @@ function TicketCard({ ticket, onViewDetails, isLast }) {
               variant="outlined"
               endIcon={<ArrowForwardIcon sx={{ fontSize: 15 }} />}
               onClick={() => onViewDetails?.(ticket)}
-              sx={{
-                borderRadius: 2,
-                fontWeight: 700,
-                alignSelf: { xs: 'stretch', sm: 'center' },
-                flexShrink: 0,
-              }}
+              sx={{ borderRadius: 2, fontWeight: 700, alignSelf: { xs: 'stretch', sm: 'center' }, flexShrink: 0 }}
             >
-              View Details
+              View details
             </Button>
           </Stack>
         </CardContent>
@@ -552,18 +451,10 @@ function LabelValue({ label, value, mono = false, icon }) {
   return (
     <Box>
       <Stack direction="row" alignItems="center" spacing={0.5} mb={0.25}>
-        {icon && (
-          <Box sx={{ display: 'flex', color: 'text.disabled' }}>{icon}</Box>
-        )}
-        <Typography variant="caption" color="text.secondary" fontWeight={600}>
-          {label}
-        </Typography>
+        {icon && <Box sx={{ display: 'flex', color: 'text.disabled' }}>{icon}</Box>}
+        <Typography variant="caption" color="text.secondary" fontWeight={600}>{label}</Typography>
       </Stack>
-      <Typography
-        variant="body2"
-        fontWeight={600}
-        sx={{ ...(mono ? { fontFamily: 'monospace' } : {}), overflowWrap: 'anywhere' }}
-      >
+      <Typography variant="body2" fontWeight={600} sx={{ ...(mono ? { fontFamily: 'monospace' } : {}), overflowWrap: 'anywhere' }}>
         {value}
       </Typography>
     </Box>
@@ -620,31 +511,15 @@ function EmptyState({ onCreate, onFaq }) {
       >
         <SupportAgentIcon sx={{ fontSize: 30 }} />
       </Avatar>
-      <Typography variant="h6" fontWeight={800} gutterBottom>
-        No support tickets yet
-      </Typography>
+      <Typography variant="h6" fontWeight={800} gutterBottom>No support tickets yet</Typography>
       <Typography variant="body2" color="text.secondary" mb={3.5} maxWidth={400} mx="auto">
-        You haven't raised any support tickets yet. If you're facing an issue with a booking,
-        payment, or refund, our support team is ready to help — or browse our FAQs for quick
-        answers.
+        You haven't raised any support tickets yet. If you're facing an issue with a booking, payment, or refund, our support team is ready to help — or browse our FAQs for quick answers.
       </Typography>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent="center">
-        <Button
-          variant="contained"
-          onClick={onCreate}
-          size="medium"
-          startIcon={<AddCircleOutlineOutlinedIcon />}
-          sx={{ borderRadius: 2.5, px: 3, fontWeight: 700 }}
-        >
-          Create Support Ticket
+        <Button variant="contained" onClick={onCreate} size="medium" startIcon={<AddCircleOutlineOutlinedIcon />} sx={{ borderRadius: 2.5, px: 3, fontWeight: 700 }}>
+          Create support ticket
         </Button>
-        <Button
-          variant="outlined"
-          onClick={onFaq}
-          size="medium"
-          startIcon={<HelpOutlineOutlinedIcon />}
-          sx={{ borderRadius: 2.5, px: 3, fontWeight: 700 }}
-        >
+        <Button variant="outlined" onClick={onFaq} size="medium" startIcon={<HelpOutlineOutlinedIcon />} sx={{ borderRadius: 2.5, px: 3, fontWeight: 700 }}>
           Browse FAQs
         </Button>
       </Stack>
@@ -664,59 +539,31 @@ function ErrorState({ message, onRetry }) {
         borderStyle: 'dashed',
         borderWidth: 1.5,
         borderColor: 'error.main',
-        bgcolor:
-          theme.palette.mode === 'dark' ? 'rgba(211,47,47,0.08)' : 'rgba(211,47,47,0.04)',
+        bgcolor: theme.palette.mode === 'dark' ? 'rgba(211,47,47,0.08)' : 'rgba(211,47,47,0.04)',
       })}
     >
-      <Avatar
-        sx={{
-          width: 76,
-          height: 42,
-          bgcolor: 'rgba(211,47,47,0.1)',
-          color: 'error.main',
-          mx: 'auto',
-          mb: 2.5,
-        }}
-      >
+      <Avatar sx={{ width: 76, height: 42, bgcolor: 'rgba(211,47,47,0.1)', color: 'error.main', mx: 'auto', mb: 2.5 }}>
         <ErrorOutlineIcon sx={{ fontSize: 30 }} />
       </Avatar>
-      <Typography variant="h6" fontWeight={800} gutterBottom>
-        Something went wrong
-      </Typography>
+      <Typography variant="h6" fontWeight={800} gutterBottom>Something went wrong</Typography>
       <Typography variant="body2" color="text.secondary" mb={3} maxWidth={380} mx="auto">
         {message || 'We could not load your tickets. Please check your connection and try again.'}
       </Typography>
-      <Button
-        variant="contained"
-        color="error"
-        startIcon={<RefreshIcon />}
-        onClick={onRetry}
-        size="medium"
-        sx={{ borderRadius: 2.5, px: 3.5, fontWeight: 700 }}
-      >
-        Try Again
+      <Button variant="contained" color="error" startIcon={<RefreshIcon />} onClick={onRetry} size="medium" sx={{ borderRadius: 2.5, px: 3.5, fontWeight: 700 }}>
+        Try again
       </Button>
     </Card>
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
-// NOTE: all state, effects, memoized derivations, handlers, and the
-// GET /support/my-tickets call below are UNCHANGED from the original file.
-// Only the JSX returned has been redesigned for visual presentation.
-
 export default function MyTicketsPage() {
   const navigate = useNavigate();
-
-  const [tickets, setTickets]           = useState([]);
-  const [loading, setLoading]           = useState(true);
-  const [error, setError]               = useState(null);
-  const [search, setSearch]             = useState('');
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
-  // Additive, client-side-only quick filter. Does not touch the existing
-  // search/statusFilter state or the original filtering logic — it narrows
-  // the already-filtered list as an extra layer.
-  const [quickFilter, setQuickFilter]   = useState(null);
+  const [quickFilter, setQuickFilter] = useState(null);
 
   const fetchTickets = useCallback(async () => {
     setLoading(true);
@@ -731,57 +578,33 @@ export default function MyTicketsPage() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchTickets();
-  }, [fetchTickets]);
+  useEffect(() => { fetchTickets(); }, [fetchTickets]);
 
-  // Original filtering logic — unchanged.
   const filteredTickets = useMemo(() => {
     const q = search.toLowerCase().trim();
     return tickets.filter((t) => {
-      const matchesStatus  = statusFilter === 'All' || t.status === statusFilter;
-      const matchesSearch  =
-        !q ||
-        t.id?.toLowerCase().includes(q) ||
-       t.topic?.toLowerCase()?.includes(q) ||
-       t.description?.toLowerCase()?.includes(q);
+      const matchesStatus = statusFilter === 'All' || t.status === statusFilter;
+      const matchesSearch = !q || t.id?.toLowerCase().includes(q) || t.topic?.toLowerCase()?.includes(q) || t.description?.toLowerCase()?.includes(q);
       return matchesStatus && matchesSearch;
     });
   }, [tickets, search, statusFilter]);
 
-  // Quick filter applied on top of the existing filtered result — additive
-  // only, never replaces filteredTickets above.
   const visibleTickets = useMemo(() => {
     if (!quickFilter) return filteredTickets;
     const def = QUICK_FILTERS.find((f) => f.key === quickFilter);
     if (!def) return filteredTickets;
 
     let list = filteredTickets;
-    if (def.openOnly) {
-      list = list.filter((t) => t.status === 'OPEN' || t.status === 'IN_PROGRESS');
-    }
-    if (def.days) {
-      list = list.filter((t) => withinDays(t.createdAt, def.days));
-    }
+    if (def.openOnly) list = list.filter((t) => t.status === 'OPEN' || t.status === 'IN_PROGRESS');
+    if (def.days) list = list.filter((t) => withinDays(t.createdAt, def.days));
     if (def.key === 'recent') {
-      list = [...list].sort(
-        (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-      );
+      list = [...list].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
     }
     return list;
   }, [filteredTickets, quickFilter]);
 
-  const handleViewDetails = useCallback(
-    (ticket) => {
-      navigate(`/support/tickets/${ticket.id}`);
-    },
-    [navigate]
-  );
-
-  const handleQuickFilterClick = useCallback((key) => {
-    setQuickFilter((prev) => (prev === key ? null : key));
-  }, []);
-
+  const handleViewDetails = useCallback((ticket) => { navigate(`/support/tickets/${ticket.id}`); }, [navigate]);
+  const handleQuickFilterClick = useCallback((key) => { setQuickFilter((prev) => (prev === key ? null : key)); }, []);
   const handleClearFilters = useCallback(() => {
     setSearch('');
     setStatusFilter('All');
@@ -793,13 +616,9 @@ export default function MyTicketsPage() {
       <Container maxWidth="md">
         <Fade in timeout={450}>
           <Box>
-            {/* ── Premium hero header ── */}
             <PageHero ticketCount={tickets.length} loading={loading} />
-
-            {/* ── Statistics dashboard ── */}
             {!error && <StatsDashboard tickets={tickets} loading={loading} />}
 
-            {/* ── Search & Filters — hidden only during initial load or when error occurred ── */}
             {!error && (
               <Card
                 variant="outlined"
@@ -829,10 +648,9 @@ export default function MyTicketsPage() {
                     }}
                   />
 
-                  {/* Status filters */}
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap rowGap={1}>
                     {STATUS_FILTERS.map((s) => {
-                      const meta   = STATUS_META[s];
+                      const meta = STATUS_META[s];
                       const active = statusFilter === s;
                       return (
                         <Chip
@@ -857,21 +675,8 @@ export default function MyTicketsPage() {
 
                   <Divider />
 
-                  {/* Quick filters — additive, client-side only */}
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    spacing={1}
-                    flexWrap="wrap"
-                    useFlexGap
-                    rowGap={1}
-                  >
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      fontWeight={700}
-                      sx={{ mr: 0.5, textTransform: 'uppercase', letterSpacing: 0.4, fontSize: '0.65rem' }}
-                    >
+                  <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap rowGap={1}>
+                    <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ mr: 0.5, textTransform: 'uppercase', letterSpacing: 0.4, fontSize: '0.65rem' }}>
                       Quick filters
                     </Typography>
                     {QUICK_FILTERS.map((f) => {
@@ -885,62 +690,38 @@ export default function MyTicketsPage() {
                           variant={active ? 'filled' : 'outlined'}
                           color={active ? 'secondary' : 'default'}
                           aria-pressed={active}
-                          aria-current={active ? 'true' : undefined}
-                          sx={{
-                            fontWeight: active ? 700 : 500,
-                            cursor: 'pointer',
-                            borderRadius: 2,
-                            transition: 'all 0.2s ease',
-                          }}
+                          sx={{ fontWeight: active ? 700 : 500, cursor: 'pointer', borderRadius: 2, transition: 'all 0.2s ease' }}
                         />
                       );
                     })}
                   </Stack>
 
-                  {/* Search result summary */}
                   {!loading && (
                     <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                      Showing {visibleTickets.length} of {tickets.length} ticket
-                      {tickets.length !== 1 ? 's' : ''}
+                      Showing {visibleTickets.length} of {tickets.length} ticket{tickets.length !== 1 ? 's' : ''}
                     </Typography>
                   )}
                 </Stack>
               </Card>
             )}
 
-            {/* ── Content ── */}
             {loading ? (
               <Stack spacing={0}>
-                {[1, 2, 3].map((n) => (
-                  <SkeletonCard key={n} />
-                ))}
+                {[1, 2, 3].map((n) => <SkeletonCard key={n} />)}
               </Stack>
             ) : error ? (
               <ErrorState message={error} onRetry={fetchTickets} />
             ) : visibleTickets.length === 0 ? (
               tickets.length === 0 ? (
-                <EmptyState
-                  onCreate={() => navigate('/support')}
-                  onFaq={() => navigate('/support')}
-                />
+                <EmptyState onCreate={() => navigate('/support')} onFaq={() => navigate('/support')} />
               ) : (
-                <Card
-                  variant="outlined"
-                  sx={{ borderRadius: 4, textAlign: 'center', py: 3, px: 3, borderStyle: 'dashed' }}
-                >
+                <Card variant="outlined" sx={{ borderRadius: 4, textAlign: 'center', py: 3, px: 3, borderStyle: 'dashed' }}>
                   <SearchIcon sx={{ fontSize: 30, color: 'text.disabled', mb: 1.5 }} />
-                  <Typography variant="h6" fontWeight={700} gutterBottom>
-                    No matching tickets
-                  </Typography>
+                  <Typography variant="h6" fontWeight={700} gutterBottom>No matching tickets</Typography>
                   <Typography variant="body2" color="text.secondary" mb={2}>
                     Try adjusting your search, status, or quick filter criteria.
                   </Typography>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={handleClearFilters}
-                    sx={{ borderRadius: 2, fontWeight: 600 }}
-                  >
+                  <Button variant="outlined" size="small" onClick={handleClearFilters} sx={{ borderRadius: 2, fontWeight: 600 }}>
                     Clear filters
                   </Button>
                 </Card>
@@ -948,18 +729,9 @@ export default function MyTicketsPage() {
             ) : (
               <Box>
                 {visibleTickets.map((ticket, idx) => (
-                  <Fade
-                    in
-                    timeout={400}
-                    key={ticket.id}
-                    style={{ transitionDelay: `${Math.min(idx, 6) * 60}ms` }}
-                  >
+                  <Fade in timeout={400} key={ticket.id} style={{ transitionDelay: `${Math.min(idx, 6) * 60}ms` }}>
                     <Box>
-                      <TicketCard
-                        ticket={ticket}
-                        onViewDetails={handleViewDetails}
-                        isLast={idx === visibleTickets.length - 1}
-                      />
+                      <TicketCard ticket={ticket} onViewDetails={handleViewDetails} isLast={idx === visibleTickets.length - 1} />
                     </Box>
                   </Fade>
                 ))}
