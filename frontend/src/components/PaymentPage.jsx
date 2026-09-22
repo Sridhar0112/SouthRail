@@ -23,6 +23,7 @@ import LockIcon from "@mui/icons-material/Lock"
 import TrainIcon from "@mui/icons-material/Train"
 import PersonIcon from "@mui/icons-material/Person"
 import PaymentIcon from "@mui/icons-material/Payment"
+import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid"
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong"
 import RefreshIcon from "@mui/icons-material/Refresh"
 import ScheduleIcon from "@mui/icons-material/Schedule"
@@ -456,17 +457,18 @@ export default function PaymentPage() {
       >
         <Container maxWidth="lg">
           <Stack
-            direction="row"
-            alignItems="center"
+            direction={{ xs: "column", sm: "row" }}
+            alignItems={{ xs: "flex-start", sm: "center" }}
             justifyContent="space-between"
+            spacing={1}
             py={1.25}
           >
-            <Box>
+            <Box sx={{ minWidth: 0 }}>
               <Typography variant="h4" component="h1" fontWeight={900}>Complete your booking</Typography>
               <Typography variant="body2" color="text.secondary">Review your journey and finish secure payment before the hold expires.</Typography>
             </Box>
 
-            <Tooltip title="Secured by Razorpay & 256-bit SSL">
+            <Tooltip title="Secure checkout with Razorpay">
               <Chip
                 icon={<LockIcon sx={{ fontSize: "14px !important" }} />}
                 label="Secure payment"
@@ -476,7 +478,8 @@ export default function PaymentPage() {
                   color: primaryColor,
                   fontWeight: 700,
                   fontSize: "0.7rem",
-                  height: 24
+                  height: 24,
+                  flexShrink: 0
                 }}
               />
             </Tooltip>
@@ -833,7 +836,7 @@ export default function PaymentPage() {
                         sx={{ fontSize: 14, color: "text.secondary" }}
                       />
                       <Typography variant="caption" color="text.secondary">
-                        The server controls reservation expiry; this countdown is informational.
+                        This timer is a guide. SouthRail will confirm whether your reservation is still available before payment continues.
                       </Typography>
                     </Stack>
                   </Collapse>
@@ -855,8 +858,7 @@ export default function PaymentPage() {
                         color={primaryColor}
                       >
                         Razorpay
-                      </Box>{" "}
-                      · 256-bit SSL
+                      </Box>
                     </Typography>
                   </Stack>
                 </CardContent>
