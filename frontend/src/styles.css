@@ -122,7 +122,7 @@ select {
   min-height: 44px;
 }
 
-/* Status chips were visually cramped on phones; keep labels readable and tappable. */
+/* Status chips stay compact; interactive chips get a larger usable target. */
 .MuiChip-root {
   min-height: 28px;
   max-width: 100%;
@@ -132,10 +132,8 @@ select {
   min-height: 24px;
 }
 
-/* Static information cards should not appear clickable just because the pointer moves over them. */
-.MuiCard-root,
-.MuiCard-root:hover {
-  transform: none !important;
+.MuiChip-clickable {
+  min-height: 36px;
 }
 
 .MuiAlert-root {
@@ -219,5 +217,9 @@ a:focus-visible,
 
   .MuiButton-sizeSmall {
     min-height: 38px;
+  }
+
+  .MuiChip-clickable {
+    min-height: 40px;
   }
 }
