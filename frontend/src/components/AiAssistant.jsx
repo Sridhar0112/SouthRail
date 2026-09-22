@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   Alert, Avatar, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent,
-  DialogTitle, Fade, IconButton, InputAdornment, InputLabel, FormControl, MenuItem,
+  DialogTitle, Fade, IconButton, InputAdornment, FormControl, MenuItem,
   Select, Stack, TextField, Tooltip, Typography, alpha
 } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -14,12 +14,14 @@ import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded';
 import api from '../services/api.js';
 import { getApiErrorMessage } from '../utils/apiErrors.js';
+import { AssistantMarkdown } from './AssistantMarkdown.jsx';
 
 const STARTERS = ['How do I book a train?', 'Explain RAC and waitlist', 'How can I cancel a booking?'];
 
 export function AiAssistant({ authenticated }) {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
   const [open, setOpen] = useState(false);
   const [models, setModels] = useState([]);
   const [model, setModel] = useState('');
@@ -30,27 +32,30 @@ export function AiAssistant({ authenticated }) {
   const [sending, setSending] = useState(false);
   const endRef = useRef(null);
 
-  useEffect(() => {
-    if (!open || models.length || modelsLoading || modelsError) return;
-    let active = true;
+  const loadModels = async () => {
+    if (modelsLoading) return;
     setModelsLoading(true);
-    api.get('/chat/models')
-      .then(({ data }) => {
-        if (!active) return;
-        const available = Array.isArray(data) ? data : [];
-        setModels(available);
-        setModel(available[0]?.name || '');
-      })
-      .catch((error) => {
-        if (active) setModelsError(getApiErrorMessage(error, 'The travel assistant is unavailable right now.'));
-      })
-      .finally(() => { if (active) setModelsLoading(false); });
-    return () => { active = false; };
-  }, [models.length, modelsError, modelsLoading, open]);
+    setModelsError('');
+    try {
+      const { data } = await api.get('/chat/models');
+      const available = Array.isArray(data) ? data : [];
+      setModels(available);
+      setModel(available[0]?.name || '');
+    } catch (error) {
+      setModelsError(getApiErrorMessage(error, 'The travel assistant is unavailable right now.'));
+    } finally {
+      setModelsLoading(false);
+    }
+  };
+
+  const openAssistant = () => {
+    setOpen(true);
+    if (!models.length && !modelsError) loadModels();
+  };
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [messages, sending]);
+    endRef.current?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
+  }, [messages, reduceMotion, sending]);
 
   if (!authenticated) return null;
 
@@ -94,7 +99,7 @@ export function AiAssistant({ authenticated }) {
           component="button"
           type="button"
           aria-label="Open travel assistant"
-          onClick={() => setOpen(true)}
+          onClick={openAssistant}
           sx={{
             position: 'fixed',
             right: { xs: 16, sm: 28 },
@@ -153,6 +158,8 @@ export function AiAssistant({ authenticated }) {
             backgroundColor: theme.palette.surface.raised,
             border: `1px solid ${theme.palette.custom.cardBorder}`,
             height: { xs: '100dvh', sm: 'min(78vh, 680px)' },
+            maxWidth: { sm: 560 },
+            maxHeight: { sm: 'min(700px, calc(100dvh - 48px))' },
             display: 'flex',
             flexDirection: 'column'
           }
@@ -265,7 +272,7 @@ export function AiAssistant({ authenticated }) {
               <Alert
                 severity="warning"
                 variant="outlined"
-                action={<Button size="small" onClick={() => setModelsError('')}>Retry</Button>}
+                action={<Button size="small" onClick={loadModels}>Retry</Button>}
               >
                 {modelsError}
               </Alert>
@@ -354,13 +361,16 @@ export function AiAssistant({ authenticated }) {
                       )}
                       <Box
                         sx={{
-                          maxWidth: '78%',
+                          width: 'fit-content',
+                          minWidth: 0,
+                          maxWidth: isUser
+                            ? { xs: '86%', sm: '72%' }
+                            : { xs: '88%', sm: '76%' },
                           px: 1.75,
                           py: 1.1,
                           borderRadius: '16px',
                           borderBottomRightRadius: isUser ? '4px' : '16px',
                           borderBottomLeftRadius: !isUser ? '4px' : '16px',
-                          whiteSpace: 'pre-wrap',
                           overflowWrap: 'anywhere',
                           ...(isUser
                             ? {
@@ -382,7 +392,11 @@ export function AiAssistant({ authenticated }) {
                               })
                         }}
                       >
-                        <Typography variant="body2" sx={{ lineHeight: 1.6 }}>{item.content}</Typography>
+                        {!isUser && !isError ? (
+                          <AssistantMarkdown>{item.content}</AssistantMarkdown>
+                        ) : (
+                          <Typography variant="body2" sx={{ lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{item.content}</Typography>
+                        )}
                       </Box>
                     </Stack>
                   );
