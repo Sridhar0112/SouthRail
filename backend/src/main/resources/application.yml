@@ -134,7 +134,7 @@ gemini:
   read-timeout-millis: ${GEMINI_READ_TIMEOUT:${GEMINI_READ_TIMEOUT_MS:10000}}
 
 razorpay:
-  enabled: ${RAZORPAY_ENABLED:false}
+  enabled: ${RAZORPAY_ENABLED:true}
   key-id: ${RAZORPAY_KEY_ID:}
   key-secret: ${RAZORPAY_KEY_SECRET:}
   webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:}
