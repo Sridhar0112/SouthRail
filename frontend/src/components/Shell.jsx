@@ -486,19 +486,12 @@ export function Shell() {
       </Box>
       <Box component="footer" sx={{ borderTop: 1, borderColor: 'divider', bgcolor: 'background.paper', mt: 'auto' }}>
         <Container maxWidth="xl" sx={{ py: { xs: 2, sm: 2.5 } }}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between">
-            <Stack direction="row" spacing={1} alignItems="center">
-              <TrainIcon color="primary" fontSize="small" />
-              <Box>
-                <Typography variant="subtitle2" fontWeight={800}>SouthRail</Typography>
-                <Typography variant="caption" color="text.secondary">Plan, book, and manage supported rail journeys.</Typography>
-              </Box>
-            </Stack>
-            <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-              <Button component={Link} to="/" size="small">Search trains</Button>
-              {auth.user && <Button component={Link} to="/dashboard" size="small">My journeys</Button>}
-              {auth.user && <Button component={Link} to="/support" size="small">Help & support</Button>}
-            </Stack>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <TrainIcon color="primary" fontSize="small" />
+            <Box>
+              <Typography variant="subtitle2" fontWeight={800}>SouthRail</Typography>
+              <Typography variant="caption" color="text.secondary">Plan, book, and manage supported rail journeys.</Typography>
+            </Box>
           </Stack>
         </Container>
       </Box>
