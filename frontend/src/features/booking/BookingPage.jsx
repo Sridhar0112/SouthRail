@@ -21,6 +21,7 @@ import { EmptyState, ErrorState, LoadingState, SuccessState } from '../../compon
 import ReviewBookingPage from './ReviewBookingPage.jsx';
 import { getApiErrorMessage, isAuthError } from '../../utils/apiErrors.js';
 import { formatAmount, getBookingStatusLabel, getBookingStatusMessage, getBookingStatusTitle, getQueueText, normalizeBookingStatus, safeText } from '../../utils/bookingStatus.js';
+import { localDateKey } from '../../utils/date.js';
 
 const steps = ['Passenger details', 'Review booking', 'Confirmation'];
 const travelClasses = ['1A', '2A', '3A', 'SL', 'CC', '2S'];
@@ -31,7 +32,7 @@ const berthOptions = ['LOWER', 'MIDDLE', 'UPPER', 'SIDE_LOWER', 'SIDE_UPPER', 'N
 export default function BookingPage() {
   const { trainId } = useParams();
   const [searchParams] = useSearchParams();
-  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const today = useMemo(() => localDateKey(), []);
   const [train, setTrain] = useState(null);
   const [trainError, setTrainError] = useState('');
   const [response, setResponse] = useState(null);
@@ -257,7 +258,14 @@ export default function BookingPage() {
                                   <Chip size="small" color={index === 0 ? 'primary' : 'default'} variant={index === 0 ? 'filled' : 'outlined'} label={index === 0 ? 'Primary traveller' : 'Co-passenger'} />
                                   {fields.length > 1 && (
                                     <Tooltip title={`Remove passenger ${index + 1}`}>
-                                      <IconButton size="small" color="error" aria-label={`Remove passenger ${index + 1}`} onClick={() => remove(index)} disabled={submitting}>
+                                      <IconButton
+                                        size="small"
+                                        color="error"
+                                        aria-label={`Remove passenger ${index + 1}`}
+                                        onClick={() => remove(index)}
+                                        disabled={submitting}
+                                        sx={{ width: 44, height: 44 }}
+                                      >
                                         <DeleteOutlineIcon fontSize="small" />
                                       </IconButton>
                                     </Tooltip>
@@ -438,7 +446,7 @@ function BookingSuccess({ response, fallbackValues }) {
   const title = getBookingStatusTitle(status);
   const message = response?.pnr
     ? `${getBookingStatusMessage(status)} PNR ${response.pnr}`
-    : `${getBookingStatusMessage(status)} Booking completed, but PNR was not returned by the booking API.`;
+    : `${getBookingStatusMessage(status)} Your booking reference is still being finalized.`;
   const reservationLabel = getBookingStatusLabel(status, response?.reservationLabel);
   const queueText = getQueueText(response?.queuePosition);
   const hasPnr = Boolean(response?.pnr);
@@ -458,7 +466,7 @@ function BookingSuccess({ response, fallbackValues }) {
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6} md={4}>
               <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>PNR</Typography>
-              <Typography fontWeight={900} sx={{ fontSize: '1.1rem', fontFamily: 'monospace', letterSpacing: 1 }}>{safeText(response?.pnr, 'Not returned')}</Typography>
+              <Typography fontWeight={900} sx={{ fontSize: '1.1rem', fontFamily: 'monospace', letterSpacing: 1 }}>{safeText(response?.pnr, 'Pending')}</Typography>
             </Grid>
             <Detail label="Train" value={`${safeText(response?.trainName, 'Train')} ${response?.trainNumber ? `- ${response.trainNumber}` : ''}`} />
             <Detail label="From" value={safeText(response?.sourceName || response?.sourceCode || fallbackValues.sourceStationCode)} />
@@ -473,7 +481,7 @@ function BookingSuccess({ response, fallbackValues }) {
             <Detail label="Reservation" value={reservationLabel} />
             {status !== 'CONFIRMED' && <Detail label="Queue position" value={queueText} />}
             <Detail label="Total fare" value={formatAmount(response?.totalFare)} />
-            <Detail label="Payment status" value={safeText(response?.paymentStatus, 'Not returned by API')} />
+            <Detail label="Payment status" value={safeText(response?.paymentStatus, 'Not available')} />
           </Grid>
         </CardContent>
       </Card>
