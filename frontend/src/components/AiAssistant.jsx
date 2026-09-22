@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent,
-  DialogTitle, Divider, Fab, FormControl, IconButton, InputLabel, MenuItem,
+  Alert, Avatar, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent,
+  DialogTitle, Fade, IconButton, InputAdornment, InputLabel, FormControl, MenuItem,
   Select, Stack, TextField, Tooltip, Typography, alpha
 } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CloseIcon from '@mui/icons-material/Close';
-import SendIcon from '@mui/icons-material/Send';
+import SendRoundedIcon from '@mui/icons-material/SendRounded';
+import TrainOutlinedIcon from '@mui/icons-material/TrainOutlined';
+import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
+import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded';
 import api from '../services/api.js';
 import { getApiErrorMessage } from '../utils/apiErrors.js';
 
@@ -80,77 +83,433 @@ export function AiAssistant({ authenticated }) {
     }
   };
 
+  const isLight = theme.palette.mode === 'light';
+  const nearLimit = message.length > 3600;
+
   return (
     <>
+      {/* ---------- Floating launcher ---------- */}
       <Tooltip title="Ask the SouthRail travel assistant">
-        <Fab color="primary" size="medium" aria-label="Open travel assistant" onClick={() => setOpen(true)}
-          sx={{ position: 'fixed', right: { xs: 18, sm: 28 }, bottom: { xs: 18, sm: 28 }, zIndex: 1100 }}>
-          <AutoAwesomeIcon />
-        </Fab>
+        <Box
+          component="button"
+          type="button"
+          aria-label="Open travel assistant"
+          onClick={() => setOpen(true)}
+          sx={{
+            position: 'fixed',
+            right: { xs: 16, sm: 28 },
+            bottom: { xs: 16, sm: 28 },
+            zIndex: 1100,
+            width: 60,
+            height: 60,
+            borderRadius: '50%',
+            border: 'none',
+            cursor: 'pointer',
+            p: 0,
+            display: 'grid',
+            placeItems: 'center',
+            color: theme.palette.primary.contrastText,
+            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+            boxShadow: `0 10px 30px ${alpha(theme.palette.primary.main, isLight ? 0.38 : 0.5)}`,
+            transition: 'transform 220ms cubic-bezier(.34,1.56,.64,1), box-shadow 220ms ease',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              inset: -6,
+              borderRadius: '50%',
+              border: `1.5px solid ${alpha(theme.palette.primary.main, 0.45)}`,
+              animation: 'southrail-fab-ring 2.6s ease-out infinite'
+            },
+            '&:hover': {
+              transform: 'translateY(-3px) scale(1.04)',
+              boxShadow: `0 14px 36px ${alpha(theme.palette.primary.main, isLight ? 0.46 : 0.6)}`
+            },
+            '&:active': { transform: 'translateY(-1px) scale(0.98)' },
+            '&:focus-visible': { outline: `2.5px solid ${theme.palette.primary.main}`, outlineOffset: 4 },
+            '@media (prefers-reduced-motion: reduce)': { '&::before': { animation: 'none' } },
+            '@keyframes southrail-fab-ring': {
+              '0%': { opacity: 0.55, transform: 'scale(1)' },
+              '100%': { opacity: 0, transform: 'scale(1.35)' }
+            }
+          }}
+        >
+          <AutoAwesomeIcon sx={{ fontSize: 26 }} />
+        </Box>
       </Tooltip>
 
-      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm" fullScreen={fullScreen} aria-labelledby="assistant-title">
-        <DialogTitle id="assistant-title" sx={{ pr: 7 }}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <AutoAwesomeIcon color="primary" />
-            <Box>
-              <Typography component="span" fontWeight={800}>Travel assistant</Typography>
-              <Typography variant="caption" color="text.secondary" display="block">Guidance for using SouthRail</Typography>
+      {/* ---------- Assistant window ---------- */}
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        fullWidth
+        maxWidth="sm"
+        fullScreen={fullScreen}
+        aria-labelledby="assistant-title"
+        TransitionComponent={Fade}
+        transitionDuration={220}
+        PaperProps={{
+          sx: {
+            overflow: 'hidden',
+            backgroundColor: theme.palette.surface.raised,
+            border: `1px solid ${theme.palette.custom.cardBorder}`,
+            height: { xs: '100dvh', sm: 'min(78vh, 680px)' },
+            display: 'flex',
+            flexDirection: 'column'
+          }
+        }}
+      >
+        {/* Header */}
+        <DialogTitle
+          id="assistant-title"
+          sx={{
+            p: 0,
+            flexShrink: 0,
+            backgroundImage: theme.palette.custom.heroOverlay,
+            backgroundColor: theme.palette.primary.dark,
+            color: '#fff'
+          }}
+        >
+          <Stack direction="row" alignItems="center" spacing={1.5} sx={{ px: { xs: 2.25, sm: 3 }, py: 2 }}>
+            <Box
+              sx={{
+                width: 40, height: 40, borderRadius: '12px', flexShrink: 0,
+                display: 'grid', placeItems: 'center',
+                bgcolor: alpha('#FFFFFF', 0.14),
+                border: `1px solid ${alpha('#FFFFFF', 0.22)}`
+              }}
+            >
+              <TrainOutlinedIcon sx={{ fontSize: 21 }} />
             </Box>
+            <Box sx={{ minWidth: 0, flexGrow: 1 }}>
+              <Typography component="span" sx={{ fontWeight: 800, fontSize: '1.02rem', display: 'block', lineHeight: 1.2 }}>
+                SouthRail Copilot
+              </Typography>
+              <Typography variant="caption" sx={{ color: alpha('#FFFFFF', 0.78), fontWeight: 500 }}>
+                Guidance for using SouthRail
+              </Typography>
+            </Box>
+            <IconButton
+              aria-label="Close assistant"
+              onClick={() => setOpen(false)}
+              sx={{
+                color: '#fff',
+                bgcolor: alpha('#FFFFFF', 0.10),
+                '&:hover': { bgcolor: alpha('#FFFFFF', 0.18) },
+                '&:focus-visible': { outline: `2.5px solid #fff`, outlineOffset: 2 }
+              }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
           </Stack>
-          <IconButton aria-label="Close assistant" onClick={() => setOpen(false)} sx={{ position: 'absolute', right: 12, top: 12 }}>
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <Divider />
-        <DialogContent sx={{ p: { xs: 2, sm: 2.5 } }}>
-          <Stack spacing={2}>
-            {modelsLoading && <Stack direction="row" spacing={1} alignItems="center" role="status">
-              <CircularProgress size={16} /><Typography variant="caption" color="text.secondary">Connecting to the assistant…</Typography>
-            </Stack>}
-            {modelsError && <Alert severity="warning" action={<Button size="small" onClick={() => setModelsError('')}>Retry</Button>}>{modelsError}</Alert>}
-            {models.length > 1 && <FormControl size="small" fullWidth>
-              <InputLabel id="assistant-model-label">AI model</InputLabel>
-              <Select labelId="assistant-model-label" label="AI model" value={model} onChange={(event) => setModel(event.target.value)}>
-                {models.map((item) => <MenuItem key={item.name} value={item.name}>{item.displayName || item.name}</MenuItem>)}
-              </Select>
-            </FormControl>}
 
-            <Box aria-live="polite" sx={{ minHeight: 230, maxHeight: '45vh', overflowY: 'auto', px: 0.5, py: 1 }}>
-              {!messages.length ? <Stack spacing={2} alignItems="center" textAlign="center" py={2}>
-                <Box sx={(theme) => ({ p: 1.5, borderRadius: '50%', bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', display: 'flex' })}>
-                  <AutoAwesomeIcon />
+          {models.length > 1 && (
+            <Box sx={{ px: { xs: 2.25, sm: 3 }, pb: 1.5 }}>
+              <FormControl size="small" variant="standard" sx={{ minWidth: 160 }}>
+                <Select
+                  disableUnderline
+                  value={model}
+                  onChange={(event) => setModel(event.target.value)}
+                  aria-label="AI model"
+                  startAdornment={
+                    <InputAdornment position="start" sx={{ ml: 0.25, mr: 0.75 }}>
+                      <TuneRoundedIcon sx={{ fontSize: 16, color: alpha('#FFFFFF', 0.85) }} />
+                    </InputAdornment>
+                  }
+                  sx={{
+                    color: '#fff',
+                    fontSize: '0.78rem',
+                    fontWeight: 600,
+                    borderRadius: 999,
+                    bgcolor: alpha('#FFFFFF', 0.12),
+                    border: `1px solid ${alpha('#FFFFFF', 0.20)}`,
+                    px: 1.25,
+                    py: 0.25,
+                    '& .MuiSelect-select': { py: 0.5, display: 'flex', alignItems: 'center' },
+                    '& .MuiSvgIcon-root': { color: alpha('#FFFFFF', 0.85) },
+                    '&:hover': { bgcolor: alpha('#FFFFFF', 0.18) },
+                    '&:focus-visible': { outline: `2px solid #fff` }
+                  }}
+                  MenuProps={{ PaperProps: { sx: { mt: 0.5 } } }}
+                >
+                  {models.map((item) => (
+                    <MenuItem key={item.name} value={item.name} sx={{ fontSize: '0.85rem' }}>
+                      {item.displayName || item.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          )}
+        </DialogTitle>
+
+        {/* Body */}
+        <DialogContent
+          sx={{
+            p: 0,
+            flexGrow: 1,
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            bgcolor: theme.palette.background.default,
+            backgroundImage: theme.palette.custom.pageBg
+          }}
+        >
+          {modelsLoading && (
+            <Stack direction="row" spacing={1} alignItems="center" role="status" sx={{ px: 3, py: 1.25 }}>
+              <CircularProgress size={14} thickness={5} />
+              <Typography variant="caption" color="text.secondary">Connecting to the assistant…</Typography>
+            </Stack>
+          )}
+          {modelsError && (
+            <Box sx={{ px: 2.5, pt: 2 }}>
+              <Alert
+                severity="warning"
+                variant="outlined"
+                action={<Button size="small" onClick={() => setModelsError('')}>Retry</Button>}
+              >
+                {modelsError}
+              </Alert>
+            </Box>
+          )}
+
+          <Box
+            aria-live="polite"
+            sx={{
+              flexGrow: 1,
+              minHeight: 0,
+              overflowY: 'auto',
+              px: { xs: 2, sm: 2.75 },
+              py: 2.5,
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
+            {!messages.length ? (
+              <Stack spacing={2.5} alignItems="center" textAlign="center" sx={{ m: 'auto', py: 3, maxWidth: 380 }}>
+                <Box
+                  sx={{
+                    width: 56, height: 56, borderRadius: '16px',
+                    display: 'grid', placeItems: 'center',
+                    background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.18)}, ${alpha(theme.palette.secondary.main, 0.14)})`,
+                    color: 'primary.main',
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.18)}`
+                  }}
+                >
+                  <AutoAwesomeIcon sx={{ fontSize: 26 }} />
                 </Box>
                 <Box>
-                  <Typography fontWeight={800}>How can I help?</Typography>
-                  <Typography variant="body2" color="text.secondary">Ask about search, reservations, PNR status, cancellations, or your SouthRail account.</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 800, mb: 0.5 }}>How can I help?</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Ask about search, reservations, PNR status, cancellations, or your SouthRail account.
+                  </Typography>
                 </Box>
                 <Stack direction="row" gap={1} flexWrap="wrap" justifyContent="center">
-                  {STARTERS.map((starter) => <Button key={starter} variant="outlined" size="small" onClick={() => send(starter)} disabled={sending || Boolean(modelsError)}>{starter}</Button>)}
+                  {STARTERS.map((starter) => (
+                    <Button
+                      key={starter}
+                      variant="outlined"
+                      size="small"
+                      onClick={() => send(starter)}
+                      disabled={sending || Boolean(modelsError)}
+                      sx={{
+                        borderRadius: 999,
+                        borderColor: theme.palette.custom.fieldBorder,
+                        bgcolor: theme.palette.surface.raised,
+                        color: 'text.primary',
+                        fontWeight: 600,
+                        '&:hover': {
+                          borderColor: 'primary.main',
+                          bgcolor: alpha(theme.palette.primary.main, 0.08)
+                        }
+                      }}
+                    >
+                      {starter}
+                    </Button>
+                  ))}
                 </Stack>
-              </Stack> : <Stack spacing={1.5}>
-                {messages.map((item, index) => <Box key={`${item.role}-${index}`} sx={(theme) => ({
-                  alignSelf: item.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '88%', px: 1.5, py: 1, borderRadius: 2,
-                  bgcolor: item.role === 'user' ? 'primary.main' : alpha(theme.palette.text.primary, 0.06),
-                  color: item.role === 'user' ? 'primary.contrastText' : item.role === 'error' ? 'error.main' : 'text.primary',
-                  whiteSpace: 'pre-wrap', overflowWrap: 'anywhere'
-                })}><Typography variant="body2">{item.content}</Typography></Box>)}
-                {sending && <Stack direction="row" spacing={1} alignItems="center" color="text.secondary">
-                  <CircularProgress size={16} /><Typography variant="caption">Thinking…</Typography>
-                </Stack>}
+              </Stack>
+            ) : (
+              <Stack spacing={2} sx={{ mt: 'auto' }}>
+                {messages.map((item, index) => {
+                  const isUser = item.role === 'user';
+                  const isError = item.role === 'error';
+                  return (
+                    <Stack
+                      key={`${item.role}-${index}`}
+                      direction={isUser ? 'row-reverse' : 'row'}
+                      spacing={1}
+                      alignItems="flex-end"
+                      sx={{ maxWidth: '100%' }}
+                    >
+                      {!isUser && (
+                        <Avatar
+                          sx={{
+                            width: 28, height: 28, flexShrink: 0,
+                            bgcolor: isError ? alpha(theme.palette.error.main, 0.14) : alpha(theme.palette.primary.main, 0.14),
+                            color: isError ? 'error.main' : 'primary.main'
+                          }}
+                        >
+                          {isError ? <ErrorOutlineRoundedIcon sx={{ fontSize: 16 }} /> : <AutoAwesomeIcon sx={{ fontSize: 15 }} />}
+                        </Avatar>
+                      )}
+                      <Box
+                        sx={{
+                          maxWidth: '78%',
+                          px: 1.75,
+                          py: 1.1,
+                          borderRadius: '16px',
+                          borderBottomRightRadius: isUser ? '4px' : '16px',
+                          borderBottomLeftRadius: !isUser ? '4px' : '16px',
+                          whiteSpace: 'pre-wrap',
+                          overflowWrap: 'anywhere',
+                          ...(isUser
+                            ? {
+                                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                                color: theme.palette.primary.contrastText,
+                                boxShadow: `0 4px 14px ${alpha(theme.palette.primary.main, 0.28)}`
+                              }
+                            : isError
+                            ? {
+                                bgcolor: alpha(theme.palette.error.main, isLight ? 0.08 : 0.14),
+                                color: 'error.main',
+                                border: `1px solid ${alpha(theme.palette.error.main, 0.25)}`
+                              }
+                            : {
+                                bgcolor: theme.palette.surface.raised,
+                                color: 'text.primary',
+                                border: `1px solid ${theme.palette.custom.cardBorder}`,
+                                boxShadow: theme.palette.custom.cardShadow
+                              })
+                        }}
+                      >
+                        <Typography variant="body2" sx={{ lineHeight: 1.6 }}>{item.content}</Typography>
+                      </Box>
+                    </Stack>
+                  );
+                })}
+
+                {sending && (
+                  <Stack direction="row" spacing={1} alignItems="flex-end">
+                    <Avatar sx={{ width: 28, height: 28, bgcolor: alpha(theme.palette.primary.main, 0.14), color: 'primary.main' }}>
+                      <AutoAwesomeIcon sx={{ fontSize: 15 }} />
+                    </Avatar>
+                    <Box
+                      role="status"
+                      aria-label="Assistant is thinking"
+                      sx={{
+                        px: 1.75, py: 1.35, borderRadius: '16px', borderBottomLeftRadius: '4px',
+                        bgcolor: theme.palette.surface.raised,
+                        border: `1px solid ${theme.palette.custom.cardBorder}`,
+                        boxShadow: theme.palette.custom.cardShadow,
+                        display: 'flex', gap: '5px', alignItems: 'center'
+                      }}
+                    >
+                      {[0, 1, 2].map((dot) => (
+                        <Box
+                          key={dot}
+                          sx={{
+                            width: 6, height: 6, borderRadius: '50%',
+                            bgcolor: alpha(theme.palette.primary.main, 0.75),
+                            animation: 'southrail-typing 1.15s ease-in-out infinite',
+                            animationDelay: `${dot * 0.16}s`,
+                            '@media (prefers-reduced-motion: reduce)': { animation: 'none', opacity: 0.6 },
+                            '@keyframes southrail-typing': {
+                              '0%, 60%, 100%': { transform: 'translateY(0)', opacity: 0.4 },
+                              '30%': { transform: 'translateY(-4px)', opacity: 1 }
+                            }
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  </Stack>
+                )}
                 <div ref={endRef} />
-              </Stack>}
-            </Box>
-            <Typography variant="caption" color="text.secondary">AI responses may be inaccurate. Confirm fares, availability, and booking status in SouthRail before acting.</Typography>
-          </Stack>
+              </Stack>
+            )}
+          </Box>
         </DialogContent>
-        <DialogActions sx={{ alignItems: 'flex-end' }}>
-          <TextField autoFocus fullWidth multiline maxRows={4} label="Ask a question" value={message}
-            onChange={(event) => setMessage(event.target.value)} onKeyDown={handleKeyDown} inputProps={{ maxLength: 4000 }}
-            helperText={`${message.length}/4000 · Enter to send, Shift+Enter for a new line`} disabled={sending || Boolean(modelsError)} />
-          <IconButton color="primary" aria-label="Send message" onClick={() => send()} disabled={!message.trim() || sending || Boolean(modelsError)} sx={{ mb: 2.5 }}>
-            {sending ? <CircularProgress size={22} /> : <SendIcon />}
-          </IconButton>
+
+        {/* Composer */}
+        <DialogActions
+          sx={{
+            flexShrink: 0,
+            flexDirection: 'column',
+            alignItems: 'stretch',
+            gap: 0.75,
+            px: { xs: 2, sm: 2.75 },
+            py: 1.75,
+            bgcolor: theme.palette.surface.raised,
+            borderTop: `1px solid ${theme.palette.custom.cardBorder}`
+          }}
+        >
+          <Stack direction="row" spacing={1} alignItems="flex-end">
+            <TextField
+              autoFocus
+              fullWidth
+              multiline
+              maxRows={4}
+              placeholder="Ask a question"
+              aria-label="Ask a question"
+              value={message}
+              onChange={(event) => setMessage(event.target.value)}
+              onKeyDown={handleKeyDown}
+              inputProps={{ maxLength: 4000, 'aria-describedby': 'assistant-composer-hint' }}
+              disabled={sending || Boolean(modelsError)}
+              variant="filled"
+              hiddenLabel
+              InputProps={{
+                disableUnderline: true,
+                sx: {
+                  borderRadius: '18px',
+                  bgcolor: theme.palette.surface.input,
+                  border: `1.5px solid ${theme.palette.custom.fieldBorder}`,
+                  px: 1.75,
+                  py: 0.5,
+                  fontSize: '0.9rem',
+                  transition: 'border-color 180ms ease, box-shadow 180ms ease',
+                  '&.Mui-focused': {
+                    borderColor: 'primary.main',
+                    boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.12)}`
+                  }
+                }
+              }}
+              sx={{ '& .MuiFilledInput-root': { pt: 1, pb: 1 } }}
+            />
+            <Tooltip title="Send message">
+              <span>
+                <IconButton
+                  aria-label="Send message"
+                  onClick={() => send()}
+                  disabled={!message.trim() || sending || Boolean(modelsError)}
+                  sx={{
+                    width: 44, height: 44, flexShrink: 0, color: '#fff',
+                    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                    boxShadow: `0 4px 14px ${alpha(theme.palette.primary.main, 0.32)}`,
+                    transition: 'transform 160ms ease, opacity 160ms ease',
+                    '&:hover': { transform: 'translateY(-1px)' },
+                    '&.Mui-disabled': { background: theme.palette.action.disabledBackground, color: theme.palette.action.disabled, boxShadow: 'none' },
+                    '&:focus-visible': { outline: `2.5px solid ${theme.palette.primary.main}`, outlineOffset: 2 }
+                  }}
+                >
+                  {sending ? <CircularProgress size={19} thickness={5} sx={{ color: 'inherit' }} /> : <SendRoundedIcon fontSize="small" />}
+                </IconButton>
+              </span>
+            </Tooltip>
+          </Stack>
+          <Typography id="assistant-composer-hint" sx={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>
+            Press Enter to send, Shift+Enter for a new line.
+          </Typography>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ px: 0.5 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+              AI responses may be inaccurate. Confirm fares, availability, and booking status in SouthRail before acting.
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{ fontSize: '0.7rem', flexShrink: 0, ml: 1, color: nearLimit ? 'warning.main' : 'text.secondary', fontWeight: nearLimit ? 700 : 400 }}
+            >
+              {message.length}/4000
+            </Typography>
+          </Stack>
         </DialogActions>
       </Dialog>
     </>
