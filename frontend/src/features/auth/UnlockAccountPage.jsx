@@ -18,6 +18,7 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import api from '../../services/api.js';
 import { getApiErrorMessage } from '../../utils/apiErrors.js';
 import TrainIcon from '@mui/icons-material/Train';
+
 const STATUS_CONFIG = {
   loading: {
     icon: LockOpenOutlinedIcon,
@@ -38,7 +39,7 @@ const STATUS_CONFIG = {
     color: 'error.main',
     bg: (theme) => alpha(theme.palette.error.main, 0.1),
     title: 'Unable to unlock account',
-    body: null, // dynamic
+    body: null,
   },
   success: {
     icon: CheckCircleOutlineIcon,
@@ -59,7 +60,6 @@ export default function UnlockAccountPage() {
   useEffect(() => {
     let active = true;
     let redirectTimer;
-
     const token = searchParams.get('token');
 
     if (!token) {
@@ -108,7 +108,6 @@ export default function UnlockAccountPage() {
       }}
     >
       <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
-        {/* Brand header */}
         <Stack alignItems="center" spacing={0.5} sx={{ mb: { xs: 2.5, sm: 4 } }}>
           <TrainIcon color="primary" />
           <Typography variant="h6" fontWeight={700} letterSpacing={-0.3}>
@@ -130,7 +129,6 @@ export default function UnlockAccountPage() {
           {status === 'loading' && <LinearProgress sx={{ height: 3 }} />}
 
           <Stack spacing={0}>
-            {/* Status banner */}
             <Box
               aria-live="polite"
               sx={{
@@ -159,19 +157,17 @@ export default function UnlockAccountPage() {
               </Stack>
             </Box>
 
-            {/* Detail body */}
             <Box sx={{ px: { xs: 1.75, sm: 2.5 }, py: { xs: 2, sm: 2.5 } }}>
-
               {status === 'loading' && (
                 <Typography variant="body2" color="text.secondary">
-                  We're processing your unlock request. This usually completes within a second.
+                  We're processing your unlock request. This should only take a moment.
                 </Typography>
               )}
 
               {status === 'success' && (
                 <Stack spacing={2.5}>
                   <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, overflowWrap: 'anywhere' }}>
-                    Your account has been restored and is fully accessible. To keep your account safe going forward, consider reviewing your recent login activity and updating your password after signing in.
+                    Your account has been restored and is ready to use. If the lock was unexpected, consider updating your password after signing in.
                   </Typography>
                   <Divider />
                   <Stack spacing={1}>
@@ -180,8 +176,8 @@ export default function UnlockAccountPage() {
                     </Typography>
                     {[
                       'Log in to your SouthRail account',
-                      'Review recent login activity in security settings',
-                      'Update your password if you suspect unauthorized access',
+                      'Review your profile and security settings',
+                      'Update your password if the lock was unexpected',
                     ].map((step) => (
                       <Stack key={step} direction="row" sx={{ minWidth: 0 }} spacing={1} alignItems="center">
                         <Box sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: 'success.main', flexShrink: 0 }} />
@@ -218,7 +214,6 @@ export default function UnlockAccountPage() {
                 </Stack>
               )}
 
-              {/* CTA */}
               {status !== 'loading' && (
                 <Box sx={{ mt: 3.5 }}>
                   <Button
@@ -238,7 +233,6 @@ export default function UnlockAccountPage() {
           </Stack>
         </Paper>
 
-        {/* Footer */}
         <Typography
           variant="caption"
           color="text.disabled"
