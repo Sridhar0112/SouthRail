@@ -96,6 +96,52 @@ select {
   overflow-wrap: anywhere;
 }
 
+.MuiButton-root,
+.MuiIconButton-root,
+.MuiListItemButton-root,
+.MuiChip-clickable {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Keep primary actions comfortable to tap without making the UI bulky. */
+.MuiButton-root {
+  min-height: 40px;
+}
+
+.MuiButton-sizeSmall {
+  min-height: 36px;
+}
+
+.MuiButton-sizeLarge {
+  min-height: 48px;
+}
+
+/* Inputs across search, auth and booking should align to one dependable rhythm. */
+.MuiOutlinedInput-root:not(.MuiInputBase-multiline) {
+  min-height: 44px;
+}
+
+/* Status chips were visually cramped on phones; keep labels readable and tappable. */
+.MuiChip-root {
+  min-height: 28px;
+  max-width: 100%;
+}
+
+.MuiChip-sizeSmall {
+  min-height: 24px;
+}
+
+/* Static information cards should not appear clickable just because the pointer moves over them. */
+.MuiCard-root,
+.MuiCard-root:hover {
+  transform: none !important;
+}
+
+.MuiAlert-root {
+  align-items: flex-start;
+}
+
 .MuiButton-root:focus-visible,
 .MuiIconButton-root:focus-visible,
 a:focus-visible,
@@ -104,9 +150,24 @@ a:focus-visible,
   outline-offset: 2px;
 }
 
+/* Prevent ultra-wide layouts from becoming visually sparse on large monitors. */
+.MuiContainer-maxWidthXl {
+  max-width: 1360px !important;
+}
+
+#main-content {
+  scroll-margin-top: 72px;
+}
+
 .MuiTableContainer-root {
   max-width: 100%;
   overflow-x: auto;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+
+.MuiTableCell-head {
+  white-space: nowrap;
 }
 
 @media print {
@@ -123,9 +184,40 @@ a:focus-visible,
 }
 
 @media (max-width: 599.95px) {
-  .MuiDialog-paper {
-    margin: 12px;
-    width: calc(100% - 24px);
-    max-height: calc(100% - 24px);
+  .MuiDialog-paper:not(.MuiDialog-paperFullScreen) {
+    margin: 10px;
+    width: calc(100% - 20px);
+    max-height: calc(100dvh - 20px);
+  }
+
+  .MuiDialogTitle-root {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+
+  .MuiDialogContent-root {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+
+  .MuiDialogActions-root {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+
+  .MuiCardContent-root {
+    padding: 16px !important;
+  }
+
+  .MuiCardContent-root:last-child {
+    padding-bottom: 16px !important;
+  }
+
+  .MuiTableCell-root {
+    padding: 10px 12px !important;
+  }
+
+  .MuiButton-sizeSmall {
+    min-height: 38px;
   }
 }
