@@ -176,13 +176,7 @@ export function AppThemeProvider({ children }) {
               maxWidth: '100%',
               minWidth: 0,
               borderRadius: 16,
-              transition: 'box-shadow 250ms ease, border-color 200ms ease, transform 200ms ease',
-              '&:hover': {
-                boxShadow: isLight
-                  ? '0 8px 32px rgba(13,107,75,0.12), 0 2px 8px rgba(13,107,75,0.06)'
-                  : '0 8px 40px rgba(0,0,0,0.40)',
-                borderColor: alpha(palette.primary.main, 0.25)
-              }
+              transition: 'box-shadow 250ms ease, border-color 200ms ease'
             }
           }
         },
