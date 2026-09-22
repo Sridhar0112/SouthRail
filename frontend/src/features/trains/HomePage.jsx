@@ -35,6 +35,7 @@ import FlashOnIcon from '@mui/icons-material/FlashOn';
 import { EmptyState, ErrorState } from '../../components/StateFeedback.jsx';
 import api from '../../services/api.js';
 import { getApiErrorMessage } from '../../utils/apiErrors.js';
+import { localDateKey } from '../../utils/date.js';
 import { rememberSearch, searchTrains } from './trainSlice.js';
 
 const classes = ['1A', '2A', '3A', 'SL', 'CC', '2S'];
@@ -218,9 +219,9 @@ export default function HomePage() {
                   </Typography>
                   <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap sx={{ mt: 3 }}>
                     {[
-                      { icon: <AccessTimeIcon sx={{ fontSize: 16 }} />, text: 'Real-time availability' },
+                      { icon: <AccessTimeIcon sx={{ fontSize: 16 }} />, text: 'Availability checks' },
                       { icon: <CurrencyRupeeIcon sx={{ fontSize: 16 }} />, text: 'Fare comparison' },
-                      { icon: <EventSeatIcon sx={{ fontSize: 16 }} />, text: 'Instant confirmation' }
+                      { icon: <EventSeatIcon sx={{ fontSize: 16 }} />, text: 'Reservation status' }
                     ].map((item) => (
                       <Stack key={item.text} direction="row" spacing={0.6} alignItems="center" sx={{ color: alpha('#FFFFFF', 0.7) }}>
                         {item.icon}
@@ -283,21 +284,21 @@ export default function HomePage() {
                         />
                       </Grid>
                       <Grid item xs={12} sm={compactSearch ? 1 : 2} sx={{ display: 'grid', placeItems: 'center' }}>
-                          <Button
-                            type="button"
-                            onClick={swap}
-                            aria-label="Swap stations"
-                            sx={{
-                              minWidth: 36,
-                              width: 36,
-                              height: 36,
-                              borderRadius: 2,
-                              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-                              color: 'primary.main',
-                              '&:hover': { bgcolor: (theme) => alpha(theme.palette.primary.main, 0.16) },
-                              '&:focus-visible': { outline: 2, outlineColor: 'primary.main', outlineOffset: 2 }
-                            }}
-                          >
+                        <Button
+                          type="button"
+                          onClick={swap}
+                          aria-label="Swap stations"
+                          sx={{
+                            minWidth: 44,
+                            width: 44,
+                            height: 44,
+                            borderRadius: 2,
+                            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                            color: 'primary.main',
+                            '&:hover': { bgcolor: (theme) => alpha(theme.palette.primary.main, 0.16) },
+                            '&:focus-visible': { outline: 2, outlineColor: 'primary.main', outlineOffset: 2 }
+                          }}
+                        >
                           <SwapHorizIcon sx={{ fontSize: 20 }} />
                         </Button>
                       </Grid>
@@ -574,7 +575,7 @@ const TrainResultCard = memo(function TrainResultCard({ train, search }) {
           </Grid>
 
           <Grid item xs={6} md={1.5}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', mb: 0.3, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: 0.04 }}>Availability</Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', mb: 0.3, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: 0.04 }}>Availability</Typography>
             <Chip size="small" color={availability.color} label={availability.label} sx={{ fontWeight: 700 }} />
             <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.3 }}>
               {availability.detail}
@@ -655,7 +656,7 @@ function RouteComparison({ results }) {
   );
 }
 
-function getToday() { return new Date().toISOString().slice(0, 10); }
+function getToday() { return localDateKey(); }
 
 function getInitialSearchValues(today) {
   const recent = readRecentSearches(today)[0];
