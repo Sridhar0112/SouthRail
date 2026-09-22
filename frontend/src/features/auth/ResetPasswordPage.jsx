@@ -27,15 +27,15 @@ import { getApiErrorMessage } from '../../utils/apiErrors.js';
 function getStrength(password) {
   if (!password) return { score: 0, label: '', color: 'inherit' };
   let score = 0;
-  if (password.length >= 8)  score++;
+  if (password.length >= 8) score++;
   if (password.length >= 12) score++;
   if (/[A-Z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
   if (/[^A-Za-z0-9]/.test(password)) score++;
-  if (score <= 1) return { score: 1, label: 'Weak',   key: 'error'   };
-  if (score === 2) return { score: 2, label: 'Fair',   key: 'warning' };
-  if (score === 3) return { score: 3, label: 'Good',   key: 'info'    };
-  return             { score: 4, label: 'Strong', key: 'success' };
+  if (score <= 1) return { score: 1, label: 'Weak', key: 'error' };
+  if (score === 2) return { score: 2, label: 'Fair', key: 'warning' };
+  if (score === 3) return { score: 3, label: 'Good', key: 'info' };
+  return { score: 4, label: 'Strong', key: 'success' };
 }
 
 function PasswordStrength({ password, theme }) {
@@ -62,7 +62,7 @@ function SuccessPanel({ onNavigate }) {
         <CheckCircleOutlineIcon sx={{ color: '#fff', fontSize: 38 }} />
       </Box>
       <Typography variant="h5" fontWeight={800} sx={{ mb: 1 }}>
-        Password Updated Successfully
+        Password updated successfully
       </Typography>
       <Typography color="text.secondary" sx={{ mb: 1.5, lineHeight: 1.6 }}>
         Your SouthRail account password has been updated successfully.
@@ -71,21 +71,20 @@ function SuccessPanel({ onNavigate }) {
         <Stack spacing={0.5}>
           {[
             'Future logins will require the new password',
-            'Your account remains secure',
             'Password reset completed successfully',
           ].map((item) => (
             <Typography key={item} variant="body2" sx={{ fontWeight: 500 }}>✓ {item}</Typography>
           ))}
         </Stack>
       </Alert>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1.5 }}>
-        <CircularProgress size={14} thickness={5} color="primary" />
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1.5 }} role="status" aria-live="polite">
+        <CircularProgress size={14} thickness={5} color="primary" aria-hidden="true" />
         <Typography variant="body2" color="text.secondary">
-          Redirecting to login in 5 seconds\u2026
+          Redirecting to login in a few seconds…
         </Typography>
       </Box>
       <Button variant="contained" fullWidth onClick={onNavigate} sx={{ borderRadius: 2, py: 1.4 }}>
-        Go to Login Now
+        Go to login now
       </Button>
     </Box>
   );
@@ -186,13 +185,22 @@ export default function ResetPasswordPage() {
                       InputProps={{
                         endAdornment: (
                           <InputAdornment position="end">
-                            <IconButton onClick={() => setShowPass((v) => !v)} edge="end" aria-label={showPass ? 'Hide password' : 'Show password'} size="small" tabIndex={-1}>
+                            <IconButton
+                              onClick={() => setShowPass((v) => !v)}
+                              edge="end"
+                              aria-label={showPass ? 'Hide password' : 'Show password'}
+                              size="small"
+                            >
                               {showPass ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
                             </IconButton>
                           </InputAdornment>
                         ),
                       }}
-                      {...form.register('password', { required: 'Password is required', minLength: { value: 8, message: 'Use at least 8 characters' }, maxLength: { value: 72, message: 'Use 72 characters or fewer' } })}
+                      {...form.register('password', {
+                        required: 'Password is required',
+                        minLength: { value: 8, message: 'Use at least 8 characters' },
+                        maxLength: { value: 72, message: 'Use 72 characters or fewer' }
+                      })}
                     />
                     <Box sx={{ mt: 1 }}>
                       <PasswordStrength password={password} theme={theme} />
