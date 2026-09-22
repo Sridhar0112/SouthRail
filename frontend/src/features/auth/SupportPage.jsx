@@ -32,9 +32,6 @@ import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
-// ─── Data ────────────────────────────────────────────────────────────────────
-// All static data stays at module scope (unchanged).
-
 const CATEGORIES = [
   { id: 'all', label: 'All topics' },
   { id: 'account', label: 'Account & login' },
@@ -48,72 +45,72 @@ const FAQ_ITEMS = [
   {
     id: 1, category: 'account', icon: LockResetIcon,
     question: 'My account is locked. How do I unlock it?',
-    answer: 'SouthRail locks accounts after several consecutive failed login attempts to protect your data. We automatically send an unlock link to your registered email address. Open that email and click the link — your account will be restored immediately. If you can\'t find the email, check your spam folder. Links expire after 24 hours; contact support if you need a new one.',
+    answer: 'SouthRail locks accounts after several consecutive failed login attempts to protect your data. We automatically send an unlock link to your registered email address. Open that email and click the link. If you can\'t find the email, check your spam folder. Links expire after 24 hours; contact support if you need help.',
   },
   {
     id: 2, category: 'account', icon: AccountCircleOutlinedIcon,
     question: 'How do I verify my email address?',
-    answer: 'After registering, we send a verification email to the address you provided. Click the link inside to activate your account. If the link has expired or you didn\'t receive the email, log in and go to Account Settings → Email → Resend verification. Verification links are valid for 24 hours.',
+    answer: 'After registering, SouthRail sends a verification email to the address you provided. Open the most recent verification email and follow its link to activate your account. If the link is missing or no longer valid, contact support for help.',
   },
   {
     id: 3, category: 'account', icon: LockResetIcon,
     question: 'I forgot my password. How do I reset it?',
-    answer: 'On the login page, click "Forgot password?" and enter your email address. We\'ll send you a password reset link valid for 1 hour. If you don\'t receive it within a few minutes, check your spam folder or try again. For security reasons, reset links can only be used once.',
+    answer: 'On the login page, select "Forgot password?" and enter your email address. SouthRail will send a password reset link if an account exists for that address. If you don\'t receive it within a few minutes, check your spam folder before trying again.',
   },
   {
     id: 4, category: 'account', icon: AccountCircleOutlinedIcon,
     question: 'How do I update my email address or phone number?',
-    answer: 'Go to Account Settings → Personal details to update your name or phone number. Email-address changes are not currently supported. Contact SouthRail support if you no longer have access to your registered email.',
+    answer: 'Open your profile to update your name or phone number. Email-address changes are not currently supported. Contact SouthRail support if you no longer have access to your registered email.',
   },
   {
     id: 5, category: 'bookings', icon: ConfirmationNumberOutlinedIcon,
     question: 'How do I cancel or modify a booking?',
-    answer: 'Open your Dashboard, find the trip, and select "Cancel" for an eligible Confirmed, RAC, or Waitlisted booking. SouthRail shows the server-calculated cancellation charge and refund before you confirm. Booking modifications are not currently supported.',
+    answer: 'Open your Dashboard, find the trip, and select "Cancel" for an eligible Confirmed, RAC, or Waitlisted booking. SouthRail shows the cancellation charge and expected refund before you confirm. Booking modifications are not currently supported.',
   },
   {
     id: 6, category: 'bookings', icon: ConfirmationNumberOutlinedIcon,
     question: 'Where do I find my booking confirmation?',
-    answer: 'Confirmations are emailed after booking. You can also find all your bookings on your Dashboard. Each booking has a unique PNR — keep it handy for ticket downloads and support queries.',
+    answer: 'Confirmations are emailed after booking. You can also find your bookings on the Dashboard. Each booking has a unique PNR that you can use to check status and access supported ticket actions.',
   },
   {
     id: 7, category: 'bookings', icon: TrainOutlinedIcon,
     question: 'How are seats allocated?',
-    answer: 'SouthRail automatically allocates seats based on train availability, travel class, and passenger berth preference. Seat allocation occurs during booking and manual seat selection is currently not available.',
+    answer: 'SouthRail allocates seats based on train availability, travel class, and passenger berth preference. Final seat or queue status is confirmed during the booking process; manual seat selection is not currently available.',
   },
   {
     id: 8, category: 'payments', icon: CreditCardOutlinedIcon,
     question: 'What payment methods are accepted?',
-    answer: 'We accept Visa, Mastercard, American Express, UPI, net banking, and SouthRail Travel Wallet. All payments are processed over encrypted connections. We do not store full card numbers on our servers.',
+    answer: 'The payment methods currently available for your order are shown securely in Razorpay checkout and can vary by provider availability. SouthRail does not store your card, bank, or UPI credentials.',
   },
   {
     id: 9, category: 'payments', icon: CreditCardOutlinedIcon,
     question: 'Why was my payment declined?',
-    answer: 'Payments can be declined for several reasons: insufficient funds, card limits, bank security checks, or incorrect card details. Try a different payment method or contact your bank. If the amount was deducted but the booking failed, the charge will be automatically reversed within 3–5 business days.',
+    answer: 'Payments can be declined because of bank limits, security checks, insufficient funds, or payment-provider issues. Try another available method if appropriate. If money was debited but your booking is not confirmed, check the payment or booking status before retrying and contact support if the issue remains unresolved.',
   },
   {
     id: 10, category: 'payments', icon: CreditCardOutlinedIcon,
     question: 'How do I get a refund?',
-    answer: 'Eligible refunds are automatically initiated when you cancel a booking. The amount is returned to the original payment method within 5–7 business days. For Travel Wallet refunds, credit appears within 24 hours. If your refund hasn\'t arrived after 7 business days, contact support with your booking reference.',
+    answer: 'For an eligible cancellation, SouthRail shows the refund amount before you confirm and initiates the supported refund process after cancellation. The time for funds to appear can depend on the payment provider and your bank. Contact support if a completed refund remains unresolved.',
   },
   {
     id: 11, category: 'travel', icon: TrainOutlinedIcon,
     question: 'What happens if my train is delayed or cancelled?',
-    answer: 'Passengers can check booking status and train information through SouthRail. Any refund or cancellation eligibility is determined through the cancellation and refund process supported by the system.',
+    answer: 'You can check booking status and available journey information through SouthRail. Cancellation or refund eligibility is shown through the supported cancellation flow when applicable.',
   },
   {
     id: 12, category: 'travel', icon: TrainOutlinedIcon,
     question: 'What luggage am I allowed to bring?',
-    answer: 'Please refer to railway travel guidelines for luggage and baggage restrictions. SouthRail currently does not manage baggage reservations or baggage fee calculations.',
+    answer: 'Please refer to the applicable railway travel guidelines for luggage and baggage restrictions. SouthRail currently does not manage baggage reservations or baggage-fee calculations.',
   },
   {
     id: 13, category: 'notifications', icon: NotificationsNoneOutlinedIcon,
     question: 'How do I manage travel alerts and notifications?',
-    answer: 'SouthRail currently sends essential booking and account emails automatically. Notification preferences are not yet configurable because the server does not provide preference controls.',
+    answer: 'SouthRail sends supported booking and account notifications automatically. Notification preferences are not configurable in the app yet.',
   },
   {
     id: 14, category: 'notifications', icon: NotificationsNoneOutlinedIcon,
     question: 'I\'m not receiving emails from SouthRail. What should I do?',
-    answer: 'First, check your spam or junk folder and mark SouthRail emails as "Not spam." Add support@southrail.in to your contacts. If the problem persists, verify that your registered email address is correct in Account Settings. Still nothing? Contact support and we\'ll investigate.',
+    answer: 'First, check your spam or junk folder and confirm that your registered email address is correct. If messages are still missing, create a support ticket so the issue can be investigated.',
   },
 ];
 
@@ -127,20 +124,12 @@ const CONTACT_CHANNELS = [
   },
 ];
 
-// ─── OPTIMIZATION 1: Hoist static policy array out of JSX to module scope ────
-// Previously defined inline in JSX — recreated as a new array reference on
-// every render, forcing React to diff all four Grid children unnecessarily.
-// Impact: Medium.
 const POLICIES = [
   { title: 'My support tickets', description: 'Review existing requests and continue conversations with support.', to: '/my-tickets' },
-  { title: 'PNR enquiry', description: 'View the current server-reported status of a booking.', to: '/pnr' },
+  { title: 'PNR enquiry', description: 'View the current booking status for a PNR.', to: '/pnr' },
   { title: 'Account settings', description: 'Manage supported profile and security settings.', to: '/profile' },
 ];
 
-// ─── OPTIMIZATION 2: Stable sx objects at module scope ───────────────────────
-// Inline `sx` objects are new references every render. Hoisting stable,
-// non-dynamic ones prevents MUI's `sx` prop resolver from rerunning needlessly.
-// Impact: Low (accumulates across many elements).
 const sxFaqPaperOpen = {
   border: '1px solid',
   borderColor: 'primary.main',
@@ -157,24 +146,11 @@ const sxFaqPaperClosed = {
   transition: 'border-color 0.15s',
 };
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-// OPTIMIZATION 3: Wrap FaqItem in React.memo ──────────────────────────────────
-// Without memo, every keystroke in the search box (which updates parent state)
-// re-renders *all* currently visible FaqItem instances even though their props
-// haven't changed. With 14 items each containing Collapse + icons + Typography,
-// this is a meaningful reconciliation cost.
-// Impact: High.
 const FaqItem = memo(function FaqItem({ item }) {
   const [open, setOpen] = useState(false);
   const Icon = item.icon;
-
-  // OPTIMIZATION 4: useCallback for the toggle handler ─────────────────────
-  // Prevents a new function reference being created on every FaqItem render.
-  // Especially relevant now that FaqItem is memoized — a new handler reference
-  // would bust the memo on every parent render even with no prop change.
-  // Impact: Low-medium (complements memo).
   const handleToggle = useCallback(() => setOpen((v) => !v), []);
+  const answerId = `faq-answer-${item.id}`;
 
   return (
     <Paper
@@ -182,9 +158,18 @@ const FaqItem = memo(function FaqItem({ item }) {
       sx={open ? sxFaqPaperOpen : sxFaqPaperClosed}
     >
       <Box
+        component="button"
+        type="button"
         onClick={handleToggle}
+        aria-expanded={open}
+        aria-controls={answerId}
         sx={{
-          px: { xs: 2.5, sm: 3 },
+          width: '100%',
+          border: 0,
+          color: 'text.primary',
+          font: 'inherit',
+          textAlign: 'left',
+          px: { xs: 2, sm: 3 },
           py: 2,
           display: 'flex',
           alignItems: 'center',
@@ -193,10 +178,16 @@ const FaqItem = memo(function FaqItem({ item }) {
           userSelect: 'none',
           bgcolor: open ? 'action.selected' : 'transparent',
           transition: 'background-color 0.15s',
+          '&:hover': { bgcolor: open ? 'action.selected' : 'action.hover' },
+          '&:focus-visible': {
+            outline: 2,
+            outlineColor: 'primary.main',
+            outlineOffset: -2,
+          },
         }}
       >
         <Icon sx={{ fontSize: 20, color: open ? 'primary.main' : 'text.disabled', flexShrink: 0 }} />
-        <Typography variant="body1" fontWeight={600} sx={{ flex: 1, lineHeight: 1.4 }}>
+        <Typography component="span" variant="body1" fontWeight={600} sx={{ flex: 1, lineHeight: 1.4 }}>
           {item.question}
         </Typography>
         {open
@@ -204,7 +195,7 @@ const FaqItem = memo(function FaqItem({ item }) {
           : <ExpandMoreIcon sx={{ color: 'text.disabled', flexShrink: 0 }} />}
       </Box>
       <Collapse in={open}>
-        <Box sx={{ px: { xs: 2.5, sm: 3 }, pb: 2.5, pt: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
+        <Box id={answerId} sx={{ px: { xs: 2, sm: 3 }, pb: 2.5, pt: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
           <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.75 }}>
             {item.answer}
           </Typography>
@@ -214,11 +205,6 @@ const FaqItem = memo(function FaqItem({ item }) {
   );
 });
 
-// OPTIMIZATION 5: Wrap ContactCard in React.memo ──────────────────────────────
-// ContactCard receives a stable object reference from the module-scope
-// CONTACT_CHANNELS array. With memo, the three cards skip reconciliation
-// entirely whenever parent state (search, category, ticket) changes.
-// Impact: Medium.
 const ContactCard = memo(function ContactCard({ channel }) {
   const Icon = channel.icon;
   return (
@@ -249,13 +235,15 @@ const ContactCard = memo(function ContactCard({ channel }) {
         >
           <Icon sx={{ color: 'primary.main', fontSize: 22 }} />
         </Box>
-        <Chip
-          label={channel.badge}
-          size="small"
-          color={channel.badgeColor}
-          variant={channel.badgeColor === 'success' ? 'filled' : 'outlined'}
-          sx={{ fontSize: 11, height: 22 }}
-        />
+        {channel.badge && (
+          <Chip
+            label={channel.badge}
+            size="small"
+            color={channel.badgeColor}
+            variant={channel.badgeColor === 'success' ? 'filled' : 'outlined'}
+            sx={{ fontSize: 11 }}
+          />
+        )}
       </Stack>
       <Box>
         <Typography variant="subtitle1" fontWeight={700} gutterBottom>
@@ -280,17 +268,13 @@ const ContactCard = memo(function ContactCard({ channel }) {
   );
 });
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default function SupportPage() {
-  
   const [search, setSearch] = useState('');
-  
-   const [snackbar, setSnackbar] = useState({
-  open: false,
-  severity: 'success',
-  message: '',
-});
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    severity: 'success',
+    message: '',
+  });
 
   const [ticket, setTicket] = useState({
     bookingReference: '',
@@ -299,108 +283,68 @@ export default function SupportPage() {
   });
   const [activeCategory, setActiveCategory] = useState('all');
 
-  // OPTIMIZATION 6: useMemo for the filtered FAQ list ───────────────────────
-  // The .filter() previously ran on every render regardless of whether search
-  // or activeCategory had changed. useMemo ensures it only reruns when those
-  // two values actually change — not on ticket field keystrokes, for example.
-  // Impact: Medium.
   const filtered = useMemo(
-    () =>
-      FAQ_ITEMS.filter((item) => {
-        const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
-        const matchesSearch =
-          search.trim() === '' ||
-          item.question.toLowerCase().includes(search.toLowerCase()) ||
-          item.answer.toLowerCase().includes(search.toLowerCase());
-        return matchesCategory && matchesSearch;
-      }),
+    () => FAQ_ITEMS.filter((item) => {
+      const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
+      const matchesSearch = search.trim() === ''
+        || item.question.toLowerCase().includes(search.toLowerCase())
+        || item.answer.toLowerCase().includes(search.toLowerCase());
+      return matchesCategory && matchesSearch;
+    }),
     [search, activeCategory],
   );
 
-  // OPTIMIZATION 7: useCallback for submitTicket ────────────────────────────
-  // Previously an inline async function recreated on every render. As a
-  // useCallback it gets a stable reference; the Button's onClick prop stays
-  // referentially equal between renders, preventing unnecessary Button
-  // reconciliation. ticket is listed as a dependency so it always closes over
-  // the latest form values — identical behaviour to before.
-  // Impact: Low-medium.
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [descriptionTouched, setDescriptionTouched] = useState(false);
+
   const validateTicket = useCallback(() => {
-  const topic = ticket.topic.trim();
-  const description = ticket.description.trim();
+    const topic = ticket.topic.trim();
+    const description = ticket.description.trim();
 
-  if (!topic) {
-    return 'Please select a topic.';
-  }
+    if (!topic) return 'Please select a topic.';
+    if (!description) return 'Please enter issue description.';
+    if (description.length > 5000) return 'Description cannot exceed 5000 characters.';
+    return '';
+  }, [ticket]);
 
-  if (!description) {
-    return 'Please enter issue description.';
-  }
+  const submitTicket = useCallback(async () => {
+    setSubmitted(true);
+    const validationMessage = validateTicket();
 
-  if (description.length > 5000) {
-    return 'Description cannot exceed 5000 characters.';
-  }
+    if (validationMessage) {
+      setSnackbar({ open: true, severity: 'error', message: validationMessage });
+      return;
+    }
 
-  return '';
-}, [ticket]);
+    try {
+      setLoading(true);
+      const response = await api.post('/support/tickets', {
+        bookingReference: ticket.bookingReference.trim(),
+        topic: ticket.topic.trim(),
+        description: ticket.description.trim(),
+      });
 
-const submitTicket = useCallback(async () => {
-  setSubmitted(true);
-
-  const validationMessage = validateTicket();
-
-  if (validationMessage) {
-    setSnackbar({
-      open: true,
-      severity: 'error',
-      message: validationMessage,
-    });
-    return;
-  }
-
-  try {
-    setLoading(true);
-
-    const response = await api.post('/support/tickets', {
-      bookingReference: ticket.bookingReference.trim(),
-      topic: ticket.topic.trim(),
-      description: ticket.description.trim(),
-    });
-
-    const ticketId = String(response?.data?.id || 'created');
-    const val = ticketId === 'created' ? '' : ` Ticket ID: ${ticketId.slice(0, 8).toUpperCase()}`;
-    setSnackbar({
-      open: true,
-      severity: 'success',
-      message: `Support ticket created successfully.${val}`,
-    });
-
-    setTicket({
-      bookingReference: '',
-      topic: '',
-      description: '',
-    });
-
-    setSubmitted(false);
-  } catch (error) {
-    setSnackbar({
-      open: true,
-      severity: 'error',
-      message: getApiErrorMessage(error, 'Failed to create support ticket. Please try again.'),
-    });
-  } finally {
-    setLoading(false);
-  }
-}, [ticket, validateTicket]);
-
-  // OPTIMIZATION 8: useCallback for ticket field onChange handlers ──────────
-  // Each TextField previously received a new arrow function on every render.
-  // Stable callbacks mean MUI's TextField internals don't needlessly
-  // re-subscribe to prop changes while the user types in a different field.
-  // Impact: Low-medium (4 fields × every parent render = noticeable on slower
-  // devices when the ticket form is visible alongside the full FAQ list).
+      const ticketId = String(response?.data?.id || 'created');
+      const val = ticketId === 'created' ? '' : ` Ticket ID: ${ticketId.slice(0, 8).toUpperCase()}`;
+      setSnackbar({
+        open: true,
+        severity: 'success',
+        message: `Support ticket created successfully.${val}`,
+      });
+      setTicket({ bookingReference: '', topic: '', description: '' });
+      setSubmitted(false);
+      setDescriptionTouched(false);
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        severity: 'error',
+        message: getApiErrorMessage(error, 'Failed to create support ticket. Please try again.'),
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [ticket, validateTicket]);
 
   const handleBookingRefChange = useCallback(
     (e) => setTicket((prev) => ({ ...prev, bookingReference: e.target.value })),
@@ -415,30 +359,18 @@ const submitTicket = useCallback(async () => {
     [],
   );
   const handleDescriptionBlur = useCallback(() => { setDescriptionTouched(true); }, []);
-
-  // OPTIMIZATION 9: useCallback for category chip click handler ─────────────
-  // The Chip onClick previously received a new closure per category per render.
-  // A single stable handler using the chip's data attribute avoids 6 new
-  // function allocations on every render cycle.
-  // Impact: Low.
   const handleCategoryClick = useCallback(
     (e) => setActiveCategory(e.currentTarget.dataset.categoryId),
     [],
   );
-
-  // OPTIMIZATION 10: useCallback for search onChange ────────────────────────
-  // Keeps the TextField's onChange prop referentially stable so MUI doesn't
-  // re-run its internal effect that watches for prop changes.
-  // Impact: Low.
   const handleSearchChange = useCallback((e) => setSearch(e.target.value), []);
-  
-useEffect(() => {
-  window.scrollTo(0, 0);
-}, []);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: (theme) => theme.palette.background.default }}>
-
-      {/* ── Hero ── */}
       <Box
         sx={{
           bgcolor: 'background.paper',
@@ -490,17 +422,12 @@ useEffect(() => {
 
       <Container maxWidth="md" sx={{ py: { xs: 2, sm: 3 } }}>
         <Stack spacing={2}>
-
-          {/* ── FAQ ── */}
           <Box>
             <Stack direction="row" spacing={1} sx={{ mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
               {CATEGORIES.map((cat) => (
                 <Chip
                   key={cat.id}
                   label={cat.label}
-                  // Pass the id via data attribute so the single stable
-                  // handleCategoryClick handler can read it without a closure
-                  // per chip (see Optimization 9).
                   data-category-id={cat.id}
                   onClick={handleCategoryClick}
                   color={activeCategory === cat.id ? 'primary' : 'default'}
@@ -538,7 +465,6 @@ useEffect(() => {
 
           <Divider />
 
-          {/* ── Contact channels ── */}
           <Box>
             <Stack spacing={0.5} sx={{ mb: 1.5 }}>
               <Typography variant="overline" color="text.disabled" fontWeight={600} letterSpacing={1}>
@@ -548,13 +474,13 @@ useEffect(() => {
                 Reach our support team
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Choose the channel that suits you. We aim to resolve every query on first contact.
+                Use the channel below for questions that need personal assistance.
               </Typography>
             </Stack>
 
             <Grid container spacing={1.5}>
               {CONTACT_CHANNELS.map((ch) => (
-                <Grid item xs={12} md={4} key={ch.title}>
+                <Grid item xs={12} md={6} key={ch.title}>
                   <ContactCard channel={ch} />
                 </Grid>
               ))}
@@ -563,18 +489,15 @@ useEffect(() => {
 
           <Divider />
 
-          {/* ── System status ── */}
           <Box>
             <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>
               Service health
             </Typography>
             <Alert severity="info">
-              Live service-health information is not currently published by the SouthRail API. If an action fails, retry from that page or create a support ticket below.
+              Live service-health information is not currently available in SouthRail. If an action fails, retry from that page or create a support ticket below.
             </Alert>
           </Box>
 
-
-          {/* ── Policies quick links ── */}
           <Box>
             <Stack spacing={0.5} sx={{ mb: 1.5 }}>
               <Typography variant="overline" color="text.disabled" fontWeight={600} letterSpacing={1}>
@@ -589,7 +512,6 @@ useEffect(() => {
             </Stack>
 
             <Grid container spacing={1.5}>
-              {/* OPTIMIZATION 1 applied here — iterating module-scope POLICIES array */}
               {POLICIES.map((policy) => (
                 <Grid item xs={12} sm={6} key={policy.title}>
                   <Button
@@ -626,7 +548,6 @@ useEffect(() => {
 
           <Divider />
 
-          {/* ── Submit a ticket ── */}
           <Paper
             elevation={0}
             sx={{
@@ -654,111 +575,95 @@ useEffect(() => {
 
               <Grid container spacing={1.5}>
                 <Grid item xs={12} sm={6}>
-  <TextField
-    fullWidth
-    label="Booking reference (optional)"
-    size="small"
-    value={ticket.bookingReference}
-    onChange={handleBookingRefChange}
-    inputProps={{ maxLength: 20 }}
-  />
-</Grid>
+                  <TextField
+                    fullWidth
+                    label="Booking reference (optional)"
+                    size="small"
+                    value={ticket.bookingReference}
+                    onChange={handleBookingRefChange}
+                    inputProps={{ maxLength: 20 }}
+                  />
+                </Grid>
 
-<Grid item xs={12} sm={6}>
-  <TextField
-  fullWidth
-  label="Topic"
-  size="small"
-  select
-  value={ticket.topic}
-  onChange={handleTopicChange}
-  error={submitted && !ticket.topic.trim()}
-  helperText={submitted && !ticket.topic.trim() ? 'Topic is required' : ''}
-  SelectProps={{ native: true }}
->
-    <option value="">Select a topic…</option>
-    <option value="account">Account & login</option>
-    <option value="bookings">Bookings & travel</option>
-    <option value="payments">Payments & refunds</option>
-    <option value="notifications">Notifications</option>
-    <option value="other">Something else</option>
-  </TextField>
-</Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Topic"
+                    size="small"
+                    select
+                    value={ticket.topic}
+                    onChange={handleTopicChange}
+                    error={submitted && !ticket.topic.trim()}
+                    helperText={submitted && !ticket.topic.trim() ? 'Topic is required' : ''}
+                    SelectProps={{ native: true }}
+                  >
+                    <option value="">Select a topic…</option>
+                    <option value="account">Account & login</option>
+                    <option value="bookings">Bookings & travel</option>
+                    <option value="payments">Payments & refunds</option>
+                    <option value="notifications">Notifications</option>
+                    <option value="other">Something else</option>
+                  </TextField>
+                </Grid>
+
                 <Grid item xs={12}>
                   <TextField
-  fullWidth
-  label="Describe your issue"
-  multiline
-  minRows={3}
-  value={ticket.description}
-  onChange={handleDescriptionChange}
-  onBlur={handleDescriptionBlur}
-  error={
-    submitted &&
-    (
-      !ticket.description.trim() ||
-      ticket.description.trim().length > 5000
-    )
-  }
-  helperText={
-    submitted && !ticket.description.trim()
-      ? 'Description is required'
-      : submitted && ticket.description.trim().length > 5000
-      ? 'Description cannot exceed 5000 characters'
-      : descriptionTouched ? `${ticket.description.length}/5000` : ''
-  }
-  inputProps={{ maxLength: 5000 }}
-/>
+                    fullWidth
+                    label="Describe your issue"
+                    multiline
+                    minRows={3}
+                    value={ticket.description}
+                    onChange={handleDescriptionChange}
+                    onBlur={handleDescriptionBlur}
+                    error={submitted && (!ticket.description.trim() || ticket.description.trim().length > 5000)}
+                    helperText={
+                      submitted && !ticket.description.trim()
+                        ? 'Description is required'
+                        : submitted && ticket.description.trim().length > 5000
+                          ? 'Description cannot exceed 5000 characters'
+                          : descriptionTouched ? `${ticket.description.length}/5000` : ''
+                    }
+                    inputProps={{ maxLength: 5000 }}
+                  />
                 </Grid>
               </Grid>
 
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} alignItems={{ sm: 'center' }}>
-               <Button
-  variant="contained"
-  size="small"
-  onClick={submitTicket}
-  disabled={loading}
-  sx={{ width: { xs: '100%', sm: 'auto' } }}
->
-  {loading ? 'Submitting...' : 'Submit ticket'}
-</Button>
-
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={submitTicket}
+                  disabled={loading}
+                  sx={{ width: { xs: '100%', sm: 'auto' } }}
+                >
+                  {loading ? 'Submitting...' : 'Submit ticket'}
+                </Button>
               </Stack>
             </Stack>
           </Paper>
-
         </Stack>
-<Snackbar
-  open={snackbar.open}
-  autoHideDuration={3000}
-  onClose={() =>
-    setSnackbar((prev) => ({
-      ...prev,
-      open: false,
-    }))
-  }
-  anchorOrigin={{
-    vertical: 'bottom',
-    horizontal: 'right',
-  }}
->
-  <Alert
-    severity={snackbar.severity}
-    variant="filled"
-    aria-live="polite"
-    sx={{
-      width: { xs: 'calc(100vw - 32px)', sm: 'auto' },
-      minWidth: { xs: 0, sm: 320 },
-      borderRadius: 2,
-      boxShadow: 6,
-    }}
-  >
-    {snackbar.message}
-  </Alert>
-</Snackbar>
-      </Container>
 
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={3000}
+          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert
+            severity={snackbar.severity}
+            variant="filled"
+            aria-live="polite"
+            sx={{
+              width: { xs: 'calc(100vw - 32px)', sm: 'auto' },
+              minWidth: { xs: 0, sm: 320 },
+              borderRadius: 2,
+              boxShadow: 6,
+            }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </Container>
     </Box>
-    
   );
 }
