@@ -33,20 +33,20 @@ import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import api from '../../services/api.js';
 import { getApiErrorMessage } from '../../utils/apiErrors.js';
 
-// ─── Constants ───────────────────────────────────────────────────────────────
-
 const TOPIC_LABELS = {
-  account:   'Account',
-  booking:   'Booking',
-  payment:   'Payment',
-  refund:    'Refund',
-  general:   'General',
+  account: 'Account & login',
+  booking: 'Booking',
+  bookings: 'Bookings & travel',
+  payment: 'Payment',
+  payments: 'Payments & refunds',
+  refund: 'Refund',
+  notifications: 'Notifications',
+  general: 'General',
   complaint: 'Complaint',
+  other: 'Something else',
 };
 
 const MAX_MESSAGE_LENGTH = 2000;
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatDate(iso) {
   if (!iso) return '—';
@@ -65,13 +65,18 @@ function topicLabel(topic = '') {
   return TOPIC_LABELS[topic.toLowerCase()] ?? topic;
 }
 
+function formatTicketStatus(status = '') {
+  return String(status || '')
+    .replaceAll('_', ' ')
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 function initialsOf(name = '') {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return '?';
   return (parts[0][0] + (parts[1]?.[0] || '')).toUpperCase();
 }
-
-// ── Message bubble ──
 
 function MessageBubble({ message }) {
   const isAdmin = (message.senderType || message.sender || '').toUpperCase() === 'ADMIN';
@@ -79,7 +84,7 @@ function MessageBubble({ message }) {
 
   return (
     <Stack
-      direction={isAdmin ? 'row-reverse' : 'row'}
+      direction={isAdmin ? 'row' : 'row-reverse'}
       spacing={1.25}
       alignItems="flex-start"
       sx={{ mb: 2 }}
@@ -100,7 +105,7 @@ function MessageBubble({ message }) {
 
       <Box sx={{ maxWidth: '78%', minWidth: 0 }}>
         <Stack
-          direction={isAdmin ? 'row-reverse' : 'row'}
+          direction={isAdmin ? 'row' : 'row-reverse'}
           spacing={0.75}
           alignItems="baseline"
           mb={0.4}
@@ -121,15 +126,15 @@ function MessageBubble({ message }) {
             whiteSpace: 'pre-wrap',
             ...(isAdmin
               ? {
-                  bgcolor: theme.palette.primary.main,
-                  color: theme.palette.primary.contrastText,
-                  borderTopRightRadius: 6,
-                }
-              : {
                   bgcolor: theme.palette.surface.elevated,
                   color: theme.palette.text.primary,
                   border: `1px solid ${theme.palette.custom.cardBorder}`,
                   borderTopLeftRadius: 6,
+                }
+              : {
+                  bgcolor: theme.palette.primary.main,
+                  color: theme.palette.primary.contrastText,
+                  borderTopRightRadius: 6,
                 }),
           })}
         >
@@ -155,28 +160,22 @@ function MessageSkeleton({ align = 'left' }) {
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
-
 export default function TicketDetailsPage() {
   const { ticketId } = useParams();
   const navigate = useNavigate();
 
-  const [ticket, setTicket]               = useState(null);
+  const [ticket, setTicket] = useState(null);
   const [ticketLoading, setTicketLoading] = useState(true);
-  const [ticketError, setTicketError]     = useState(null);
-
-  const [messages, setMessages]             = useState([]);
+  const [ticketError, setTicketError] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(true);
-  const [messagesError, setMessagesError]   = useState(null);
-
-  const [draft, setDraft]       = useState('');
-  const [sending, setSending]   = useState(false);
+  const [messagesError, setMessagesError] = useState(null);
+  const [draft, setDraft] = useState('');
+  const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState(null);
-
   const scrollRef = useRef(null);
   const replyInputRef = useRef(null);
 
-  // GET /support/my-tickets/{ticketId}
   const fetchTicket = useCallback(async () => {
     setTicketLoading(true);
     setTicketError(null);
@@ -190,7 +189,6 @@ export default function TicketDetailsPage() {
     }
   }, [ticketId]);
 
-  // GET /support/my-tickets/{ticketId}/messages
   const fetchMessages = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setMessagesLoading(true);
     setMessagesError(null);
@@ -209,32 +207,26 @@ export default function TicketDetailsPage() {
     fetchMessages();
   }, [fetchTicket, fetchMessages]);
 
-  // Auto-scroll to newest message only if user was already near the bottom.
   useEffect(() => {
     if (scrollRef.current) {
       const el = scrollRef.current;
       const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50;
-      if (isNearBottom) {
-        el.scrollTop = el.scrollHeight;
-      }
+      if (isNearBottom) el.scrollTop = el.scrollHeight;
     }
   }, [messages]);
 
   const isClosed = ticket?.status === 'CLOSED';
-
   const remainingChars = MAX_MESSAGE_LENGTH - draft.length;
   const canSend = !isClosed && draft.trim().length > 0 && remainingChars >= 0 && !sending;
 
-  // POST /support/my-tickets/{ticketId}/messages
   const handleSend = useCallback(async () => {
     const content = draft.trim();
     if (!content || isClosed) return;
     setSending(true);
     setSendError(null);
     try {
-      await api.post(`/support/my-tickets/${ticketId}/messages`, {  message: content });
+      await api.post(`/support/my-tickets/${ticketId}/messages`, { message: content });
       setDraft('');
-      // Auto-refresh conversation after a successful reply.
       await fetchMessages({ silent: true });
     } catch (err) {
       setSendError(getApiErrorMessage(err, 'Failed to send your message. Please try again.'));
@@ -254,12 +246,12 @@ export default function TicketDetailsPage() {
   );
 
   const shortId = useMemo(() => ticketId?.slice(0, 8).toUpperCase(), [ticketId]);
+
   useEffect(() => {
-    if (isClosed) return;
+    if (isClosed) return undefined;
     const interval = setInterval(() => {
       fetchMessages({ silent: true });
     }, 15000);
-  
     return () => clearInterval(interval);
   }, [fetchMessages, isClosed]);
 
@@ -268,7 +260,6 @@ export default function TicketDetailsPage() {
       <Container maxWidth="md">
         <Fade in timeout={400}>
           <Box>
-            {/* ── Back navigation ── */}
             <Button
               startIcon={<ArrowBackIcon />}
               onClick={() => navigate('/my-tickets')}
@@ -277,7 +268,6 @@ export default function TicketDetailsPage() {
               Back to support requests
             </Button>
 
-            {/* ── Ticket header ── */}
             {ticketLoading ? (
               <Card variant="outlined" sx={{ borderRadius: 3, mb: 1.5, p: 1.5 }}>
                 <Skeleton width={160} height={28} sx={{ mb: 1 }} />
@@ -310,7 +300,7 @@ export default function TicketDetailsPage() {
                   onClick={fetchTicket}
                   sx={{ borderRadius: 2.5, fontWeight: 700 }}
                 >
-                  Try Again
+                  Try again
                 </Button>
               </Card>
             ) : (
@@ -343,18 +333,15 @@ export default function TicketDetailsPage() {
                       </Typography>
                     </Stack>
                     <Chip
- label={ticket?.status}
- sx={{
-   bgcolor:'rgba(255,255,255,.18)',
-   color:'#fff'
- }}
-/>
+                      label={formatTicketStatus(ticket?.status)}
+                      sx={{ bgcolor: 'rgba(255,255,255,.18)', color: '#fff' }}
+                    />
                   </Stack>
 
                   <Typography
                     variant="h6"
                     fontWeight={800}
-                    sx={{ mb: 1.5, fontSize: { xs: '1.05rem', sm: '1.2rem' } }}
+                    sx={{ mb: 1.5, fontSize: { xs: '1.05rem', sm: '1.2rem' }, overflowWrap: 'anywhere' }}
                   >
                     {ticket?.description}
                   </Typography>
@@ -362,15 +349,11 @@ export default function TicketDetailsPage() {
                   <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap rowGap={1}>
                     <Stack direction="row" alignItems="center" spacing={0.6} sx={{ opacity: 0.9 }}>
                       <SellOutlinedIcon sx={{ fontSize: 15 }} />
-                      <Typography variant="caption" fontWeight={600}>
-                        {topicLabel(ticket?.topic)}
-                      </Typography>
+                      <Typography variant="caption" fontWeight={600}>{topicLabel(ticket?.topic)}</Typography>
                     </Stack>
                     <Stack direction="row" alignItems="center" spacing={0.6} sx={{ opacity: 0.9 }}>
                       <EventOutlinedIcon sx={{ fontSize: 15 }} />
-                      <Typography variant="caption" fontWeight={600}>
-                        {formatDate(ticket?.createdAt)}
-                      </Typography>
+                      <Typography variant="caption" fontWeight={600}>{formatDate(ticket?.createdAt)}</Typography>
                     </Stack>
                     {ticket?.bookingReference && (
                       <Stack direction="row" alignItems="center" spacing={0.6} sx={{ opacity: 0.9 }}>
@@ -385,26 +368,13 @@ export default function TicketDetailsPage() {
               </Card>
             )}
 
-            {/* ── Conversation card ── */}
             {!ticketError && (
-              <Card
-                variant="outlined"
-                sx={(theme) => ({ borderRadius: 3, borderColor: theme.palette.custom.cardBorder })}
-              >
+              <Card variant="outlined" sx={(theme) => ({ borderRadius: 3, borderColor: theme.palette.custom.cardBorder })}>
                 <CardContent sx={{ p: { xs: 1.75, sm: 2.5 } }}>
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    mb={1.5}
-                    aria-live="polite"
-                    aria-atomic="false"
-                  >
-                    <Stack direction="row" alignItems="center" spacing={1}>
+                  <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1.5} aria-live="polite" aria-atomic="false">
+                    <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
                       <ForumOutlinedIcon color="primary" sx={{ fontSize: 20 }} />
-                      <Typography variant="subtitle1" fontWeight={800}>
-                        Conversation
-                      </Typography>
+                      <Typography variant="subtitle1" fontWeight={800}>Conversation</Typography>
                       {!messagesLoading && !messagesError && (
                         <Chip
                           label={`${messages.length} message${messages.length !== 1 ? 's' : ''}`}
@@ -415,7 +385,7 @@ export default function TicketDetailsPage() {
                       )}
                     </Stack>
                     <Tooltip title="Refresh conversation">
-                      <IconButton size="small" onClick={() => fetchMessages()} aria-label="Refresh conversation">
+                      <IconButton size="small" onClick={() => fetchMessages()} aria-label="Refresh conversation" sx={{ flexShrink: 0 }}>
                         <RefreshIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
@@ -423,7 +393,6 @@ export default function TicketDetailsPage() {
 
                   <Divider sx={{ mb: 1.5 }} />
 
-                  {/* Scrollable message area */}
                   <Box
                     ref={scrollRef}
                     role="log"
@@ -448,16 +417,9 @@ export default function TicketDetailsPage() {
                         <MessageSkeleton align="left" />
                       </>
                     ) : messagesError ? (
-                      <Stack
-                        alignItems="center"
-                        justifyContent="center"
-                        spacing={1.5}
-                        sx={{ height: '100%', textAlign: 'center', px: 2 }}
-                      >
+                      <Stack alignItems="center" justifyContent="center" spacing={1.5} sx={{ height: '100%', textAlign: 'center', px: 2 }}>
                         <ErrorOutlineIcon sx={{ fontSize: 32, color: 'error.main' }} />
-                        <Typography variant="body2" color="text.secondary">
-                          {messagesError}
-                        </Typography>
+                        <Typography variant="body2" color="text.secondary">{messagesError}</Typography>
                         <Button
                           size="small"
                           variant="outlined"
@@ -470,18 +432,11 @@ export default function TicketDetailsPage() {
                         </Button>
                       </Stack>
                     ) : messages.length === 0 ? (
-                      <Stack
-                        alignItems="center"
-                        justifyContent="center"
-                        spacing={1.25}
-                        sx={{ height: '100%', textAlign: 'center', px: 2 }}
-                      >
+                      <Stack alignItems="center" justifyContent="center" spacing={1.25} sx={{ height: '100%', textAlign: 'center', px: 2 }}>
                         <Avatar sx={{ bgcolor: 'rgba(25,118,210,0.08)', color: 'primary.main', width: 52, height: 52 }}>
                           <ForumOutlinedIcon />
                         </Avatar>
-                        <Typography variant="body2" fontWeight={700}>
-                          No messages yet
-                        </Typography>
+                        <Typography variant="body2" fontWeight={700}>No messages yet</Typography>
                         <Typography variant="caption" color="text.secondary" maxWidth={280}>
                           Send a message below and our support team will get back to you here.
                         </Typography>
@@ -495,31 +450,22 @@ export default function TicketDetailsPage() {
                         </Button>
                       </Stack>
                     ) : (
-                      messages.map((m, idx) => (
-                        <MessageBubble key={m.id || m._id || idx} message={m} />
-                      ))
+                      messages.map((m, idx) => <MessageBubble key={m.id || m._id || idx} message={m} />)
                     )}
                   </Box>
 
-                  {/* ── Reply section ── */}
                   {isClosed ? (
                     <Alert
                       icon={<LockOutlinedIcon fontSize="small" />}
                       severity="info"
                       sx={{ borderRadius: 2 }}
                       action={
-                        <Button
-                          color="inherit"
-                          size="small"
-                          onClick={() => navigate('/support')}
-                          sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}
-                        >
-                          New Ticket
+                        <Button color="inherit" size="small" onClick={() => navigate('/support')} sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
+                          New ticket
                         </Button>
                       }
                     >
-                      This ticket is closed, so it's no longer accepting replies. If you need
-                      further help, please raise a new support ticket.
+                      This ticket is closed, so it's no longer accepting replies. If you need further help, please raise a new support ticket.
                     </Alert>
                   ) : (
                     <Stack spacing={1}>
@@ -531,7 +477,7 @@ export default function TicketDetailsPage() {
                       <TextField
                         label="Reply to support team"
                         inputRef={replyInputRef}
-                        placeholder="Reply to Support Team"
+                        placeholder="Write your reply"
                         value={draft}
                         onChange={(e) => setDraft(e.target.value)}
                         onKeyDown={handleKeyDown}
@@ -544,32 +490,22 @@ export default function TicketDetailsPage() {
                         sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                       />
                       <Stack
-                        direction="row"
+                        direction={{ xs: 'column', sm: 'row' }}
                         justifyContent="space-between"
-                        alignItems="center"
+                        alignItems={{ xs: 'stretch', sm: 'center' }}
                         spacing={1}
                       >
-                        <Typography
-                          variant="caption"
-                          color={remainingChars < 0 ? 'error.main' : 'text.secondary'}
-                          fontWeight={600}
-                        >
-                          {remainingChars} characters left
+                        <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                          {remainingChars} characters left · Ctrl/Cmd + Enter to send
                         </Typography>
                         <Button
                           variant="contained"
-                          endIcon={
-                            sending ? (
-                              <CircularProgress size={16} color="inherit" />
-                            ) : (
-                              <SendIcon sx={{ fontSize: 17 }} />
-                            )
-                          }
+                          endIcon={sending ? <CircularProgress size={16} color="inherit" /> : <SendIcon sx={{ fontSize: 17 }} />}
                           onClick={handleSend}
                           disabled={!canSend}
-                          sx={{ borderRadius: 2, fontWeight: 700, px: 3 }}
+                          sx={{ borderRadius: 2, fontWeight: 700, px: 3, width: { xs: '100%', sm: 'auto' } }}
                         >
-                          {sending ? 'Sending…' : 'Send Reply'}
+                          {sending ? 'Sending…' : 'Send reply'}
                         </Button>
                       </Stack>
                     </Stack>
