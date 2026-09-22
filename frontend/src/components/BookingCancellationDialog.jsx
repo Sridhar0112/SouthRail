@@ -208,7 +208,7 @@ function RefundHighlight({ label, value }) {
 
 function getCancellationErrorMessage(error) {
   if (!error?.response) {
-    return getApiErrorMessage(error, 'Server is not reachable. Please make sure the backend is running.');
+    return getApiErrorMessage(error, 'SouthRail could not be reached. Check your connection and try again.');
   }
 
   const status = error.response.status;
