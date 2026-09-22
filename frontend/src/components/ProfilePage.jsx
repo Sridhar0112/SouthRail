@@ -117,7 +117,6 @@ function ProfileHero({ profile, loading }) {
         position: 'relative'
       }}
     >
-      {/* Accent stripe */}
       <Box
         sx={{
           height: 64,
@@ -187,7 +186,7 @@ function PersonalInfoTab({ profile, loading, error, onSaved,onProfileUpdated, on
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ fullName: '', phone: '' });
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState(null); // { type: 'success'|'error', text }
+  const [message, setMessage] = useState(null);
 
   useEffect(() => {
     if (profile) setForm({ fullName: profile.fullName || '', phone: profile.phone || '' });
@@ -317,7 +316,6 @@ function PersonalInfoTab({ profile, loading, error, onSaved,onProfileUpdated, on
   );
 }
 
-
 // ── Tab: Security ──────────────────────────────────────────────────────────
 
 function SecurityTab({ onDeleteClick }) {
@@ -393,12 +391,8 @@ function SecurityTab({ onDeleteClick }) {
             <Divider />
             {pwField('next', 'New password')}
             {pwField('confirm', 'Confirm new password')}
-            {form.next && (
-              <PasswordStrengthBar password={form.next} />
-            )}
-            {message && (
-              <Alert severity={message.type} sx={{ borderRadius: 2 }}>{message.text}</Alert>
-            )}
+            {form.next && <PasswordStrengthBar password={form.next} />}
+            {message && <Alert severity={message.type} sx={{ borderRadius: 2 }}>{message.text}</Alert>}
             <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="flex-end">
               <Button
                 type="submit" variant="contained"
@@ -432,35 +426,31 @@ function SecurityTab({ onDeleteClick }) {
           justifyContent="space-between"
           spacing={2}
           sx={{
-  p: 2,
-  border: 1,
-  borderColor: 'error.main',
-  borderRadius: 2,
-  bgcolor: (theme) =>
-    theme.palette.mode === 'dark'
-      ? 'rgba(244,67,54,0.12)'
-      : 'rgba(244,67,54,0.05)'
-}}
+            p: 2,
+            border: 1,
+            borderColor: 'error.main',
+            borderRadius: 2,
+            bgcolor: (theme) => theme.palette.mode === 'dark'
+              ? 'rgba(244,67,54,0.12)'
+              : 'rgba(244,67,54,0.05)'
+          }}
         >
           <Box sx={{ position: 'relative', zIndex: 1 }}>
             <Typography variant="body2" fontWeight={700}>Delete my account</Typography>
-            <Typography variant="caption"  sx={{
-    color: 'text.secondary'
-  }}>
-              Deactivates your account and signs you out from all devices.
-You may register again later using the same email address.
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', whiteSpace: 'pre-line' }}>
+              {'Deactivates your account and signs you out from all devices.\nYou may register again later using the same email address.'}
             </Typography>
           </Box>
           <Button
-  variant="outlined"
-  color="error"
-  size="small"
-  startIcon={<DeleteForeverIcon />}
-  sx={{ borderRadius: 2, flexShrink: 0, zIndex: 1 }}
-  onClick={onDeleteClick}
->
-  Delete account
-</Button>
+            variant="outlined"
+            color="error"
+            size="small"
+            startIcon={<DeleteForeverIcon />}
+            sx={{ borderRadius: 2, flexShrink: 0, zIndex: 1 }}
+            onClick={onDeleteClick}
+          >
+            Delete account
+          </Button>
         </Stack>
       </SectionCard>
     </Stack>
@@ -522,33 +512,28 @@ function AccountRoles() {
 // ── Tab: Notifications ─────────────────────────────────────────────────────
 
 function NotificationsTab() {
-  const groups = [
-    { label: 'Email notifications', items: ['Booking confirmations', 'Booking cancellations', 'PNR status updates'] },
-    { label: 'SMS notifications', items: ['Booking confirmations', 'Booking cancellations'] }
-  ];
+  const items = ['Booking confirmations', 'Booking cancellations', 'PNR status updates', 'Account security messages'];
 
   return (
     <SectionCard
-      title="Notification preferences"
-      subtitle="Notification controls are not yet available for this account"
+      title="Notifications"
+      subtitle="Essential account and journey messages"
       icon={<NotificationsIcon fontSize="small" />}
     >
       <Stack spacing={2}>
         <Alert severity="info">
-          SouthRail currently sends essential booking and account messages automatically. Preference changes cannot be saved because the server does not yet provide a notification-preferences API.
+          SouthRail currently sends essential booking and account emails automatically. Notification preferences are not configurable yet.
         </Alert>
-        {groups.map((group) => (
-          <Box key={group.label}>
-            <Typography variant="overline" color="text.secondary" fontWeight={700} letterSpacing={1}>
-              {group.label}
-            </Typography>
-            <Stack component="ul" spacing={0.75} sx={{ pl: 2.5, mb: 0, mt: 1 }}>
-              {group.items.map((item) => (
-                <Typography component="li" variant="body2" color="text.secondary" key={item}>{item}</Typography>
-              ))}
-            </Stack>
-          </Box>
-        ))}
+        <Box>
+          <Typography variant="overline" color="text.secondary" fontWeight={700} letterSpacing={1}>
+            Email updates
+          </Typography>
+          <Stack component="ul" spacing={0.75} sx={{ pl: 2.5, mb: 0, mt: 1 }}>
+            {items.map((item) => (
+              <Typography component="li" variant="body2" color="text.secondary" key={item}>{item}</Typography>
+            ))}
+          </Stack>
+        </Box>
       </Stack>
     </SectionCard>
   );
@@ -557,7 +542,6 @@ function NotificationsTab() {
 // ── Main page ──────────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
-
   const auth = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const [profile, setProfile] = useState(null);
@@ -565,35 +549,28 @@ export default function ProfilePage() {
   const [error, setError] = useState('');
   const [tab, setTab] = useState(0);
   const [deletePassword, setDeletePassword] = useState('');
-const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-const [deleteLoading, setDeleteLoading] = useState(false);
-const [deleteError, setDeleteError] = useState('');
-const navigate = useNavigate();
-const handleDeleteAccount = async () => {
-  try {
-    setDeleteLoading(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const navigate = useNavigate();
+
+  const handleDeleteAccount = async () => {
+    try {
+      setDeleteLoading(true);
       setDeleteError('');
-    await api.delete('/users/me', {
-      data: {
-        password: deletePassword
-      }
-    });
+      await api.delete('/users/me', { data: { password: deletePassword } });
+      setDeleteDialogOpen(false);
+      setDeletePassword('');
+      setDeleteError('');
+      dispatch(logout());
+      navigate('/');
+    } catch (error) {
+      setDeleteError(getApiErrorMessage(error, 'Unable to delete account'));
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
-setDeleteDialogOpen(false);
-setDeletePassword('');
-setDeleteError('');
-dispatch(logout());
-
-navigate('/');
-
-  } catch (error) {
-setDeleteError(
-    getApiErrorMessage(error, 'Unable to delete account')
-  );
-  } finally {
-    setDeleteLoading(false);
-  }
-};
   const fetchProfile = useCallback(() => {
     setLoading(true);
     setError('');
@@ -611,18 +588,15 @@ setDeleteError(
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: { xs: 2.25, md: 3.5 } }}>
       <Container maxWidth="md">
         <Stack spacing={2}>
-          {/* Page title */}
           <Box>
             <Typography variant="h5" fontWeight={800}>Account</Typography>
             <Typography variant="body2" color="text.secondary">
-              Manage your personal details, security, and notification preferences
+              Manage your personal details, security, and account notifications
             </Typography>
           </Box>
 
-          {/* Hero */}
           <ProfileHero profile={profile} loading={loading} />
 
-          {/* Tabs */}
           <Paper variant="outlined" sx={{ borderRadius: 3, overflow: 'hidden' }}>
             <Tabs
               value={tab}
@@ -647,7 +621,7 @@ setDeleteError(
                   loading={loading}
                   error={error}
                   onSaved={fetchProfile}
-                   onProfileUpdated={(updatedUser) => dispatch(updateUser(updatedUser))}
+                  onProfileUpdated={(updatedUser) => dispatch(updateUser(updatedUser))}
                   onRetry={fetchProfile}
                 />
               </TabPanel>
@@ -661,67 +635,61 @@ setDeleteError(
           </Paper>
         </Stack>
       </Container>
+
       <Dialog
-  open={deleteDialogOpen}
-  onClose={() => {
-    if (!deleteLoading) {
-      setDeleteDialogOpen(false);
-      setDeletePassword('');
-      setDeleteError('');
-    }
-  }}
-  maxWidth="xs"
-  fullWidth
->
-  <DialogTitle>Delete Account</DialogTitle>
-
-  <DialogContent>
-    <Typography sx={{ mb: 2 }}>
-      This will deactivate your SouthRail account and terminate all active sessions.
-      You can register again later using the same email address.
-    </Typography>
-
-    <TextField
-  fullWidth
-  required
-  autoFocus
-  type="password"
-  label="Confirm Password"
-  value={deletePassword}
-  error={Boolean(deleteError)}
-  helperText={deleteError}
-  onChange={(e) => {
-    setDeletePassword(e.target.value);
-    if (deleteError) {
-      setDeleteError('');
-    }
-  }}
-  disabled={deleteLoading}
-/>
-  </DialogContent>
-
-  <DialogActions sx={{ px: 3, pb: 2 }}>
-    <Button
-      onClick={() => {
-        setDeleteDialogOpen(false);
-        setDeletePassword('');
-        setDeleteError('');
-      }}
-      disabled={deleteLoading}
-    >
-      Cancel
-    </Button>
-
-    <Button
-      color="error"
-      variant="contained"
-      disabled={!deletePassword || deleteLoading}
-      onClick={handleDeleteAccount}
-    >
-      {deleteLoading ? 'Deleting...' : 'Delete Account'}
-    </Button>
-  </DialogActions>
-</Dialog>
+        open={deleteDialogOpen}
+        onClose={() => {
+          if (!deleteLoading) {
+            setDeleteDialogOpen(false);
+            setDeletePassword('');
+            setDeleteError('');
+          }
+        }}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Delete account</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ mb: 2 }}>
+            This will deactivate your SouthRail account and terminate all active sessions. You can register again later using the same email address.
+          </Typography>
+          <TextField
+            fullWidth
+            required
+            autoFocus
+            type="password"
+            label="Confirm password"
+            value={deletePassword}
+            error={Boolean(deleteError)}
+            helperText={deleteError}
+            onChange={(e) => {
+              setDeletePassword(e.target.value);
+              if (deleteError) setDeleteError('');
+            }}
+            disabled={deleteLoading}
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => {
+              setDeleteDialogOpen(false);
+              setDeletePassword('');
+              setDeleteError('');
+            }}
+            disabled={deleteLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            disabled={!deletePassword || deleteLoading}
+            onClick={handleDeleteAccount}
+          >
+            {deleteLoading ? 'Deleting...' : 'Delete account'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
