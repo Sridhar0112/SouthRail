@@ -3,6 +3,7 @@ package com.southrail.reservation.dto.ai;
 import lombok.*;
 
 import java.util.List;
+import java.util.Collections;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
@@ -53,7 +54,6 @@ public class AiDtos {
     @Data
     @Builder
     @NoArgsConstructor
-    @AllArgsConstructor
     public static class ChatResponse {
 
         private String response;
@@ -61,6 +61,32 @@ public class AiDtos {
         private String model;
 
         private Usage usage;
+
+        @Builder.Default
+        private List<SourceReference> sources = Collections.emptyList();
+
+        public ChatResponse(String response, String model, Usage usage) {
+            this(response, model, usage, Collections.emptyList());
+        }
+
+        public ChatResponse(String response, String model, Usage usage, List<SourceReference> sources) {
+            this.response = response;
+            this.model = model;
+            this.usage = usage;
+            this.sources = sources == null ? Collections.emptyList() : List.copyOf(sources);
+        }
+
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SourceReference {
+
+        private String document;
+
+        private String section;
 
     }
 

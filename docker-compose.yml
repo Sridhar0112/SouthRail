@@ -16,7 +16,9 @@ services:
       retries: 5
 
   backend:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/southrail
       SPRING_PROFILES_ACTIVE: prod
@@ -38,6 +40,11 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_CONNECT_TIMEOUT: ${GEMINI_CONNECT_TIMEOUT:-3000}
       GEMINI_READ_TIMEOUT: ${GEMINI_READ_TIMEOUT:-10000}
+      GEMINI_EMBEDDING_MODEL: ${GEMINI_EMBEDDING_MODEL:-gemini-embedding-001}
+      AI_RAG_ENABLED: ${AI_RAG_ENABLED:-true}
+      AI_RAG_MAX_CHUNKS: ${AI_RAG_MAX_CHUNKS:-4}
+      AI_RAG_RELEVANCE_THRESHOLD: ${AI_RAG_RELEVANCE_THRESHOLD:-0.42}
+      AI_RAG_MAX_CHUNK_CHARACTERS: ${AI_RAG_MAX_CHUNK_CHARACTERS:-1800}
       SLOW_REQUEST_THRESHOLD: ${SLOW_REQUEST_THRESHOLD:-2s}
     depends_on:
       postgres:

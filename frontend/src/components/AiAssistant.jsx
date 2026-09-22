@@ -70,7 +70,9 @@ export function AiAssistant({ authenticated }) {
       if (model) payload.model = model;
       const { data } = await api.post('/chat', payload);
       setMessages((current) => [...current, {
-        role: 'assistant', content: data?.response || 'I could not create a response. Please try again.'
+        role: 'assistant',
+        content: data?.response || 'I could not create a response. Please try again.',
+        sources: Array.isArray(data?.sources) ? data.sources : []
       }]);
     } catch (error) {
       setMessages((current) => [...current, {
@@ -393,7 +395,36 @@ export function AiAssistant({ authenticated }) {
                         }}
                       >
                         {!isUser && !isError ? (
-                          <AssistantMarkdown>{item.content}</AssistantMarkdown>
+                          <>
+                            <AssistantMarkdown>{item.content}</AssistantMarkdown>
+                            {item.sources?.length > 0 && (
+                              <Box
+                                component="aside"
+                                aria-label="Answer sources"
+                                sx={{ mt: 1.25, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}
+                              >
+                                <Typography
+                                  component="h4"
+                                  variant="caption"
+                                  sx={{ display: 'block', mb: 0.35, color: 'text.secondary', fontWeight: 700 }}
+                                >
+                                  Sources
+                                </Typography>
+                                <Box component="ul" sx={{ m: 0, pl: 2, color: 'text.secondary' }}>
+                                  {item.sources.map((source) => (
+                                    <Typography
+                                      component="li"
+                                      variant="caption"
+                                      key={`${source.document}-${source.section}`}
+                                      sx={{ lineHeight: 1.45, overflowWrap: 'anywhere' }}
+                                    >
+                                      {source.document}{source.section ? ` · ${source.section}` : ''}
+                                    </Typography>
+                                  ))}
+                                </Box>
+                              </Box>
+                            )}
+                          </>
                         ) : (
                           <Typography variant="body2" sx={{ lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{item.content}</Typography>
                         )}

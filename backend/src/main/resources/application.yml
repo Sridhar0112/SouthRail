@@ -79,6 +79,12 @@ southrail:
     email-enabled: ${EMAIL_ENABLED:false}
   logging:
     slow-request-threshold: ${SLOW_REQUEST_THRESHOLD:2s}
+  ai:
+    rag:
+      enabled: ${AI_RAG_ENABLED:true}
+      max-chunks: ${AI_RAG_MAX_CHUNKS:4}
+      relevance-threshold: ${AI_RAG_RELEVANCE_THRESHOLD:0.42}
+      max-chunk-characters: ${AI_RAG_MAX_CHUNK_CHARACTERS:1800}
 
 management:
   health:
@@ -130,6 +136,7 @@ gemini:
   api-key: ${GEMINI_API_KEY:}
   base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com/v1beta}
   default-model: ${GEMINI_DEFAULT_MODEL:gemini-2.5-flash}
+  embedding-model: ${GEMINI_EMBEDDING_MODEL:gemini-embedding-001}
   connect-timeout-millis: ${GEMINI_CONNECT_TIMEOUT:${GEMINI_CONNECT_TIMEOUT_MS:3000}}
   read-timeout-millis: ${GEMINI_READ_TIMEOUT:${GEMINI_READ_TIMEOUT_MS:10000}}
 

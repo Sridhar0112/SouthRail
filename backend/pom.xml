@@ -138,6 +138,22 @@
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>../docs</directory>
+        <targetPath>knowledge</targetPath>
+        <includes>
+          <include>WAITLIST.md</include>
+          <include>PAYMENTS.md</include>
+          <include>CONFIGURATION.md</include>
+          <include>DEPLOYMENT.md</include>
+          <include>OPERATIONS.md</include>
+        </includes>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.springframework.boot</groupId>
