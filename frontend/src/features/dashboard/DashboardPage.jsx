@@ -56,6 +56,7 @@ import {
 } from "../../components/RailwayStatusChip.jsx";
 import { getApiErrorMessage, isAuthError } from "../../utils/apiErrors.js";
 import { formatStatus, getBookingStatusLabel } from "../../utils/bookingStatus.js";
+import { localDateKey } from "../../utils/date.js";
 
 // ─── Theme helpers ───────────────────────────────────────────────────────────
 // SouthRail branding is expressed through the theme's primary/secondary palette
@@ -729,12 +730,7 @@ function KpiStrip({ metrics }) {
               borderRadius: 2,
               bgcolor: t.raisedBg,
               border: `1px solid ${t.cardBorder}`,
-              transition: "box-shadow 0.2s, transform 0.2s",
               height: "100%",
-              "&:hover": {
-                boxShadow: t.cardShadow,
-                transform: "translateY(-1px)",
-              },
             }}
           >
             <Stack spacing={1}>
@@ -944,7 +940,6 @@ function TicketCard({ booking, onCancelBooking, featured }) {
         position: "relative",
       }}
     >
-      {/* Top stripe */}
       {featured && (
         <Box
           sx={{
@@ -954,7 +949,6 @@ function TicketCard({ booking, onCancelBooking, featured }) {
         />
       )}
       <Box sx={{ p: { xs: 1.25, md: 1.5 } }}>
-        {/* Train name + status */}
         <Stack
           direction={{ xs: "column", sm: "row" }}
           justifyContent="space-between"
@@ -997,7 +991,6 @@ function TicketCard({ booking, onCancelBooking, featured }) {
           </Stack>
         </Stack>
 
-        {/* Route visual */}
         <Stack
           direction={{ xs: "column", sm: "row" }}
           alignItems={{ xs: "stretch", sm: "center" }}
@@ -1058,7 +1051,6 @@ function TicketCard({ booking, onCancelBooking, featured }) {
           </Box>
         </Stack>
 
-        {/* Meta row */}
         <Stack
           direction="row"
           justifyContent="space-between"
@@ -1201,7 +1193,6 @@ function JourneySkeleton() {
   );
 }
 
-// ─── Recent Activity ──────────────────────────────────────────────────────────
 function RecentActivitySection({ bookings, loading }) {
   const theme = useTheme();
   const t = getDashboardTokens(theme);
@@ -1219,7 +1210,6 @@ function RecentActivitySection({ bookings, loading }) {
       <Stack spacing={0}>
         {activities.map((item, idx) => (
           <Box key={idx} sx={{ display: "flex", gap: 1.25, position: "relative" }}>
-            {/* Timeline spine */}
             {idx < activities.length - 1 && (
               <Box
                 sx={{
@@ -1233,7 +1223,6 @@ function RecentActivitySection({ bookings, loading }) {
                 }}
               />
             )}
-            {/* Dot */}
             <Box
               sx={{
                 width: 36,
@@ -1278,13 +1267,8 @@ function RecentActivitySection({ bookings, loading }) {
                     cursor: "pointer",
                   }}
                 />
-                <Typography variant="caption" color={t.textSub}>
-                  •
-                </Typography>
-
-                <Typography variant="caption" color={t.textSub}>
-                  {item.time}
-                </Typography>
+                <Typography variant="caption" color={t.textSub}>•</Typography>
+                <Typography variant="caption" color={t.textSub}>{item.time}</Typography>
               </Stack>
             </Box>
           </Box>
@@ -1328,7 +1312,6 @@ function buildActivity(bookings, t) {
   });
 }
 
-// ─── Booking History ──────────────────────────────────────────────────────────
 function BookingHistoryCard({
   loading,
   error,
@@ -1357,7 +1340,6 @@ function BookingHistoryCard({
           sx={{ "& .MuiButton-root": { width: { xs: "100%", sm: "auto" } } }}
         >
           {action}
-
           <Button
             component={Link}
             to="/pnr"
@@ -1368,9 +1350,7 @@ function BookingHistoryCard({
               borderRadius: 2,
               borderColor: t.primary,
               color: t.primary,
-              "&:hover": {
-                bgcolor: alpha(t.primary, 0.07),
-              },
+              "&:hover": { bgcolor: alpha(t.primary, 0.07) },
             }}
           >
             Track PNR
@@ -1389,7 +1369,6 @@ function BookingHistoryCard({
       )}
       {historyLoaded && (
         <Stack spacing={1.75}>
-          {/* Filters */}
           <Stack
             direction={{ xs: "column", sm: "row" }}
             spacing={1.5}
@@ -1400,9 +1379,7 @@ function BookingHistoryCard({
               size="small"
               label="Search by PNR, train, or route"
               value={filters.search}
-              onChange={(e) =>
-                setFilters((c) => ({ ...c, search: e.target.value }))
-              }
+              onChange={(e) => setFilters((c) => ({ ...c, search: e.target.value }))}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -1417,51 +1394,31 @@ function BookingHistoryCard({
               size="small"
               label="Status"
               value={filters.status}
-              onChange={(e) =>
-                setFilters((c) => ({ ...c, status: e.target.value }))
-              }
-              sx={{
-                minWidth: { xs: "100%", sm: 180 },
-                "& .MuiOutlinedInput-root": { borderRadius: 2 },
-              }}
+              onChange={(e) => setFilters((c) => ({ ...c, status: e.target.value }))}
+              sx={{ minWidth: { xs: "100%", sm: 180 }, "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
             >
               <MenuItem value="ALL">All statuses</MenuItem>
               {statusOptions.map((s) => (
-                <MenuItem key={s} value={s}>
-                  {formatStatus(s)}
-                </MenuItem>
+                <MenuItem key={s} value={s}>{formatStatus(s)}</MenuItem>
               ))}
             </TextField>
           </Stack>
 
           {allRows.length === 0 && (
             <Box sx={{ py: 3, textAlign: "center" }}>
-              <ConfirmationNumberIcon
-                sx={{ fontSize: 40, color: alpha(t.primary, 0.2), mb: 0.5 }}
-              />
-              <Typography fontWeight={700} color={t.textMain} sx={{ mb: 0.25 }}>
-                No bookings yet
-              </Typography>
-              <Typography color={t.textSub} variant="body2">
-                Search trains and book your first journey.
-              </Typography>
+              <ConfirmationNumberIcon sx={{ fontSize: 40, color: alpha(t.primary, 0.2), mb: 0.5 }} />
+              <Typography fontWeight={700} color={t.textMain} sx={{ mb: 0.25 }}>No bookings yet</Typography>
+              <Typography color={t.textSub} variant="body2">Search trains and book your first journey.</Typography>
             </Box>
           )}
           {allRows.length > 0 && rows.length === 0 && (
             <Box sx={{ py: 3, textAlign: "center" }}>
-              <SearchIcon
-                sx={{ fontSize: 32, color: alpha(t.primary, 0.2), mb: 0.5 }}
-              />
-              <Typography color={t.textSub} variant="body2">
-                No bookings match your search.
-              </Typography>
+              <SearchIcon sx={{ fontSize: 32, color: alpha(t.primary, 0.2), mb: 0.5 }} />
+              <Typography color={t.textSub} variant="body2">No bookings match your search.</Typography>
             </Box>
           )}
           {rows.length > 0 && (
-            <BookingHistoryTable
-              rows={rows}
-              onCancelBooking={onCancelBooking}
-            />
+            <BookingHistoryTable rows={rows} onCancelBooking={onCancelBooking} />
           )}
         </Stack>
       )}
@@ -1476,28 +1433,12 @@ function BookingHistoryTable({ rows, onCancelBooking }) {
     <TableContainer
       component={Paper}
       variant="outlined"
-      sx={{
-        borderRadius: 2.5,
-        border: `1px solid ${t.cardBorder}`,
-        overflowX: "auto",
-      }}
+      sx={{ borderRadius: 2.5, border: `1px solid ${t.cardBorder}`, overflowX: "auto" }}
     >
-      <Table
-        size="small"
-        aria-label="Booking history table"
-        sx={{ minWidth: { xs: 760, md: 820 } }}
-      >
+      <Table size="small" aria-label="Booking history table" sx={{ minWidth: { xs: 760, md: 820 } }}>
         <TableHead>
           <TableRow sx={{ bgcolor: alpha(t.primary, 0.04) }}>
-            {[
-              "PNR",
-              "Train",
-              "Route",
-              "Journey date",
-              "Status",
-              "Fare",
-              "Actions",
-            ].map((h) => (
+            {["PNR", "Train", "Route", "Journey date", "Status", "Fare", "Actions"].map((h) => (
               <TableCell
                 key={h}
                 sx={{
@@ -1562,12 +1503,7 @@ function BookingHistoryRow({ booking, onCancelBooking, tokens: t }) {
       }}
     >
       <TableCell
-        sx={{
-          whiteSpace: "nowrap",
-          fontWeight: 700,
-          color: t.primary,
-          fontSize: 13,
-        }}
+        sx={{ whiteSpace: "nowrap", fontWeight: 700, color: t.primary, fontSize: 13 }}
       >
         {booking.pnr || "—"}
       </TableCell>
@@ -1580,38 +1516,21 @@ function BookingHistoryRow({ booking, onCancelBooking, tokens: t }) {
         >
           {booking.trainName || "Train"}
         </Typography>
-        <Typography
-          color={t.textSub}
-          variant="body2"
-          sx={{ overflowWrap: "anywhere" }}
-        >
+        <Typography color={t.textSub} variant="body2" sx={{ overflowWrap: "anywhere" }}>
           {booking.trainNumber || "—"}
         </Typography>
       </TableCell>
       <TableCell
-        sx={{
-          minWidth: 160,
-          maxWidth: 240,
-          fontSize: 13,
-          color: t.textMain,
-          overflowWrap: "anywhere",
-        }}
+        sx={{ minWidth: 160, maxWidth: 240, fontSize: 13, color: t.textMain, overflowWrap: "anywhere" }}
       >
         {formatRoute(booking)}
       </TableCell>
       <TableCell sx={{ whiteSpace: "nowrap", fontSize: 13, color: t.textMain }}>
         {formatDate(booking.journeyDate)}
       </TableCell>
-      <TableCell>
-        <RailwayStatusChip status={booking.status} />
-      </TableCell>
+      <TableCell><RailwayStatusChip status={booking.status} /></TableCell>
       <TableCell
-        sx={{
-          whiteSpace: "nowrap",
-          fontWeight: 800,
-          fontSize: 13,
-          color: t.textMain,
-        }}
+        sx={{ whiteSpace: "nowrap", fontWeight: 800, fontSize: 13, color: t.textMain }}
       >
         {formatFare(booking.totalFare)}
       </TableCell>
@@ -1666,7 +1585,6 @@ function BookingHistoryRow({ booking, onCancelBooking, tokens: t }) {
   );
 }
 
-// ─── Shared SectionCard ───────────────────────────────────────────────────────
 function SectionCard({ id, title, subtitle, icon, action, children }) {
   const theme = useTheme();
   const t = getDashboardTokens(theme);
@@ -1681,44 +1599,39 @@ function SectionCard({ id, title, subtitle, icon, action, children }) {
         overflow: "hidden",
       }}
     >
-        <Box sx={{ px: { xs: 1.5, md: 1.75 }, pt: { xs: 1.25, md: 1.5 }, pb: 1 }}>
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            justifyContent="space-between"
-            alignItems={{ sm: "center" }}
-            spacing={0.5}
-            sx={{ mb: 1 }}
-          >
-            <Stack direction="row" spacing={1} alignItems="center">
-              {icon}
-              <Box sx={{ minWidth: 0 }}>
-                <Typography
-                  variant="subtitle1"
-                  fontWeight={900}
-                  color={t.textMain}
-                  sx={{ lineHeight: 1.2, overflowWrap: "anywhere" }}
-                >
-                  {title}
-                </Typography>
-                {subtitle && (
-                  <Typography variant="caption" color={t.textSub}>
-                    {subtitle}
-                  </Typography>
-                )}
-              </Box>
-            </Stack>
-            {action}
+      <Box sx={{ px: { xs: 1.5, md: 1.75 }, pt: { xs: 1.25, md: 1.5 }, pb: 1 }}>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          justifyContent="space-between"
+          alignItems={{ sm: "center" }}
+          spacing={0.5}
+          sx={{ mb: 1 }}
+        >
+          <Stack direction="row" spacing={1} alignItems="center">
+            {icon}
+            <Box sx={{ minWidth: 0 }}>
+              <Typography
+                variant="subtitle1"
+                fontWeight={900}
+                color={t.textMain}
+                sx={{ lineHeight: 1.2, overflowWrap: "anywhere" }}
+              >
+                {title}
+              </Typography>
+              {subtitle && <Typography variant="caption" color={t.textSub}>{subtitle}</Typography>}
+            </Box>
           </Stack>
-          <Divider sx={{ mb: 1, borderColor: t.divider }} />
+          {action}
+        </Stack>
+        <Divider sx={{ mb: 1, borderColor: t.divider }} />
         {children}
       </Box>
     </Paper>
   );
 }
 
-// ─── Business logic (unchanged) ───────────────────────────────────────────────
 function buildDashboardMetrics(bookings) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDateKey();
   const upcomingBookings = bookings
     .filter(
       (b) =>
