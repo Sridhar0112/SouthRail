@@ -103,11 +103,10 @@ export default function VerifyEmailPage() {
         minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
-       bgcolor: 'background.default'
+        bgcolor: 'background.default'
       }}
     >
       <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
-        {/* Brand header */}
         <Stack alignItems="center" spacing={0.5} sx={{ mb: { xs: 2.5, sm: 4 } }}>
           <MarkEmailReadOutlinedIcon sx={{ fontSize: 36, color: 'primary.main' }} />
           <Typography variant="h6" fontWeight={700} letterSpacing={-0.3}>
@@ -126,13 +125,11 @@ export default function VerifyEmailPage() {
             minWidth: 0,
           }}
         >
-          {/* Progress bar shown only while loading */}
           {status === 'loading' && (
             <LinearProgress sx={{ height: 3 }} />
           )}
 
           <Stack spacing={0}>
-            {/* Status banner */}
             <Box
               role="alert"
               sx={{
@@ -161,18 +158,17 @@ export default function VerifyEmailPage() {
               </Stack>
             </Box>
 
-            {/* Detail body */}
             <Box sx={{ px: { xs: 1.75, sm: 2.5 }, py: { xs: 2, sm: 2.5 } }}>
               {status === 'loading' && (
                 <Typography variant="body2" color="text.secondary">
-                  We're confirming your email address with our servers. This usually completes within a second.
+                  We're confirming your email address. This should only take a moment.
                 </Typography>
               )}
 
               {status === 'verified' && (
                 <Stack spacing={2.5}>
                   <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, overflowWrap: 'anywhere' }}>
-                    Welcome aboard! Your account is fully set up. Once you log in you can manage bookings, view upcoming trips, and update your travel preferences from your dashboard.
+                    Welcome aboard! Your account is fully set up. Once you log in you can manage bookings, view upcoming trips, and check travel updates from your dashboard.
                   </Typography>
                   <Divider />
                   <Stack spacing={1}>
@@ -182,7 +178,7 @@ export default function VerifyEmailPage() {
                     {[
                       'Log in to your SouthRail account',
                       'Browse and book your first trip',
-                      'Set up travel alerts and preferences',
+                      'Check booking and travel updates from your dashboard',
                     ].map((step) => (
                       <Stack key={step} direction="row" sx={{ minWidth: 0 }} spacing={1} alignItems="center">
                         <Box
@@ -239,7 +235,6 @@ export default function VerifyEmailPage() {
                 </Stack>
               )}
 
-              {/* CTA */}
               {status !== 'loading' && (
                 <Box sx={{ mt: 3.5 }}>
                   <Button
@@ -259,7 +254,6 @@ export default function VerifyEmailPage() {
           </Stack>
         </Paper>
 
-        {/* Footer note */}
         <Typography
           variant="caption"
           color="text.disabled"
