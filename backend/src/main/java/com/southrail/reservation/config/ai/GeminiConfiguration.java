@@ -21,6 +21,8 @@ public class GeminiConfiguration {
 
     @NotBlank
     private String defaultModel;
+    @NotBlank
+    private String embeddingModel = "gemini-embedding-001";
     @Positive
     private int connectTimeoutMillis = 3000;
     @Positive
@@ -43,6 +45,8 @@ public class GeminiConfiguration {
     public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
     public String getDefaultModel() { return defaultModel; }
     public void setDefaultModel(String defaultModel) { this.defaultModel = defaultModel; }
+    public String getEmbeddingModel() { return embeddingModel; }
+    public void setEmbeddingModel(String embeddingModel) { this.embeddingModel = embeddingModel; }
     public int getConnectTimeoutMillis() { return connectTimeoutMillis; }
     public void setConnectTimeoutMillis(int connectTimeoutMillis) { this.connectTimeoutMillis = connectTimeoutMillis; }
     public int getReadTimeoutMillis() { return readTimeoutMillis; }

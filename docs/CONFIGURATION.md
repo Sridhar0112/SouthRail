@@ -25,8 +25,13 @@ Production configuration is immutable per process. Do not use machine-local file
 | `GEMINI_API_KEY` | Conditional | Yes | Required when `AI_ENABLED=true`. |
 | `GEMINI_BASE_URL` | No | No | Gemini endpoint; HTTPS vendor default. |
 | `GEMINI_DEFAULT_MODEL` | No | No | Default model. |
+| `GEMINI_EMBEDDING_MODEL` | No | No | Documentation retrieval embedding model; default `gemini-embedding-001`. |
 | `GEMINI_CONNECT_TIMEOUT` | No | No | Positive milliseconds; default 3000. |
 | `GEMINI_READ_TIMEOUT` | No | No | Positive milliseconds; default 10000. |
+| `AI_RAG_ENABLED` | No | No | Enables the startup-built documentation index while AI is enabled; default true. |
+| `AI_RAG_MAX_CHUNKS` | No | No | Maximum relevant documentation chunks supplied to Gemini; default 4. |
+| `AI_RAG_RELEVANCE_THRESHOLD` | No | No | Cosine-similarity floor from 0 to 1; default 0.42. |
+| `AI_RAG_MAX_CHUNK_CHARACTERS` | No | No | Maximum semantic chunk size; default 1800. |
 | `EMAIL_ENABLED` | Yes | No | Runtime delivery switch. `false` sends no outbound email; production requires `true` because registration requires verification. |
 | `SMTP_HOST` / `SMTP_PORT` | Conditional | No | SMTP endpoint; localhost:1025 default is safe while disabled. Legacy `MAIL_HOST` / `MAIL_PORT` remain fallbacks. |
 | `SMTP_USERNAME` | Conditional | Sensitive | Required when `EMAIL_ENABLED=true`. |
