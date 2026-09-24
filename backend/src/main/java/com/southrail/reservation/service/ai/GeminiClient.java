@@ -50,7 +50,7 @@ public class GeminiClient {
                         .body(String.class);
             return parseResponse(response, model);
         } catch (RestClientException ex) {
-            throw translateFailure(ex);
+            throw translateFailure(ex, true);
         }
     }
 
@@ -153,7 +153,7 @@ public class GeminiClient {
                     .retrieve()
                     .body(String.class);
         } catch (RestClientException ex) {
-            throw translateFailure(ex);
+            throw translateFailure(ex, false);
         }
     }
 
@@ -221,13 +221,20 @@ public class GeminiClient {
                     .body(String.class);
             return parseModels(response);
         } catch (RestClientException ex) {
-            throw translateFailure(ex);
+            throw translateFailure(ex, false);
         }
     }
 
-    private AiException translateFailure(RestClientException exception) {
+    private AiException translateFailure(RestClientException exception, boolean generationRequest) {
         if (exception instanceof RestClientResponseException) {
             RestClientResponseException responseException = (RestClientResponseException) exception;
+            if (generationRequest && isModelUnavailable(responseException)) {
+                return new AiException(
+                        HttpStatus.BAD_REQUEST,
+                        "AI_MODEL_UNAVAILABLE",
+                        "The selected AI model is no longer available. Please choose another model.",
+                        exception);
+            }
             if (responseException.getStatusCode().is4xxClientError()
                     && responseException.getStatusCode().value() != 429) {
                 return new AiException(
@@ -242,6 +249,18 @@ public class GeminiClient {
                 "AI_SERVICE_UNAVAILABLE",
                 "Gemini service is temporarily unavailable",
                 exception);
+    }
+
+    private boolean isModelUnavailable(RestClientResponseException exception) {
+        String body = exception.getResponseBodyAsString().toLowerCase(java.util.Locale.ROOT);
+        int status = exception.getStatusCode().value();
+        return status == 404
+                || status == 410
+                || (body.contains("model")
+                    && (body.contains("not found")
+                        || body.contains("not supported")
+                        || body.contains("deprecated")
+                        || body.contains("unavailable")));
     }
 
     private List<AiDtos.ModelResponse> parseModels(String json) {
@@ -260,6 +279,9 @@ public class GeminiClient {
                     for (JsonNode method : generationMethods) {
                         methods.add(method.asText());
                     }
+                }
+                if (!methods.contains("generateContent")) {
+                    continue;
                 }
                 models.add(
                         AiDtos.ModelResponse.builder()

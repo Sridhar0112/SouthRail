@@ -17,6 +17,8 @@ import { getApiErrorMessage } from '../utils/apiErrors.js';
 import { AssistantMarkdown } from './AssistantMarkdown.jsx';
 
 const STARTERS = ['How do I book a train?', 'Explain RAC and waitlist', 'How can I cancel a booking?'];
+const MODEL_UNAVAILABLE_MESSAGE = 'The selected AI model is no longer available. Please choose another model.';
+const NO_COMPATIBLE_MODELS_MESSAGE = 'No compatible AI models are currently available. Please try again later.';
 
 export function AiAssistant({ authenticated }) {
   const theme = useTheme();
@@ -32,7 +34,7 @@ export function AiAssistant({ authenticated }) {
   const [sending, setSending] = useState(false);
   const endRef = useRef(null);
 
-  const loadModels = async () => {
+  const loadModels = async ({ preserveSelection = true } = {}) => {
     if (modelsLoading) return;
     setModelsLoading(true);
     setModelsError('');
@@ -40,7 +42,11 @@ export function AiAssistant({ authenticated }) {
       const { data } = await api.get('/chat/models');
       const available = Array.isArray(data) ? data : [];
       setModels(available);
-      setModel(available[0]?.name || '');
+      setModel((current) => {
+        if (preserveSelection && available.some((item) => item.name === current)) return current;
+        return preserveSelection ? available[0]?.name || '' : '';
+      });
+      if (!available.length) setModelsError(NO_COMPATIBLE_MODELS_MESSAGE);
     } catch (error) {
       setModelsError(getApiErrorMessage(error, 'The travel assistant is unavailable right now.'));
     } finally {
@@ -75,9 +81,16 @@ export function AiAssistant({ authenticated }) {
         sources: Array.isArray(data?.sources) ? data.sources : []
       }]);
     } catch (error) {
-      setMessages((current) => [...current, {
-        role: 'error', content: getApiErrorMessage(error, 'The travel assistant could not respond. Please try again.')
-      }]);
+      if (error.response?.data?.errorCode === 'AI_MODEL_UNAVAILABLE') {
+        setModel('');
+        setModels([]);
+        setMessages((current) => [...current, { role: 'error', content: MODEL_UNAVAILABLE_MESSAGE }]);
+        loadModels({ preserveSelection: false });
+      } else {
+        setMessages((current) => [...current, {
+          role: 'error', content: getApiErrorMessage(error, 'The travel assistant could not respond. Please try again.')
+        }]);
+      }
     } finally {
       setSending(false);
     }
@@ -211,11 +224,12 @@ export function AiAssistant({ authenticated }) {
             </IconButton>
           </Stack>
 
-          {models.length > 1 && (
+          {models.length > 0 && (
             <Box sx={{ px: { xs: 2.25, sm: 3 }, pb: 1.5 }}>
               <FormControl size="small" variant="standard" sx={{ minWidth: 160 }}>
                 <Select
                   disableUnderline
+                  displayEmpty
                   value={model}
                   onChange={(event) => setModel(event.target.value)}
                   aria-label="AI model"
@@ -240,6 +254,9 @@ export function AiAssistant({ authenticated }) {
                   }}
                   MenuProps={{ PaperProps: { sx: { mt: 0.5 } } }}
                 >
+                  <MenuItem value="" disabled sx={{ fontSize: '0.85rem' }}>
+                    Choose a model
+                  </MenuItem>
                   {models.map((item) => (
                     <MenuItem key={item.name} value={item.name} sx={{ fontSize: '0.85rem' }}>
                       {item.displayName || item.name}
@@ -274,7 +291,7 @@ export function AiAssistant({ authenticated }) {
               <Alert
                 severity="warning"
                 variant="outlined"
-                action={<Button size="small" onClick={loadModels}>Retry</Button>}
+                action={<Button size="small" onClick={() => loadModels()}>Retry</Button>}
               >
                 {modelsError}
               </Alert>
@@ -319,7 +336,7 @@ export function AiAssistant({ authenticated }) {
                       variant="outlined"
                       size="small"
                       onClick={() => send(starter)}
-                      disabled={sending || Boolean(modelsError)}
+                      disabled={sending || modelsLoading || !model || Boolean(modelsError)}
                       sx={{
                         borderRadius: 999,
                         borderColor: theme.palette.custom.fieldBorder,
@@ -499,7 +516,7 @@ export function AiAssistant({ authenticated }) {
               onChange={(event) => setMessage(event.target.value)}
               onKeyDown={handleKeyDown}
               inputProps={{ maxLength: 4000, 'aria-describedby': 'assistant-composer-hint' }}
-              disabled={sending || Boolean(modelsError)}
+              disabled={sending || modelsLoading || !model || Boolean(modelsError)}
               variant="filled"
               hiddenLabel
               InputProps={{
@@ -525,7 +542,7 @@ export function AiAssistant({ authenticated }) {
                 <IconButton
                   aria-label="Send message"
                   onClick={() => send()}
-                  disabled={!message.trim() || sending || Boolean(modelsError)}
+                  disabled={!message.trim() || sending || modelsLoading || !model || Boolean(modelsError)}
                   sx={{
                     width: 44, height: 44, flexShrink: 0, color: '#fff',
                     background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
