@@ -146,11 +146,7 @@
         <directory>../docs</directory>
         <targetPath>knowledge</targetPath>
         <includes>
-          <include>WAITLIST.md</include>
-          <include>PAYMENTS.md</include>
-          <include>CONFIGURATION.md</include>
-          <include>DEPLOYMENT.md</include>
-          <include>OPERATIONS.md</include>
+          <include>SOUTHRAIL_KNOWLEDGE_BASE.md</include>
         </includes>
       </resource>
     </resources>

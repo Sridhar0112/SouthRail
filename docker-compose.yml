@@ -44,13 +44,17 @@ services:
       AI_RAG_ENABLED: ${AI_RAG_ENABLED:-true}
       AI_RAG_MAX_CHUNKS: ${AI_RAG_MAX_CHUNKS:-4}
       AI_RAG_RELEVANCE_THRESHOLD: ${AI_RAG_RELEVANCE_THRESHOLD:-0.42}
+      AI_RAG_DOMAIN_THRESHOLD: ${AI_RAG_DOMAIN_THRESHOLD:-0.30}
       AI_RAG_MAX_CHUNK_CHARACTERS: ${AI_RAG_MAX_CHUNK_CHARACTERS:-1800}
+      AI_RAG_INDEX_PATH: ${AI_RAG_INDEX_PATH:-/var/lib/southrail-ai/knowledge-index.json}
       SLOW_REQUEST_THRESHOLD: ${SLOW_REQUEST_THRESHOLD:-2s}
     depends_on:
       postgres:
         condition: service_healthy
     ports:
       - "8080:8080"
+    volumes:
+      - ai-index:/var/lib/southrail-ai
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/api/actuator/health/readiness"]
       interval: 10s
@@ -70,3 +74,4 @@ services:
 
 volumes:
   postgres-data:
+  ai-index:

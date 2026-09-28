@@ -8,7 +8,8 @@ RUN mvn -q -DskipTests package
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-RUN addgroup -S southrail && adduser -S southrail -G southrail
+RUN addgroup -S southrail && adduser -S southrail -G southrail \
+    && mkdir -p /var/lib/southrail-ai && chown southrail:southrail /var/lib/southrail-ai
 COPY --from=build /app/backend/target/reservation-1.0.0.jar app.jar
 USER southrail
 EXPOSE 8080
