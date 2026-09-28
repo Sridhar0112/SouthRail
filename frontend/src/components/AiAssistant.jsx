@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   Alert, Avatar, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent,
-  DialogTitle, Fade, IconButton, InputAdornment, InputLabel, FormControl, MenuItem,
+  DialogTitle, Fade, IconButton, InputAdornment, FormControl, MenuItem,
   Select, Stack, TextField, Tooltip, Typography, alpha
 } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -14,12 +14,16 @@ import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded';
 import api from '../services/api.js';
 import { getApiErrorMessage } from '../utils/apiErrors.js';
+import { AssistantMarkdown } from './AssistantMarkdown.jsx';
 
 const STARTERS = ['How do I book a train?', 'Explain RAC and waitlist', 'How can I cancel a booking?'];
+const MODEL_UNAVAILABLE_MESSAGE = 'The selected AI model is no longer available. Please choose another model.';
+const NO_COMPATIBLE_MODELS_MESSAGE = 'No compatible AI models are currently available. Please try again later.';
 
 export function AiAssistant({ authenticated }) {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
   const [open, setOpen] = useState(false);
   const [models, setModels] = useState([]);
   const [model, setModel] = useState('');
@@ -30,27 +34,34 @@ export function AiAssistant({ authenticated }) {
   const [sending, setSending] = useState(false);
   const endRef = useRef(null);
 
-  useEffect(() => {
-    if (!open || models.length || modelsLoading || modelsError) return;
-    let active = true;
+  const loadModels = async ({ preserveSelection = true } = {}) => {
+    if (modelsLoading) return;
     setModelsLoading(true);
-    api.get('/chat/models')
-      .then(({ data }) => {
-        if (!active) return;
-        const available = Array.isArray(data) ? data : [];
-        setModels(available);
-        setModel(available[0]?.name || '');
-      })
-      .catch((error) => {
-        if (active) setModelsError(getApiErrorMessage(error, 'The travel assistant is unavailable right now.'));
-      })
-      .finally(() => { if (active) setModelsLoading(false); });
-    return () => { active = false; };
-  }, [models.length, modelsError, modelsLoading, open]);
+    setModelsError('');
+    try {
+      const { data } = await api.get('/chat/models');
+      const available = Array.isArray(data) ? data : [];
+      setModels(available);
+      setModel((current) => {
+        if (preserveSelection && available.some((item) => item.name === current)) return current;
+        return preserveSelection ? available[0]?.name || '' : '';
+      });
+      if (!available.length) setModelsError(NO_COMPATIBLE_MODELS_MESSAGE);
+    } catch (error) {
+      setModelsError(getApiErrorMessage(error, 'The travel assistant is unavailable right now.'));
+    } finally {
+      setModelsLoading(false);
+    }
+  };
+
+  const openAssistant = () => {
+    setOpen(true);
+    if (!models.length && !modelsError) loadModels();
+  };
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [messages, sending]);
+    endRef.current?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
+  }, [messages, reduceMotion, sending]);
 
   if (!authenticated) return null;
 
@@ -65,12 +76,21 @@ export function AiAssistant({ authenticated }) {
       if (model) payload.model = model;
       const { data } = await api.post('/chat', payload);
       setMessages((current) => [...current, {
-        role: 'assistant', content: data?.response || 'I could not create a response. Please try again.'
+        role: 'assistant',
+        content: data?.response || 'I could not create a response. Please try again.',
+        sources: Array.isArray(data?.sources) ? data.sources : []
       }]);
     } catch (error) {
-      setMessages((current) => [...current, {
-        role: 'error', content: getApiErrorMessage(error, 'The travel assistant could not respond. Please try again.')
-      }]);
+      if (error.response?.data?.errorCode === 'AI_MODEL_UNAVAILABLE') {
+        setModel('');
+        setModels([]);
+        setMessages((current) => [...current, { role: 'error', content: MODEL_UNAVAILABLE_MESSAGE }]);
+        loadModels({ preserveSelection: false });
+      } else {
+        setMessages((current) => [...current, {
+          role: 'error', content: getApiErrorMessage(error, 'The travel assistant could not respond. Please try again.')
+        }]);
+      }
     } finally {
       setSending(false);
     }
@@ -94,7 +114,7 @@ export function AiAssistant({ authenticated }) {
           component="button"
           type="button"
           aria-label="Open travel assistant"
-          onClick={() => setOpen(true)}
+          onClick={openAssistant}
           sx={{
             position: 'fixed',
             right: { xs: 16, sm: 28 },
@@ -153,6 +173,8 @@ export function AiAssistant({ authenticated }) {
             backgroundColor: theme.palette.surface.raised,
             border: `1px solid ${theme.palette.custom.cardBorder}`,
             height: { xs: '100dvh', sm: 'min(78vh, 680px)' },
+            maxWidth: { sm: 560 },
+            maxHeight: { sm: 'min(700px, calc(100dvh - 48px))' },
             display: 'flex',
             flexDirection: 'column'
           }
@@ -202,11 +224,12 @@ export function AiAssistant({ authenticated }) {
             </IconButton>
           </Stack>
 
-          {models.length > 1 && (
+          {models.length > 0 && (
             <Box sx={{ px: { xs: 2.25, sm: 3 }, pb: 1.5 }}>
               <FormControl size="small" variant="standard" sx={{ minWidth: 160 }}>
                 <Select
                   disableUnderline
+                  displayEmpty
                   value={model}
                   onChange={(event) => setModel(event.target.value)}
                   aria-label="AI model"
@@ -231,6 +254,9 @@ export function AiAssistant({ authenticated }) {
                   }}
                   MenuProps={{ PaperProps: { sx: { mt: 0.5 } } }}
                 >
+                  <MenuItem value="" disabled sx={{ fontSize: '0.85rem' }}>
+                    Choose a model
+                  </MenuItem>
                   {models.map((item) => (
                     <MenuItem key={item.name} value={item.name} sx={{ fontSize: '0.85rem' }}>
                       {item.displayName || item.name}
@@ -265,7 +291,7 @@ export function AiAssistant({ authenticated }) {
               <Alert
                 severity="warning"
                 variant="outlined"
-                action={<Button size="small" onClick={() => setModelsError('')}>Retry</Button>}
+                action={<Button size="small" onClick={() => loadModels()}>Retry</Button>}
               >
                 {modelsError}
               </Alert>
@@ -310,7 +336,7 @@ export function AiAssistant({ authenticated }) {
                       variant="outlined"
                       size="small"
                       onClick={() => send(starter)}
-                      disabled={sending || Boolean(modelsError)}
+                      disabled={sending || modelsLoading || !model || Boolean(modelsError)}
                       sx={{
                         borderRadius: 999,
                         borderColor: theme.palette.custom.fieldBorder,
@@ -354,13 +380,16 @@ export function AiAssistant({ authenticated }) {
                       )}
                       <Box
                         sx={{
-                          maxWidth: '78%',
+                          width: 'fit-content',
+                          minWidth: 0,
+                          maxWidth: isUser
+                            ? { xs: '86%', sm: '72%' }
+                            : { xs: '88%', sm: '76%' },
                           px: 1.75,
                           py: 1.1,
                           borderRadius: '16px',
                           borderBottomRightRadius: isUser ? '4px' : '16px',
                           borderBottomLeftRadius: !isUser ? '4px' : '16px',
-                          whiteSpace: 'pre-wrap',
                           overflowWrap: 'anywhere',
                           ...(isUser
                             ? {
@@ -382,7 +411,40 @@ export function AiAssistant({ authenticated }) {
                               })
                         }}
                       >
-                        <Typography variant="body2" sx={{ lineHeight: 1.6 }}>{item.content}</Typography>
+                        {!isUser && !isError ? (
+                          <>
+                            <AssistantMarkdown>{item.content}</AssistantMarkdown>
+                            {item.sources?.length > 0 && (
+                              <Box
+                                component="aside"
+                                aria-label="Answer sources"
+                                sx={{ mt: 1.25, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}
+                              >
+                                <Typography
+                                  component="h4"
+                                  variant="caption"
+                                  sx={{ display: 'block', mb: 0.35, color: 'text.secondary', fontWeight: 700 }}
+                                >
+                                  Sources
+                                </Typography>
+                                <Box component="ul" sx={{ m: 0, pl: 2, color: 'text.secondary' }}>
+                                  {item.sources.map((source) => (
+                                    <Typography
+                                      component="li"
+                                      variant="caption"
+                                      key={`${source.document}-${source.section}`}
+                                      sx={{ lineHeight: 1.45, overflowWrap: 'anywhere' }}
+                                    >
+                                      {source.document}{source.section ? ` · ${source.section}` : ''}
+                                    </Typography>
+                                  ))}
+                                </Box>
+                              </Box>
+                            )}
+                          </>
+                        ) : (
+                          <Typography variant="body2" sx={{ lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{item.content}</Typography>
+                        )}
                       </Box>
                     </Stack>
                   );
@@ -454,7 +516,7 @@ export function AiAssistant({ authenticated }) {
               onChange={(event) => setMessage(event.target.value)}
               onKeyDown={handleKeyDown}
               inputProps={{ maxLength: 4000, 'aria-describedby': 'assistant-composer-hint' }}
-              disabled={sending || Boolean(modelsError)}
+              disabled={sending || modelsLoading || !model || Boolean(modelsError)}
               variant="filled"
               hiddenLabel
               InputProps={{
@@ -480,7 +542,7 @@ export function AiAssistant({ authenticated }) {
                 <IconButton
                   aria-label="Send message"
                   onClick={() => send()}
-                  disabled={!message.trim() || sending || Boolean(modelsError)}
+                  disabled={!message.trim() || sending || modelsLoading || !model || Boolean(modelsError)}
                   sx={{
                     width: 44, height: 44, flexShrink: 0, color: '#fff',
                     background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,

@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -53,7 +54,9 @@ class GeminiClientTest {
   void exposesModelIdentifiersThatCanBeSentBackToChat() throws Exception {
     server = server(exchange -> respond(exchange, 200,
         "{\"models\":[{\"name\":\"models/gemini-test\",\"displayName\":\"Gemini Test\","
-            + "\"supportedGenerationMethods\":[\"generateContent\"]}]}"));
+            + "\"supportedGenerationMethods\":[\"generateContent\"]},"
+            + "{\"name\":\"models/embedding-test\",\"displayName\":\"Embedding Test\","
+            + "\"supportedGenerationMethods\":[\"embedContent\"]}]}"));
 
     List<AiDtos.ModelResponse> models = service(1000).getModels();
 
@@ -86,7 +89,10 @@ class GeminiClientTest {
 
   @Test
   void translatesNonRateLimitUpstreamClientErrorToBadGateway() throws Exception {
-    server = server(exchange -> respond(exchange, 400, "{\"error\":\"bad request\"}"));
+    AtomicInteger requests = new AtomicInteger();
+    server = server(exchange -> respond(exchange, 400, requests.getAndIncrement() == 0
+        ? "{\"error\":\"bad request\"}"
+        : "{\"error\":{\"message\":\"Model is not supported for generateContent\"}}"));
 
     GeminiClient service = service(1000);
 
@@ -95,6 +101,13 @@ class GeminiClientTest {
         .isInstanceOfSatisfying(AiException.class, exception -> {
           assertThat(exception.getStatus()).isEqualTo(HttpStatus.BAD_GATEWAY);
           assertThat(exception.getErrorCode()).isEqualTo("AI_UPSTREAM_REJECTED_REQUEST");
+        });
+
+    assertThatThrownBy(() -> service.chat(
+        new AiDtos.ChatRequest("hello", "gemini-test", Double.valueOf(0.7), Integer.valueOf(100))))
+        .isInstanceOfSatisfying(AiException.class, exception -> {
+          assertThat(exception.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+          assertThat(exception.getErrorCode()).isEqualTo("AI_MODEL_UNAVAILABLE");
         });
   }
 

@@ -37,8 +37,11 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(AiException.class)
   ResponseEntity<ApiErrorResponse> ai(AiException ex, HttpServletRequest request) {
+    String message = "AI_MODEL_UNAVAILABLE".equals(ex.getErrorCode())
+        ? "The selected AI model is no longer available. Please choose another model."
+        : "AI assistant is temporarily unavailable";
     return error(ex.getStatus(), ex.getErrorCode(),
-        "AI assistant is temporarily unavailable", request, null, null);
+        message, request, null, null);
   }
 
   @ExceptionHandler(NoResourceFoundException.class)
